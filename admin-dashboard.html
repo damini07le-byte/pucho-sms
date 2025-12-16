@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Pucho Public School</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>Admin Panel</h2>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="menu-link active" data-page="dashboard">Dashboard</a></li>
+                <li><a href="#" class="menu-link" data-page="staff">Staff Management</a></li>
+                <li><a href="#" class="menu-link" data-page="parents">Parent Management</a></li>
+                <li><a href="#" class="menu-link" data-page="admissions">Admissions</a></li>
+                <li><a href="#" class="menu-link" data-page="fees">Fees</a></li>
+                <li><a href="#" class="menu-link" data-page="attendance">Attendance</a></li>
+                <li><a href="#" class="menu-link" data-page="exams">Exams</a></li>
+                <li><a href="#" class="menu-link" data-page="reports">Reports</a></li>
+                <li><a href="#" id="adminLogout">Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+            <!-- Top Header -->
+            <header class="admin-header">
+                <div class="admin-header-left">
+                    <h1>Pucho Public School - Admin Dashboard</h1>
+                </div>
+                <div class="admin-header-right">
+                    <div class="admin-profile">
+                        <div class="admin-profile-icon">A</div>
+                        <div class="admin-profile-info">
+                            <div class="admin-profile-name" id="adminName">Administrator</div>
+                            <div class="admin-profile-role">System Admin</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="dashboard-content" id="mainContent">
+                <!-- Content will be dynamically loaded here -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Staff Modal -->
+    <div id="addStaffModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Staff</h3>
+                <button class="modal-close" onclick="closeModal('addStaffModal')">&times;</button>
+            </div>
+            <form id="addStaffForm">
+                <div class="form-group">
+                    <label for="staffName">Full Name</label>
+                    <input type="text" id="staffName" required>
+                </div>
+                <div class="form-group">
+                    <label for="staffEmail">Email</label>
+                    <input type="email" id="staffEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="staffRole">Role</label>
+                    <select id="staffRole" required>
+                        <option value="">Select Role</option>
+                        <option value="Teacher">Teacher</option>
+                        <option value="Office Staff">Office Staff</option>
+                        <option value="Principal">Principal</option>
+                        <option value="Vice Principal">Vice Principal</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="staffPassword">Temporary Password</label>
+                    <input type="text" id="staffPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Add Staff</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Parent Modal -->
+    <div id="addParentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Parent Account</h3>
+                <button class="modal-close" onclick="closeModal('addParentModal')">&times;</button>
+            </div>
+            <form id="addParentForm">
+                <div class="form-group">
+                    <label for="studentName">Student Name</label>
+                    <input type="text" id="studentName" required>
+                </div>
+                <div class="form-group">
+                    <label for="parentName">Parent Name</label>
+                    <input type="text" id="parentName" required>
+                </div>
+                <div class="form-group">
+                    <label for="parentEmail">Parent Email</label>
+                    <input type="email" id="parentEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="parentPhone">Parent Phone</label>
+                    <input type="tel" id="parentPhone" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="studentClass">Class</label>
+                        <select id="studentClass" required>
+                            <option value="">Select Class</option>
+                            <option value="1">Class 1</option>
+                            <option value="2">Class 2</option>
+                            <option value="3">Class 3</option>
+                            <option value="4">Class 4</option>
+                            <option value="5">Class 5</option>
+                            <option value="6">Class 6</option>
+                            <option value="7">Class 7</option>
+                            <option value="8">Class 8</option>
+                            <option value="9">Class 9</option>
+                            <option value="10">Class 10</option>
+                            <option value="11">Class 11</option>
+                            <option value="12">Class 12</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="studentSection">Section</label>
+                        <select id="studentSection" required>
+                            <option value="">Select Section</option>
+                            <option value="A">Section A</option>
+                            <option value="B">Section B</option>
+                            <option value="C">Section C</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Create Parent Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="admin-auth.js"></script>
+    <script src="admin-dashboard.js"></script>
+</body>
+
+</html>

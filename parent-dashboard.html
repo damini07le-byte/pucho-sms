@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Dashboard - Pucho Public School</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>Parent Portal</h2>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active">Dashboard</a></li>
+                <li><a href="#">Attendance</a></li>
+                <li><a href="#">Fee Status</a></li>
+                <li><a href="#">Exam Results</a></li>
+                <li><a href="#">Timetable</a></li>
+                <li><a href="#">Notifications</a></li>
+                <li><a href="#" id="parentLogout">Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <div class="dashboard-header">
+                <h1>Parent Dashboard</h1>
+                <p>View your child's academic progress and school information.</p>
+            </div>
+
+            <!-- Student Info -->
+            <div class="card mb-lg">
+                <h3>Student Information</h3>
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; color: var(--text-gray);">
+                    <div>
+                        <strong style="color: var(--primary-blue);">Name:</strong><br>
+                        Rahul Sharma
+                    </div>
+                    <div>
+                        <strong style="color: var(--primary-blue);">Class:</strong><br>
+                        10th Standard - Section A
+                    </div>
+                    <div>
+                        <strong style="color: var(--primary-blue);">Roll Number:</strong><br>
+                        2025-10A-045
+                    </div>
+                    <div>
+                        <strong style="color: var(--primary-blue);">Admission Year:</strong><br>
+                        2020
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Attendance</h3>
+                    <div class="stat-value">96.2%</div>
+                    <div class="stat-label">This Month</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Fee Status</h3>
+                    <div class="stat-value">Paid</div>
+                    <div class="stat-label">All dues cleared</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Last Exam</h3>
+                    <div class="stat-value">87.5%</div>
+                    <div class="stat-label">Mid-term examination</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Class Rank</h3>
+                    <div class="stat-value">5th</div>
+                    <div class="stat-label">Out of 45 students</div>
+                </div>
+            </div>
+
+            <!-- Academic Performance -->
+            <section class="section">
+                <h2 class="section-title">Academic Performance</h2>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>Recent Exam Results</h3>
+                        <div style="margin-top: 1rem; color: var(--text-gray);">
+                            <div
+                                style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                <span>Mathematics</span>
+                                <strong style="color: var(--primary-blue);">92/100</strong>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                <span>Science</span>
+                                <strong style="color: var(--primary-blue);">88/100</strong>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                <span>English</span>
+                                <strong style="color: var(--primary-blue);">85/100</strong>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                <span>Social Studies</span>
+                                <strong style="color: var(--primary-blue);">90/100</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                                <span>Hindi</span>
+                                <strong style="color: var(--primary-blue);">82/100</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Attendance Record</h3>
+                        <div style="margin-top: 1rem; color: var(--text-gray);">
+                            <div
+                                style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                <span>December 2025</span>
+                                <strong style="color: var(--success-green);">96.2%</strong>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                <span>November 2025</span>
+                                <strong style="color: var(--success-green);">98.5%</strong>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                <span>October 2025</span>
+                                <strong style="color: var(--success-green);">95.0%</strong>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                <span>September 2025</span>
+                                <strong style="color: var(--success-green);">97.8%</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                                <span><strong>Overall</strong></span>
+                                <strong style="color: var(--success-green);">96.9%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Fee Information -->
+            <section class="section section-alt">
+                <h2 class="section-title">Fee Information</h2>
+                <div class="card">
+                    <h3>Payment History</h3>
+                    <div style="margin-top: 1rem; color: var(--text-gray);">
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                            <span>Tuition Fee - Term 3 (Jan-Mar 2025)</span>
+                            <strong style="color: var(--success-green);">Paid - ₹15,000</strong>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                            <span>Tuition Fee - Term 2 (Sep-Dec 2024)</span>
+                            <strong style="color: var(--success-green);">Paid - ₹15,000</strong>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                            <span>Tuition Fee - Term 1 (Apr-Aug 2024)</span>
+                            <strong style="color: var(--success-green);">Paid - ₹15,000</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                            <span>Annual Charges 2024-25</span>
+                            <strong style="color: var(--success-green);">Paid - ₹5,000</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Notifications -->
+            <section class="section">
+                <h2 class="section-title">Recent Notifications</h2>
+                <div class="card">
+                    <ul style="color: var(--text-gray); line-height: 2;">
+                        <li>Parent-teacher meeting scheduled on 20th December 2025</li>
+                        <li>Annual sports day on 15th January 2026</li>
+                        <li>Mid-term exam results published</li>
+                        <li>Winter break from 25th December to 5th January</li>
+                        <li>Science project submission deadline: 18th December</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+</body>
+
+</html>

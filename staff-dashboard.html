@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - Pucho Public School</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>Staff Portal</h2>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active">Dashboard</a></li>
+                <li><a href="#">Admissions</a></li>
+                <li><a href="#">Fees Management</a></li>
+                <li><a href="#">Attendance</a></li>
+                <li><a href="#">Exams</a></li>
+                <li><a href="#">Students</a></li>
+                <li><a href="#">Reports</a></li>
+                <li><a href="#" id="staffLogout">Logout</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-content">
+            <div class="dashboard-header">
+                <h1>Staff Dashboard</h1>
+                <p>Welcome back! Here's an overview of school management.</p>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Admissions</h3>
+                    <div class="stat-value">1,245</div>
+                    <div class="stat-label">Active Students</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Pending Fees</h3>
+                    <div class="stat-value">₹3,45,000</div>
+                    <div class="stat-label">To be collected</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Attendance Today</h3>
+                    <div class="stat-value">94.5%</div>
+                    <div class="stat-label">1,176 / 1,245 present</div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Staff Members</h3>
+                    <div class="stat-value">87</div>
+                    <div class="stat-label">Teaching & Non-teaching</div>
+                </div>
+            </div>
+
+            <!-- Management Sections -->
+            <section class="section">
+                <h2 class="section-title">Quick Actions</h2>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>Admissions Management</h3>
+                        <p>Process new admissions, review applications, and manage student enrollment for the academic
+                            year.</p>
+                        <button class="btn btn-primary mt-lg">Manage Admissions</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>Fee Collection</h3>
+                        <p>Track fee payments, send reminders, generate receipts, and manage pending dues efficiently.
+                        </p>
+                        <button class="btn btn-primary mt-lg">View Fee Records</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>Attendance Tracking</h3>
+                        <p>Mark daily attendance, view attendance reports, and monitor student presence patterns.</p>
+                        <button class="btn btn-primary mt-lg">Mark Attendance</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>Exam Management</h3>
+                        <p>Schedule exams, enter marks, generate report cards, and publish results for students.</p>
+                        <button class="btn btn-primary mt-lg">Manage Exams</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Activity -->
+            <section class="section section-alt">
+                <h2 class="section-title">Recent Activity</h2>
+                <div class="card">
+                    <h3>Today's Highlights</h3>
+                    <ul style="color: var(--text-gray); line-height: 2;">
+                        <li>15 new admission applications received</li>
+                        <li>Fee payment of ₹45,000 collected today</li>
+                        <li>Class 10 exam schedule published</li>
+                        <li>Parent-teacher meeting scheduled for next week</li>
+                        <li>Annual sports day preparations underway</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+</body>
+
+</html>
