@@ -133,7 +133,31 @@ class Router {
                 e.preventDefault();
                 this.handleCreateParent(e.target);
             }
+            if (e.target.id === 'changePasswordForm') {
+                e.preventDefault();
+                this.handleChangePassword(e.target);
+            }
         });
+    }
+
+    handleChangePassword(form) {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        if (data.newPassword !== data.confirmPassword) {
+            alert('New passwords do not match!');
+            return;
+        }
+
+        if (data.newPassword.length < 6) {
+            alert('Password must be at least 6 characters long.');
+            return;
+        }
+
+        // Simulate API call
+        alert('Password successfully updated!');
+        this.closeModal('changePasswordModal');
+        form.reset();
     }
 
     handleAdminHashChange() {
@@ -258,9 +282,6 @@ class Router {
         submitBtn.disabled = true;
 
         try {
-            // Debug: Show what we are sending
-            console.log('Sending Payload:', JSON.stringify(data));
-
             // Webhook for Staff
             const response = await fetch('https://studio.pucho.ai/api/v1/webhooks/NySXblkkRlsCPEPo87hOm', {
                 method: 'POST',
@@ -268,14 +289,11 @@ class Router {
                 body: JSON.stringify(data)
             });
 
-            const responseText = await response.text(); // Get raw response
-            console.log('Server Response:', responseText);
-
             if (response.ok) {
-                alert(`Staff account created successfully!\nServer Response: ${responseText}`);
+                alert('Staff account created successfully!');
                 form.reset();
             } else {
-                alert(`Failed. Status: ${response.status}\nResponse: ${responseText}`);
+                alert(`Failed to create staff account. Server responded with ${response.status}`);
             }
         } catch (error) {
             console.error('Error:', error);

@@ -659,6 +659,7 @@ const Pages = {
                         <li><a href="#">Upload Marks</a></li>
                         <li><a href="#">View Students</a></li>
                         <li><a href="#">Notices</a></li>
+                        <li><a href="#" onclick="app.openModal('changePasswordModal')">Change Password</a></li>
                         <li><a href="#" id="logoutBtn">Logout</a></li>
                     </ul>
                 </aside>
@@ -688,7 +689,7 @@ const Pages = {
                         <div class="stat-card">
                             <h3>Pending Tasks</h3>
                             <div class="stat-value">5</div>
-                            <div class="stat-label">Marks to upload</div>
+                            <div class="stat-label">Approvals needed</div>
                         </div>
                     </div>
 
@@ -718,6 +719,29 @@ const Pages = {
                         </div>
                     </section>
                 </main>
+                
+                <!-- Change Password Modal -->
+                <div id="changePasswordModal" class="modal">
+                    <div class="modal-content" style="max-width: 400px;">
+                        <span class="close" onclick="app.closeModal('changePasswordModal')">&times;</span>
+                        <h2>Change Password</h2>
+                        <form id="changePasswordForm">
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" name="currentPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" name="newPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm New Password</label>
+                                <input type="password" name="confirmPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full">Update Password</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         `;
     },
