@@ -258,6 +258,9 @@ class Router {
         submitBtn.disabled = true;
 
         try {
+            // Debug: Show what we are sending
+            console.log('Sending Payload:', JSON.stringify(data));
+
             // Webhook for Staff
             const response = await fetch('https://studio.pucho.ai/api/v1/webhooks/NySXblkkRlsCPEPo87hOm', {
                 method: 'POST',
@@ -265,11 +268,14 @@ class Router {
                 body: JSON.stringify(data)
             });
 
+            const responseText = await response.text(); // Get raw response
+            console.log('Server Response:', responseText);
+
             if (response.ok) {
-                alert('Staff account created successfully!');
+                alert(`Staff account created successfully!\nServer Response: ${responseText}`);
                 form.reset();
             } else {
-                alert(`Failed to create staff account. Server responded with ${response.status}`);
+                alert(`Failed. Status: ${response.status}\nResponse: ${responseText}`);
             }
         } catch (error) {
             console.error('Error:', error);
