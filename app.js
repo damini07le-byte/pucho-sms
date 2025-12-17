@@ -88,9 +88,99 @@ class Router {
 
         if (route) {
             app.innerHTML = route.component();
-            // Scroll to top on route change
             window.scrollTo(0, 0);
+
+            // Initialize Dashboard Logic based on route
+            if (path === '/dashboard/staff') {
+                this.initStaffDashboard();
+            } else if (path === '/dashboard/parent') {
+                this.initParentDashboard();
+            }
         }
+    }
+
+    // ========================================
+    // DASHBOARD LOGIC
+    // ========================================
+
+    initStaffDashboard() {
+        this.setupDashboardNavigation(Pages.staffInner);
+        this.renderDashboardPage('dashboard', Pages.staffInner); // Load default view
+    }
+
+    initParentDashboard() {
+        this.setupDashboardNavigation(Pages.parentInner);
+        this.renderDashboardPage('dashboard', Pages.parentInner); // Load default view
+    }
+
+    setupDashboardNavigation(templates) {
+        // Sidebar Links
+        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                // Ignore logout
+                if (link.id === 'logoutBtn') return;
+
+                e.preventDefault();
+
+                // Active state
+                document.querySelectorAll('.sidebar-menu a').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+
+                // Determine page
+                const text = link.innerText.toLowerCase();
+                let page = 'dashboard';
+                if (text.includes('attendance')) page = 'attendance';
+                else if (text.includes('exam')) page = 'exams';
+                else if (text.includes('student')) page = 'students';
+                else if (text.includes('fee')) page = 'fee';
+                else if (text.includes('result')) page = 'results';
+
+                this.renderDashboardPage(page, templates);
+            });
+        });
+
+        // Dynamic content links (e.g., Quick Actions)
+        const mainContent = document.querySelector('.dashboard-content');
+        if (mainContent) {
+            mainContent.addEventListener('click', (e) => {
+                if (e.target.matches('[data-dashboard-page]')) {
+                    const page = e.target.dataset.dashboardPage;
+                    this.renderDashboardPage(page, templates);
+                }
+            });
+        }
+    }
+
+    renderDashboardPage(pageName, templates) {
+        const mainContentContainer = document.querySelector('.dashboard-content');
+        // Keep the header, replace the rest? No, usually replace the main part below header.
+        // But our templates include the header. So we can try to find a container.
+        // Actually, let's insert into a specific container if possible, OR just replace a wrapper.
+        // For simplest migration, let's assume the Dashboard template has a #mainContent div or we replace .dashboard-content entirely?
+        // Wait, the outer template in `pages.js` (staffDashboard) has `.dashboard-content`. 
+        // The inner templates ALSO have `.content-header`. 
+        // So we should replace the INNER HTML of `.dashboard-content`.
+
+        if (mainContentContainer && templates[pageName]) {
+            // Add logic to maintain the top "Hamburger" or "User" section if it existed, but here it's part of the template.
+            // We will just replace innerHTML.
+            mainContentContainer.innerHTML = templates[pageName];
+        } else if (mainContentContainer) {
+            mainContentContainer.innerHTML = `<h2>Page "${pageName}" under construction</h2>`;
+        }
+    }
+
+    // ========================================
+    // MODAL HANDLERS
+    // ========================================
+    openModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) modal.style.display = 'block';
+    }
+
+    closeModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) modal.style.display = 'none';
     }
 
     // ========================================
@@ -172,5 +262,5 @@ const routes = [
 // ========================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    new Router(routes);
+    window.app = new Router(routes);
 });
