@@ -19,8 +19,7 @@ const mockData = {
 // Page Templates
 const pageTemplates = {
     dashboard: `
-    dashboard: `
-        < div class= "fade-in" >
+        <div class="fade-in">
         <div class="content-header">
             <h2>Dashboard Overview</h2>
             <p>Welcome to the admin dashboard. Here's a summary of your school management system.</p>
@@ -86,7 +85,6 @@ const pageTemplates = {
     `,
 
     staff: `
-staff: `
         <div class="fade-in">
         <div class="content-header">
             <h2>Staff Management</h2>
@@ -129,8 +127,7 @@ staff: `
     `,
 
     parents: `
-    parents: `
-        < div class="fade-in" >
+        <div class="fade-in">
         <div class="content-header">
             <h2>Parent Management</h2>
             <p>Manage parent accounts and create new parent logins.</p>
@@ -174,11 +171,14 @@ staff: `
 `,
 
     admissions: `
-admissions: `
         <div class="fade-in">
         <div class="content-header">
             <h2>Admissions Management</h2>
             <p>Review and approve admission applications.</p>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <button class="btn btn-primary" onclick="openModal('addAdmissionModal')">+ New Admission</button>
         </div>
 
         <div class="data-table">
@@ -221,11 +221,14 @@ admissions: `
     `,
 
     fees: `
-    fees: `
-        < div class="fade-in" >
+        <div class="fade-in">
         <div class="content-header">
             <h2>Fees Management</h2>
             <p>Track fee payments and manage outstanding dues.</p>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <button class="btn btn-primary" onclick="openModal('addFeeModal')">+ Record Payment</button>
         </div>
 
         <div class="stats-grid" style="margin-bottom: 2rem;">
@@ -284,7 +287,6 @@ admissions: `
 `,
 
     attendance: `
-attendance: `
         <div class="fade-in">
         <div class="content-header">
             <h2>Attendance Reports</h2>
@@ -338,11 +340,14 @@ attendance: `
     `,
 
     exams: `
-    exams: `
-        < div class="fade-in" >
+        <div class="fade-in">
         <div class="content-header">
             <h2>Exam Management</h2>
             <p>View exam schedules and manage examination records.</p>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <button class="btn btn-primary" onclick="openModal('addExamModal')">+ Schedule Exam</button>
         </div>
 
         <div class="data-table">
@@ -388,7 +393,6 @@ attendance: `
 `,
 
     reports: `
-reports: `
         <div class="fade-in">
         <div class="content-header">
             <h2>Reports</h2>
