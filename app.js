@@ -247,7 +247,7 @@ class Router {
         const data = Object.fromEntries(formData.entries());
 
         // Basic Validation
-        if (!data.fullName || !data.email || !data.password) {
+        if (!data.name || !data.email || !data.password) {
             alert('Please fill in all required fields.');
             return;
         }
