@@ -11,16 +11,24 @@
 
 :root {
     /* Color Palette */
-    --primary-blue: #1e3a8a;
+    --primary-blue: #2563eb;
+    /* Softer, vibrant blue */
     --secondary-blue: #3b82f6;
-    --light-blue: #dbeafe;
+    --light-blue: #eff6ff;
+    --gradient-start: #ffffff;
+    --gradient-end: #e0f2fe;
+    /* Very light blue for background */
     --white: #ffffff;
-    --off-white: #f8fafc;
     --text-dark: #1e293b;
     --text-gray: #64748b;
     --border-color: #e2e8f0;
     --success-green: #10b981;
-    --gradient-blue: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    --danger-red: #ef4444;
+    --warning-yellow: #f59e0b;
+
+    /* Gradients */
+    --bg-gradient: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 
     /* Typography */
     --font-primary: 'Poppins', sans-serif;
@@ -34,22 +42,41 @@
     --spacing-xl: 3rem;
 
     /* Border Radius */
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
 
     /* Shadows */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+    --shadow-sm: 0 1px 3px rgba(37, 99, 235, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06);
+    --shadow-lg: 0 10px 25px -5px rgba(37, 99, 235, 0.1), 0 10px 10px -5px rgba(37, 99, 235, 0.04);
 }
 
 body {
     font-family: var(--font-primary);
     color: var(--text-dark);
-    background-color: var(--off-white);
+    background: var(--bg-gradient);
+    min-height: 100vh;
     line-height: 1.6;
     overflow-x: hidden;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
 }
 
 /* ========================================
@@ -76,11 +103,18 @@ body {
 }
 
 .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--primary-blue);
     text-decoration: none;
-    white-space: nowrap;
+}
+
+.logo img {
+    height: 40px;
+    width: auto;
 }
 
 .nav-menu {

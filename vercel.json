@@ -1,12 +1,8 @@
 {
-  "version": 2,
-  "name": "pucho-public-school",
   "rewrites": [
-    { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/dashboard/admin", "destination": "/admin-dashboard.html" },
-    { "source": "/login/staff", "destination": "/staff-login.html" },
-    { "source": "/login/parent", "destination": "/parent-login.html" },
-    { "source": "/dashboard/staff", "destination": "/staff-dashboard.html" },
-    { "source": "/dashboard/parent", "destination": "/parent-dashboard.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

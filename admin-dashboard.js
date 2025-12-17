@@ -3,43 +3,24 @@
 // ========================================
 
 // Mock Data Storage (in real app, this would be a database)
-let mockData = {
-    staff: [
-        { id: 1, name: 'Dr. Rajesh Kumar', email: 'rajesh.kumar@puchopublicschool.edu.in', role: 'Principal', status: 'Active' },
-        { id: 2, name: 'Mrs. Priya Sharma', email: 'priya.sharma@puchopublicschool.edu.in', role: 'Teacher', status: 'Active' },
-        { id: 3, name: 'Mr. Amit Patel', email: 'amit.patel@puchopublicschool.edu.in', role: 'Teacher', status: 'Active' },
-        { id: 4, name: 'Ms. Neha Gupta', email: 'neha.gupta@puchopublicschool.edu.in', role: 'Office Staff', status: 'Active' }
-    ],
-    parents: [
-        { id: 1, studentName: 'Rahul Sharma', parentName: 'Mr. Vijay Sharma', email: 'vijay.sharma@gmail.com', phone: '+91 98765 43210', class: '10', section: 'A' },
-        { id: 2, studentName: 'Priya Patel', parentName: 'Mrs. Anjali Patel', email: 'anjali.patel@gmail.com', phone: '+91 98765 43211', class: '9', section: 'B' },
-        { id: 3, studentName: 'Arjun Singh', parentName: 'Mr. Rajesh Singh', email: 'rajesh.singh@gmail.com', phone: '+91 98765 43212', class: '8', section: 'A' }
-    ],
-    admissions: [
-        { id: 1, studentName: 'Kavya Reddy', parentName: 'Mr. Suresh Reddy', phone: '+91 98765 43213', class: '6', status: 'Pending', date: '2025-12-10' },
-        { id: 2, studentName: 'Rohan Mehta', parentName: 'Mrs. Sunita Mehta', phone: '+91 98765 43214', class: '7', status: 'Pending', date: '2025-12-12' },
-        { id: 3, studentName: 'Ananya Joshi', parentName: 'Mr. Prakash Joshi', phone: '+91 98765 43215', class: '5', status: 'Approved', date: '2025-12-08' }
-    ],
-    fees: [
-        { id: 1, studentName: 'Rahul Sharma', class: '10-A', amount: 15000, paid: 15000, pending: 0, status: 'Paid', dueDate: '2025-12-31' },
-        { id: 2, studentName: 'Priya Patel', class: '9-B', amount: 15000, paid: 10000, pending: 5000, status: 'Partial', dueDate: '2025-12-31' },
-        { id: 3, studentName: 'Arjun Singh', class: '8-A', amount: 15000, paid: 0, pending: 15000, status: 'Pending', dueDate: '2025-12-31' }
-    ],
+const mockData = {
+    staff: [],
+    parents: [],
+    admissions: [],
+    fees: [],
     attendance: {
-        today: { total: 1245, present: 1176, absent: 69, percentage: 94.5 },
-        thisMonth: { percentage: 93.8 },
-        thisYear: { percentage: 94.2 }
+        today: { total: 0, present: 0, absent: 0, percentage: 0 },
+        thisMonth: { percentage: 0 },
+        thisYear: { percentage: 0 }
     },
-    exams: [
-        { id: 1, name: 'Mid-Term Examination', class: 'All', startDate: '2025-12-20', endDate: '2025-12-28', status: 'Scheduled' },
-        { id: 2, name: 'Unit Test 3', class: '9-12', startDate: '2026-01-15', endDate: '2026-01-18', status: 'Scheduled' },
-        { id: 3, name: 'Annual Examination', class: 'All', startDate: '2026-03-10', endDate: '2026-03-25', status: 'Scheduled' }
-    ]
+    exams: []
 };
 
 // Page Templates
 const pageTemplates = {
     dashboard: `
+    dashboard: `
+        < div class= "fade-in" >
         <div class="content-header">
             <h2>Dashboard Overview</h2>
             <p>Welcome to the admin dashboard. Here's a summary of your school management system.</p>
@@ -105,6 +86,8 @@ const pageTemplates = {
     `,
 
     staff: `
+staff: `
+        <div class="fade-in">
         <div class="content-header">
             <h2>Staff Management</h2>
             <p>Manage staff accounts and add new staff members.</p>
@@ -146,6 +129,8 @@ const pageTemplates = {
     `,
 
     parents: `
+    parents: `
+        < div class="fade-in" >
         <div class="content-header">
             <h2>Parent Management</h2>
             <p>Manage parent accounts and create new parent logins.</p>
@@ -186,9 +171,11 @@ const pageTemplates = {
                 </tbody>
             </table>
         </div>
-    `,
+`,
 
     admissions: `
+admissions: `
+        <div class="fade-in">
         <div class="content-header">
             <h2>Admissions Management</h2>
             <p>Review and approve admission applications.</p>
@@ -234,6 +221,8 @@ const pageTemplates = {
     `,
 
     fees: `
+    fees: `
+        < div class="fade-in" >
         <div class="content-header">
             <h2>Fees Management</h2>
             <p>Track fee payments and manage outstanding dues.</p>
@@ -292,9 +281,11 @@ const pageTemplates = {
                 </tbody>
             </table>
         </div>
-    `,
+`,
 
     attendance: `
+attendance: `
+        <div class="fade-in">
         <div class="content-header">
             <h2>Attendance Reports</h2>
             <p>View overall attendance statistics and reports.</p>
@@ -347,6 +338,8 @@ const pageTemplates = {
     `,
 
     exams: `
+    exams: `
+        < div class="fade-in" >
         <div class="content-header">
             <h2>Exam Management</h2>
             <p>View exam schedules and manage examination records.</p>
@@ -392,9 +385,11 @@ const pageTemplates = {
                 <button class="btn btn-primary mt-lg">View Full Results</button>
             </div>
         </section>
-    `,
+`,
 
     reports: `
+reports: `
+        <div class="fade-in">
         <div class="content-header">
             <h2>Reports</h2>
             <p>Generate and view comprehensive school reports.</p>
