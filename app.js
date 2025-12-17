@@ -239,6 +239,123 @@ class Router {
     }
 
     // ========================================
+    // ADMIN FORM HANDLERS
+    // ========================================
+
+    async handleCreateStaff(form) {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        // Basic Validation
+        if (!data.fullName || !data.email || !data.password) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerText;
+        submitBtn.innerText = 'Creating...';
+        submitBtn.disabled = true;
+
+        try {
+            // Webhook for Staff
+            const response = await fetch('https://studio.pucho.ai/api/v1/webhooks/NySXblkkRlsCPEPo87hOm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert('Staff account created successfully!');
+                form.reset();
+            } else {
+                alert(`Failed to create staff account. Server responded with ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while connecting to the server. Please try again.');
+        } finally {
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    async handleCreateParent(form) {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        if (!data.parentName || !data.email || !data.password) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerText;
+        submitBtn.innerText = 'Creating...';
+        submitBtn.disabled = true;
+
+        try {
+            // Webhook for Parent
+            const response = await fetch('https://studio.pucho.ai/api/v1/webhooks/TBpHJAZsje8YgoRbxnteV', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert('Parent account created successfully!');
+                form.reset();
+            } else {
+                alert(`Failed to create parent account. Server responded with ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        } finally {
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    filterStudents(className) {
+        const tableContainer = document.getElementById('studentsTableContainer');
+        const msg = document.getElementById('selectClassMsg');
+        const tbody = document.getElementById('studentsTableBody');
+
+        if (!className) {
+            tableContainer.style.display = 'none';
+            msg.style.display = 'block';
+            return;
+        }
+
+        // Mock Data for Logic
+        const mockStudents = [
+            { roll: '101', name: 'Rahul Sharma', parent: 'Mr. Sharma', contact: '9876543210', class: '10-A' },
+            { roll: '102', name: 'Priya Singh', parent: 'Mrs. Singh', contact: '9876543211', class: '10-A' },
+            { roll: '103', name: 'Amit Kumar', parent: 'Mr. Kumar', contact: '9876543212', class: '9-A' },
+            { roll: '104', name: 'Sneha Gupta', parent: 'Mr. Gupta', contact: '9876543213', class: '10-B' }
+        ];
+
+        const filtered = mockStudents.filter(s => s.class === className);
+
+        tbody.innerHTML = filtered.map(s => `
+            <tr>
+                <td>${s.roll}</td>
+                <td>${s.name}</td>
+                <td>${s.parent}</td>
+                <td>${s.contact}</td>
+            </tr>
+        `).join('');
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No students found in this class</td></tr>`;
+        }
+
+        tableContainer.style.display = 'block';
+        msg.style.display = 'none';
+    }
+
+    // ========================================
     // MODAL HANDLERS
     // ========================================
     openModal(id) {
