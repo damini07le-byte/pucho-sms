@@ -120,21 +120,8 @@ const Pages = {
                 </div>
             </div>
         `,
-        students: `
-            <div class="fade-in">
-                <div class="content-header"><h2>Student Directory</h2></div>
-                <div class="data-table">
-                    <table>
-                        <thead><tr><th>Name</th><th>Class</th><th>Roll</th></tr></thead>
-                        <tbody>
-                            ${staffMockData.students.map(s => `<tr><td>${s.name}</td><td>${s.class}</td><td>${s.roll}</td></tr>`).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `
-    },
-    assignedClasses: `
+
+        assignedClasses: `
             <div class="fade-in">
                 <div class="content-header"><h2>Assigned Classes</h2><p>Classes under your supervision.</p></div>
                 <div class="data-table">
@@ -149,7 +136,7 @@ const Pages = {
                 </div>
             </div>
         `,
-    markAttendance: `
+        markAttendance: `
             <div class="fade-in">
                 <div class="content-header"><h2>Mark Attendance</h2><p>Daily attendance log.</p></div>
                  <div class="card mb-lg">
@@ -167,7 +154,7 @@ const Pages = {
                 </div>
             </div>
         `,
-    uploadMarks: `
+        uploadMarks: `
             <div class="fade-in">
                 <div class="content-header"><h2>Upload Marks</h2><p>Manage exam results.</p></div>
                 <div class="card mb-lg">
@@ -184,7 +171,7 @@ const Pages = {
                 </div>
             </div>
         `,
-    notices: `
+        notices: `
             <div class="fade-in">
                  <div class="content-header"><h2>Notices Board</h2><p>Important announcements.</p></div>
                  <div class="card-grid">
@@ -201,7 +188,7 @@ const Pages = {
                  </div>
             </div>
         `,
-    students: `
+        students: `
             <div class="fade-in">
                 <div class="content-header"><h2>Student Directory</h2></div>
                 <div class="data-table">
@@ -214,7 +201,7 @@ const Pages = {
                 </div>
             </div>
         `
-},
+    },
 
     parentInner: {
         dashboard: `
@@ -725,7 +712,7 @@ const Pages = {
     // ========================================
     staffDashboard: () => {
         const user = Auth.getUser();
-return `
+        return `
             <div class="dashboard">
                 <aside class="sidebar">
                     <h2>Staff Portal</h2>
@@ -823,12 +810,12 @@ return `
         `;
     },
 
-// ========================================
-// PARENT DASHBOARD
-// ========================================
-parentDashboard: () => {
-    const user = Auth.getUser();
-    return `
+    // ========================================
+    // PARENT DASHBOARD
+    // ========================================
+    parentDashboard: () => {
+        const user = Auth.getUser();
+        return `
             <div class="dashboard">
                 <aside class="sidebar">
                     <h2>Parent Portal</h2>
@@ -910,7 +897,7 @@ parentDashboard: () => {
                 </main>
             </div>
         `;
-},
+    },
 
     // ========================================
     // ADMIN DASHBOARD
@@ -943,10 +930,10 @@ parentDashboard: () => {
         `;
     },
 
-        // ========================================
-        // 404 PAGE
-        // ========================================
-        notFound: () => `
+    // ========================================
+    // 404 PAGE
+    // ========================================
+    notFound: () => `
         <div class="login-container">
             <div class="login-box" style="text-align: center;">
                 <h1 style="font-size: 4rem; color: var(--primary-blue); margin-bottom: 1rem;">404</h1>
