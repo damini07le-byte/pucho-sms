@@ -418,13 +418,25 @@ class Router {
             });
 
             if (response.ok) {
-                // Success: Webhook validated credentials
-                // Ideally response json has user details, using defaults for now
-                Auth.login('staff', email, 'Staff Member');
-                this.navigate('/dashboard/staff');
+                const data = await response.json();
+                console.log('Login Response:', data);
+
+                // Validation Logic: Check if webhook returned actual user data
+                // Assuming Pucho returns an array if found, or specific success field
+                if (Array.isArray(data) && data.length > 0) {
+                    // Success: User found
+                    Auth.login('staff', email, data[0].name || 'Staff Member');
+                    this.navigate('/dashboard/staff');
+                } else if (data.status === 'success' || data.user) {
+                    // Alternative success format
+                    Auth.login('staff', email, data.user?.name || 'Staff Member');
+                    this.navigate('/dashboard/staff');
+                } else {
+                    // Webhook 200 OK but "User not found" logic
+                    alert('Invalid credentials: User not found.');
+                }
             } else {
-                // Failure: Webhook returned error (401, 403, 404 etc)
-                alert('Invalid credentials');
+                alert('Invalid credentials (Server invalid).');
             }
         } catch (error) {
             console.error('Login error:', error);
