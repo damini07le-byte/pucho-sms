@@ -35,90 +35,116 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="dashboard-content">
-            <div class="dashboard-header">
-                <h1>Staff Dashboard</h1>
-                <p>Welcome back! Here's an overview of school management.</p>
+        <!-- Main Content -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+            <header class="admin-header">
+                <div class="admin-header-left" style="display: flex; align-items: center; gap: 1rem;">
+                    <img src="assets/logo.png" alt="Logo" style="height: 40px;">
+                    <h1>Pucho Public School - Staff Portal</h1>
+                </div>
+                <div class="admin-header-right">
+                    <div class="admin-profile">
+                        <div class="admin-profile-icon">S</div>
+                        <div class="admin-profile-info">
+                            <div class="admin-profile-name">Staff Member</div>
+                            <div class="admin-profile-role">Teacher</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="dashboard-content" id="mainContent">
+                <!-- Content will be dynamically loaded here -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Mark Attendance Modal -->
+    <div id="markAttendanceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Mark Daily Attendance</h3>
+                <button class="modal-close" onclick="closeModal('markAttendanceModal')">&times;</button>
             </div>
-
-            <!-- Statistics Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Admissions</h3>
-                    <div class="stat-value">1,245</div>
-                    <div class="stat-label">Active Students</div>
+            <form id="markAttendanceForm">
+                <div class="form-group">
+                    <label for="attClass">Class</label>
+                    <select id="attClass" required>
+                        <option value="">Select Class</option>
+                        <option value="10-A">Class 10-A</option>
+                        <option value="10-B">Class 10-B</option>
+                        <option value="9-A">Class 9-A</option>
+                    </select>
                 </div>
-
-                <div class="stat-card">
-                    <h3>Pending Fees</h3>
-                    <div class="stat-value">₹3,45,000</div>
-                    <div class="stat-label">To be collected</div>
+                <div class="form-group">
+                    <label for="attDate">Date</label>
+                    <input type="date" id="attDate" required>
                 </div>
-
-                <div class="stat-card">
-                    <h3>Attendance Today</h3>
-                    <div class="stat-value">94.5%</div>
-                    <div class="stat-label">1,176 / 1,245 present</div>
+                <div class="form-group">
+                    <label>Status for All</label>
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                        <label><input type="radio" name="attStatus" value="Present" checked> Present</label>
+                        <label><input type="radio" name="attStatus" value="Absent"> Absent</label>
+                    </div>
                 </div>
+                <!-- In a real app, this would list students. For now, we simulate bulk action -->
+                <p style="font-size: 0.9rem; color: var(--text-gray); margin-bottom: 1rem;">
+                    * This will mark attendance for all 45 students in the selected class. You can edit individual
+                    records later.
+                </p>
+                <button type="submit" class="btn btn-primary btn-full">Submit Attendance</button>
+            </form>
+        </div>
+    </div>
 
-                <div class="stat-card">
-                    <h3>Staff Members</h3>
-                    <div class="stat-value">87</div>
-                    <div class="stat-label">Teaching & Non-teaching</div>
-                </div>
+    <!-- Upload Marks Modal -->
+    <div id="uploadMarksModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Upload Exam Marks</h3>
+                <button class="modal-close" onclick="closeModal('uploadMarksModal')">&times;</button>
             </div>
-
-            <!-- Management Sections -->
-            <section class="section">
-                <h2 class="section-title">Quick Actions</h2>
-                <div class="card-grid">
-                    <div class="card">
-                        <h3>Admissions Management</h3>
-                        <p>Process new admissions, review applications, and manage student enrollment for the academic
-                            year.</p>
-                        <button class="btn btn-primary mt-lg">Manage Admissions</button>
-                    </div>
-
-                    <div class="card">
-                        <h3>Fee Collection</h3>
-                        <p>Track fee payments, send reminders, generate receipts, and manage pending dues efficiently.
-                        </p>
-                        <button class="btn btn-primary mt-lg">View Fee Records</button>
-                    </div>
-
-                    <div class="card">
-                        <h3>Attendance Tracking</h3>
-                        <p>Mark daily attendance, view attendance reports, and monitor student presence patterns.</p>
-                        <button class="btn btn-primary mt-lg">Mark Attendance</button>
-                    </div>
-
-                    <div class="card">
-                        <h3>Exam Management</h3>
-                        <p>Schedule exams, enter marks, generate report cards, and publish results for students.</p>
-                        <button class="btn btn-primary mt-lg">Manage Exams</button>
+            <form id="uploadMarksForm">
+                <div class="form-group">
+                    <label for="marksExam">Exam Name</label>
+                    <input type="text" id="marksExam" required placeholder="e.g. Unit Test 1">
+                </div>
+                <div class="form-group">
+                    <label for="marksClass">Class</label>
+                    <select id="marksClass" required>
+                        <option value="">Select Class</option>
+                        <option value="10-A">Class 10-A</option>
+                        <option value="10-B">Class 10-B</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="marksSubject">Subject</label>
+                    <select id="marksSubject" required>
+                        <option value="">Select Subject</option>
+                        <option value="Maths">Mathematics</option>
+                        <option value="Science">Science</option>
+                        <option value="English">English</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Upload CSV/Excel File</label>
+                    <div
+                        style="border: 2px dashed var(--border-color); padding: 2rem; text-align: center; border-radius: 8px;">
+                        <p>Drag & drop or click to upload</p>
+                        <input type="file" style="display: none;" id="marksFile">
+                        <button type="button" class="btn btn-outline btn-sm mt-sm"
+                            onclick="document.getElementById('marksFile').click()">Choose File</button>
                     </div>
                 </div>
-            </section>
-
-            <!-- Recent Activity -->
-            <section class="section section-alt">
-                <h2 class="section-title">Recent Activity</h2>
-                <div class="card">
-                    <h3>Today's Highlights</h3>
-                    <ul style="color: var(--text-gray); line-height: 2;">
-                        <li>15 new admission applications received</li>
-                        <li>Fee payment of ₹45,000 collected today</li>
-                        <li>Class 10 exam schedule published</li>
-                        <li>Parent-teacher meeting scheduled for next week</li>
-                        <li>Annual sports day preparations underway</li>
-                    </ul>
-                </div>
-            </section>
-        </main>
+                <button type="submit" class="btn btn-primary btn-full">Upload Marks</button>
+            </form>
+        </div>
     </div>
 
     <!-- JavaScript -->
-    <script src="script.js"></script>
+    <script src="auth.js"></script>
+    <script src="staff-dashboard.js"></script>
 </body>
 
 </html>
