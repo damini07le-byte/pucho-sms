@@ -25,26 +25,22 @@ const Pages = {
                     <h2>Staff Dashboard</h2>
                     <p>Welcome, Teacher. Here is your daily overview.</p>
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3>Assigned Classes</h3>
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
                         <div class="stat-value">3</div>
-                        <div class="stat-label">Classes 10-A, 10-B, 9-A</div>
+                        <div class="stat-label">Classes (10-A, 10-B, 9-A)</div>
                     </div>
-                    <div class="stat-card">
-                        <h3>Total Students</h3>
+                    <div class="admin-stat-card">
                         <div class="stat-value">135</div>
-                        <div class="stat-label">Under your mentorship</div>
+                        <div class="stat-label">Total Students</div>
                     </div>
-                    <div class="stat-card">
-                        <h3>Attendance Today</h3>
+                    <div class="admin-stat-card">
                         <div class="stat-value">92%</div>
-                        <div class="stat-label">Average across classes</div>
+                        <div class="stat-label">Attendance Today</div>
                     </div>
-                     <div class="stat-card">
-                        <h3>Pending Tasks</h3>
+                     <div class="admin-stat-card">
                         <div class="stat-value">2</div>
-                        <div class="stat-label">Marks upload pending</div>
+                        <div class="stat-label">Pending Tasks</div>
                     </div>
                 </div>
                 <section class="section">
@@ -138,6 +134,87 @@ const Pages = {
             </div>
         `
     },
+    assignedClasses: `
+            <div class="fade-in">
+                <div class="content-header"><h2>Assigned Classes</h2><p>Classes under your supervision.</p></div>
+                <div class="data-table">
+                    <table>
+                        <thead><tr><th>Class</th><th>Subject</th><th>Students</th><th>Schedule</th></tr></thead>
+                        <tbody>
+                            <tr><td>10-A</td><td>Science</td><td>45</td><td>Mon, Wed, Fri</td></tr>
+                            <tr><td>10-B</td><td>Science</td><td>42</td><td>Tue, Thu, Sat</td></tr>
+                            <tr><td>9-A</td><td>Physics</td><td>48</td><td>Mon-Fri</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `,
+    markAttendance: `
+            <div class="fade-in">
+                <div class="content-header"><h2>Mark Attendance</h2><p>Daily attendance log.</p></div>
+                 <div class="card mb-lg">
+                    <button class="btn btn-primary" onclick="app.openModal('markAttendanceModal')">+ Mark New Attendance</button>
+                </div>
+                <div class="data-table">
+                    <table>
+                        <thead><tr><th>Date</th><th>Class</th><th>Status</th><th>Submitted By</th></tr></thead>
+                        <tbody>
+                            <tr><td>2025-10-24</td><td>10-A</td><td><span style="color: green;">Success</span></td><td>You</td></tr>
+                            <tr><td>2025-10-24</td><td>10-B</td><td><span style="color: green;">Success</span></td><td>You</td></tr>
+                            <tr><td>2025-10-23</td><td>9-A</td><td><span style="color: orange;">Late</span></td><td>You</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `,
+    uploadMarks: `
+            <div class="fade-in">
+                <div class="content-header"><h2>Upload Marks</h2><p>Manage exam results.</p></div>
+                <div class="card mb-lg">
+                    <button class="btn btn-primary" onclick="app.openModal('uploadMarksModal')">+ Upload New Marks</button>
+                </div>
+                <div class="data-table">
+                    <table>
+                        <thead><tr><th>Exam Name</th><th>Class</th><th>Subject</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr><td>Mid-Term 2025</td><td>10-A</td><td>Science</td><td><span style="color: green;">Published</span></td></tr>
+                            <tr><td>Unit Test 1</td><td>9-A</td><td>Physics</td><td><span style="color: orange;">Draft</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `,
+    notices: `
+            <div class="fade-in">
+                 <div class="content-header"><h2>Notices Board</h2><p>Important announcements.</p></div>
+                 <div class="card-grid">
+                    <div class="card">
+                        <h3>Annual Sports Day</h3>
+                        <p class="text-sm text-gray">Posted on: 12 Oct 2025</p>
+                        <p style="margin-top:0.5rem;">Sports day will be held on 20th Oct. All class teachers to submit participant lists.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Diwali Holidays</h3>
+                        <p class="text-sm text-gray">Posted on: 10 Oct 2025</p>
+                        <p style="margin-top:0.5rem;">School will remain closed from 28th Oct to 2nd Nov for Diwali break.</p>
+                    </div>
+                 </div>
+            </div>
+        `,
+    students: `
+            <div class="fade-in">
+                <div class="content-header"><h2>Student Directory</h2></div>
+                <div class="data-table">
+                    <table>
+                        <thead><tr><th>Name</th><th>Class</th><th>Roll</th><th>Attendance</th></tr></thead>
+                        <tbody>
+                            ${staffMockData.students.map(s => `<tr><td>${s.name}</td><td>${s.class}</td><td>${s.roll}</td><td>${s.attendance}</td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `
+},
 
     parentInner: {
         dashboard: `
@@ -648,17 +725,17 @@ const Pages = {
     // ========================================
     staffDashboard: () => {
         const user = Auth.getUser();
-        return `
+return `
             <div class="dashboard">
                 <aside class="sidebar">
                     <h2>Staff Portal</h2>
                     <ul class="sidebar-menu">
-                        <li><a href="#" class="active">Dashboard</a></li>
-                        <li><a href="#">Assigned Classes</a></li>
-                        <li><a href="#">Mark Attendance</a></li>
-                        <li><a href="#">Upload Marks</a></li>
-                        <li><a href="#">View Students</a></li>
-                        <li><a href="#">Notices</a></li>
+                        <li><a href="#" class="menu-link active" data-dashboard-page="dashboard">Dashboard</a></li>
+                        <li><a href="#" class="menu-link" data-dashboard-page="assignedClasses">Assigned Classes</a></li>
+                        <li><a href="#" class="menu-link" data-dashboard-page="markAttendance">Mark Attendance</a></li>
+                        <li><a href="#" class="menu-link" data-dashboard-page="uploadMarks">Upload Marks</a></li>
+                        <li><a href="#" class="menu-link" data-dashboard-page="students">View Students</a></li>
+                        <li><a href="#" class="menu-link" data-dashboard-page="notices">Notices</a></li>
                         <li><a href="#" onclick="app.openModal('changePasswordModal')">Change Password</a></li>
                         <li><a href="#" id="logoutBtn">Logout</a></li>
                     </ul>
@@ -746,12 +823,12 @@ const Pages = {
         `;
     },
 
-    // ========================================
-    // PARENT DASHBOARD
-    // ========================================
-    parentDashboard: () => {
-        const user = Auth.getUser();
-        return `
+// ========================================
+// PARENT DASHBOARD
+// ========================================
+parentDashboard: () => {
+    const user = Auth.getUser();
+    return `
             <div class="dashboard">
                 <aside class="sidebar">
                     <h2>Parent Portal</h2>
@@ -833,7 +910,7 @@ const Pages = {
                 </main>
             </div>
         `;
-    },
+},
 
     // ========================================
     // ADMIN DASHBOARD
@@ -866,10 +943,10 @@ const Pages = {
         `;
     },
 
-    // ========================================
-    // 404 PAGE
-    // ========================================
-    notFound: () => `
+        // ========================================
+        // 404 PAGE
+        // ========================================
+        notFound: () => `
         <div class="login-container">
             <div class="login-box" style="text-align: center;">
                 <h1 style="font-size: 4rem; color: var(--primary-blue); margin-bottom: 1rem;">404</h1>
