@@ -156,7 +156,7 @@ body {
 }
 
 .btn-primary {
-    background: var(--gradient-blue);
+    background: var(--primary-gradient);
     color: var(--white);
 }
 
@@ -181,7 +181,7 @@ body {
    ======================================== */
 
 .hero {
-    background: var(--gradient-blue);
+    background: var(--primary-gradient);
     color: var(--white);
     padding: var(--spacing-xl) var(--spacing-md);
     text-align: center;

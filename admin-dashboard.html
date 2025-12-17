@@ -155,6 +155,111 @@
         </div>
     </div>
 
+    <!-- Add Admission Modal -->
+    <div id="addAdmissionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>New Admission Application</h3>
+                <button class="modal-close" onclick="closeModal('addAdmissionModal')">&times;</button>
+            </div>
+            <form id="addAdmissionForm">
+                <div class="form-group">
+                    <label for="admStudentName">Student Name</label>
+                    <input type="text" id="admStudentName" required>
+                </div>
+                <div class="form-group">
+                    <label for="admParentName">Parent Name</label>
+                    <input type="text" id="admParentName" required>
+                </div>
+                <div class="form-group">
+                    <label for="admPhone">Phone Number</label>
+                    <input type="tel" id="admPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="admClass">Class Seeking</label>
+                    <select id="admClass" required>
+                        <option value="">Select Class</option>
+                        <option value="1">Class 1</option>
+                        <option value="2">Class 2</option>
+                        <option value="3">Class 3</option>
+                        <option value="4">Class 4</option>
+                        <option value="5">Class 5</option>
+                        <option value="6">Class 6</option>
+                        <option value="7">Class 7</option>
+                        <option value="8">Class 8</option>
+                        <option value="9">Class 9</option>
+                        <option value="10">Class 10</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Submit Application</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Fee Modal -->
+    <div id="addFeeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Record Fee Payment</h3>
+                <button class="modal-close" onclick="closeModal('addFeeModal')">&times;</button>
+            </div>
+            <form id="addFeeForm">
+                <div class="form-group">
+                    <label for="feeStudentName">Student Name</label>
+                    <input type="text" id="feeStudentName" required>
+                </div>
+                <div class="form-group">
+                    <label for="feeClass">Class</label>
+                    <input type="text" id="feeClass" required placeholder="e.g. 10-A">
+                </div>
+                <div class="form-group">
+                    <label for="feeAmount">Total Amount (₹)</label>
+                    <input type="number" id="feeAmount" required>
+                </div>
+                <div class="form-group">
+                    <label for="feePaid">Paid Amount (₹)</label>
+                    <input type="number" id="feePaid" required>
+                </div>
+                <div class="form-group">
+                    <label for="feeDueDate">Due Date</label>
+                    <input type="date" id="feeDueDate" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Record Payment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Exam Modal -->
+    <div id="addExamModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Schedule New Exam</h3>
+                <button class="modal-close" onclick="closeModal('addExamModal')">&times;</button>
+            </div>
+            <form id="addExamForm">
+                <div class="form-group">
+                    <label for="examName">Exam Name</label>
+                    <input type="text" id="examName" required placeholder="e.g. Mid-Term 2025">
+                </div>
+                <div class="form-group">
+                    <label for="examClass">Class(es)</label>
+                    <input type="text" id="examClass" required placeholder="e.g. 9-12 or All">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="examStart">Start Date</label>
+                        <input type="date" id="examStart" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="examEnd">End Date</label>
+                        <input type="date" id="examEnd" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Schedule Exam</button>
+            </form>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="admin-auth.js"></script>
     <script src="admin-dashboard.js"></script>
