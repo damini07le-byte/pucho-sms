@@ -248,6 +248,12 @@ const Pages = {
                                 <input type="text" name="department" required placeholder="Ex: Science">
                             </div>
                             <div class="form-group">
+                                <label>Subject</label>
+                                <input type="text" name="subject" placeholder="Ex: Physics (Optional)">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label>Password</label>
                                 <input type="password" name="password" required placeholder="Set initial password">
                             </div>
@@ -298,6 +304,80 @@ const Pages = {
                         <button type="submit" class="btn btn-primary">Create Parent</button>
                     </form>
                 </div>
+            </div>
+        `,
+        teachers: `
+            <div class="fade-in">
+                <div class="content-header">
+                    <h2>Teachers List</h2>
+                    <p>View and manage all registered teachers.</p>
+                </div>
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th>Subject</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Mock Data for Display -->
+                            <tr>
+                                <td>Damini Bhatu More</td>
+                                <td>damini.more@school.com</td>
+                                <td>Teacher</td>
+                                <td>Science</td>
+                                <td>Physics</td>
+                            </tr>
+                            <tr>
+                                <td>Rajesh Kumar</td>
+                                <td>rajesh.k@school.com</td>
+                                <td>Teacher</td>
+                                <td>Mathematics</td>
+                                <td>Maths</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `,
+        students: `
+            <div class="fade-in">
+                <div class="content-header">
+                    <h2>Student List</h2>
+                    <p>View students by class.</p>
+                </div>
+                <div class="card mb-lg">
+                    <div class="form-group" style="max-width: 300px;">
+                        <label>Select Class</label>
+                        <select id="classSelector" class="form-control" onchange="app.filterStudents(this.value)">
+                            <option value="">-- Select Class --</option>
+                            <option value="10-A">Class 10-A</option>
+                            <option value="10-B">Class 10-B</option>
+                            <option value="9-A">Class 9-A</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="studentsTableContainer" class="data-table" style="display: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Roll No</th>
+                                <th>Student Name</th>
+                                <th>Parent Name</th>
+                                <th>Contact</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <p id="selectClassMsg" style="color: var(--text-gray); text-align: center; margin-top: 2rem;">Please select a class to view students.</p>
             </div>
         `,
         admissions: `<div class="fade-in"><div class="content-header"><h2>Admissions</h2><p>Manage pending admissions.</p></div><div class="card"><p class="text-center">Admissions module placeholder.</p></div></div>`,
@@ -744,6 +824,8 @@ const Pages = {
                         <li><a href="#dashboard" class="active">Dashboard</a></li>
                         <li><a href="#create-staff">Create Staff</a></li>
                         <li><a href="#create-parent">Create Parent</a></li>
+                        <li><a href="#teachers">Teachers List</a></li>
+                        <li><a href="#students">Students List</a></li>
                         <li><a href="#admissions">Admissions</a></li>
                         <li><a href="#fees">Fees Management</a></li>
                         <li><a href="#attendance">Attendance</a></li>

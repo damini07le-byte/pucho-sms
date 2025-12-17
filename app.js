@@ -146,6 +146,8 @@ class Router {
         let pageKey = 'dashboard';
         if (hash === 'create-staff') pageKey = 'createStaff';
         else if (hash === 'create-parent') pageKey = 'createParent';
+        else if (hash === 'teachers') pageKey = 'teachers';
+        else if (hash === 'students') pageKey = 'students';
         else if (hash === 'admissions') pageKey = 'admissions';
         else if (hash === 'fees') pageKey = 'fees';
         else if (hash === 'attendance') pageKey = 'attendance';
@@ -164,6 +166,7 @@ class Router {
                 link.classList.add('active');
             }
         });
+
 
         // Default to dashboard active if no match (e.g. empty hash)
         if (hash === 'dashboard') {
