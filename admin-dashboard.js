@@ -546,6 +546,76 @@ function setupFormHandlers() {
             loadPage('parents');
         });
     }
+
+    // Add Admission Form
+    const addAdmissionForm = document.getElementById('addAdmissionForm');
+    if (addAdmissionForm) {
+        addAdmissionForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const newAdmission = {
+                id: mockData.admissions.length + 1,
+                studentName: document.getElementById('admStudentName').value,
+                parentName: document.getElementById('admParentName').value,
+                phone: document.getElementById('admPhone').value,
+                class: document.getElementById('admClass').value,
+                date: new Date().toISOString().split('T')[0],
+                status: 'Pending'
+            };
+            mockData.admissions.push(newAdmission);
+            alert('Admission application submitted successfully!');
+            closeModal('addAdmissionModal');
+            addAdmissionForm.reset();
+            loadPage('admissions');
+        });
+    }
+
+    // Add Fee Form
+    const addFeeForm = document.getElementById('addFeeForm');
+    if (addFeeForm) {
+        addFeeForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('feeAmount').value);
+            const paid = parseFloat(document.getElementById('feePaid').value);
+            const pending = amount - paid;
+
+            const newFee = {
+                id: mockData.fees.length + 1,
+                studentName: document.getElementById('feeStudentName').value,
+                class: document.getElementById('feeClass').value,
+                amount: amount,
+                paid: paid,
+                pending: pending,
+                status: pending === 0 ? 'Paid' : (pending < amount ? 'Partial' : 'Pending'),
+                dueDate: document.getElementById('feeDueDate').value
+            };
+            mockData.fees.push(newFee);
+            alert('Fee payment recorded successfully!');
+            closeModal('addFeeModal');
+            addFeeForm.reset();
+            loadPage('fees');
+        });
+    }
+
+    // Add Exam Form
+    const addExamForm = document.getElementById('addExamForm');
+    if (addExamForm) {
+        addExamForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const newExam = {
+                id: mockData.exams.length + 1,
+                name: document.getElementById('examName').value,
+                class: document.getElementById('examClass').value,
+                startDate: document.getElementById('examStart').value,
+                endDate: document.getElementById('examEnd').value,
+                status: 'Scheduled'
+            };
+            mockData.exams.push(newExam);
+            alert('Exam scheduled successfully!');
+            closeModal('addExamModal');
+            addExamForm.reset();
+            loadPage('exams');
+        });
+    }
 }
 
 // Admission Actions
