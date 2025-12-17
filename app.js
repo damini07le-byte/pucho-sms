@@ -95,6 +95,8 @@ class Router {
                 this.initStaffDashboard();
             } else if (path === '/dashboard/parent') {
                 this.initParentDashboard();
+            } else if (path === '/dashboard/admin') {
+                this.initAdminDashboard();
             }
         }
     }
@@ -113,12 +115,75 @@ class Router {
         this.renderDashboardPage('dashboard', Pages.parentInner); // Load default view
     }
 
+    // Admin Dashboard Logic (Hash based)
+    initAdminDashboard() {
+        // Initial load based on current hash
+        this.handleAdminHashChange();
+
+        // Listen for hash changes
+        window.addEventListener('hashchange', () => this.handleAdminHashChange());
+
+        // Listen for specific admin forms
+        document.addEventListener('submit', (e) => {
+            if (e.target.id === 'createStaffForm') {
+                e.preventDefault();
+                this.handleCreateStaff(e.target);
+            }
+            if (e.target.id === 'createParentForm') {
+                e.preventDefault();
+                this.handleCreateParent(e.target);
+            }
+        });
+    }
+
+    handleAdminHashChange() {
+        // Only run if we are actually on the admin dashboard route
+        if (window.location.pathname !== '/dashboard/admin') return;
+
+        const hash = window.location.hash.slice(1) || 'dashboard'; // Remove #, default to dashboard
+
+        // Map hash to template key
+        let pageKey = 'dashboard';
+        if (hash === 'create-staff') pageKey = 'createStaff';
+        else if (hash === 'create-parent') pageKey = 'createParent';
+        else if (hash === 'admissions') pageKey = 'admissions';
+        else if (hash === 'fees') pageKey = 'fees';
+        else if (hash === 'attendance') pageKey = 'attendance';
+        else if (hash === 'reports') pageKey = 'reports';
+
+        // Render content
+        const mainContent = document.getElementById('adminMainContent');
+        if (mainContent && Pages.adminInner[pageKey]) {
+            mainContent.innerHTML = Pages.adminInner[pageKey];
+        }
+
+        // Update active sidebar link
+        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === `#${hash}`) {
+                link.classList.add('active');
+            }
+        });
+
+        // Default to dashboard active if no match (e.g. empty hash)
+        if (hash === 'dashboard') {
+            const dashLink = document.querySelector('.sidebar-menu a[href="#dashboard"]');
+            if (dashLink) dashLink.classList.add('active');
+        }
+    }
+
     setupDashboardNavigation(templates) {
         // Sidebar Links
         document.querySelectorAll('.sidebar-menu a').forEach(link => {
             link.addEventListener('click', (e) => {
                 // Ignore logout
                 if (link.id === 'logoutBtn') return;
+
+                // If it's the Admin Dashboard, we let the default anchor behavior happen (hash change)
+                if (window.location.pathname === '/dashboard/admin') {
+                    // Do nothing, let hash change trigger handleAdminHashChange
+                    return;
+                }
 
                 e.preventDefault();
 

@@ -161,6 +161,151 @@ const Pages = {
         results: `<div class="fade-in"><h2>Exam Results</h2><p>Recent results will appear here.</p></div>`
     },
 
+    adminInner: {
+        dashboard: `
+            <div class="fade-in">
+                <div class="content-header">
+                    <h2>Admin Dashboard</h2>
+                    <p>Welcome, Administrator!</p>
+                </div>
+
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="stat-value">1,245</div>
+                        <div class="stat-label">Total Students</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="stat-value">87</div>
+                        <div class="stat-label">Total Staff</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">Pending Admissions</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="stat-value">₹45.2L</div>
+                        <div class="stat-label">Fees Collected</div>
+                    </div>
+                </div>
+
+                 <section class="section">
+                    <h2 class="section-title">Management Sections</h2>
+                    <div class="card-grid">
+                        <div class="card">
+                            <h3>Create Staff</h3>
+                            <p>Add new staff members.</p>
+                            <a href="#create-staff" class="btn btn-primary mt-lg">Add Staff</a>
+                        </div>
+                        <div class="card">
+                            <h3>Create Parent</h3>
+                            <p>Add new parent accounts.</p>
+                            <a href="#create-parent" class="btn btn-primary mt-lg">Add Parent</a>
+                        </div>
+                         <div class="card">
+                            <h3>Admissions</h3>
+                            <p>Manage applications.</p>
+                            <a href="#admissions" class="btn btn-primary mt-lg">View</a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        `,
+        createStaff: `
+            <div class="fade-in">
+                <div class="content-header">
+                    <h2>Create Staff Account</h2>
+                    <p>Register a new staff member.</p>
+                </div>
+                <div class="card" style="max-width: 800px;">
+                    <form id="createStaffForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" name="name" required placeholder="Ex: John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" name="email" required placeholder="email@school.com">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Mobile</label>
+                                <input type="tel" name="mobile" required placeholder="+91 XXXXX XXXXX">
+                            </div>
+                            <div class="form-group">
+                                <label>Role / Designation</label>
+                                <select name="role" class="form-control" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                                    <option value="Teacher">Teacher</option>
+                                    <option value="Admin">Admin</option>
+                                    <option value="Support">Support Staff</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                             <div class="form-group">
+                                <label>Department</label>
+                                <input type="text" name="department" required placeholder="Ex: Science">
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" name="password" required placeholder="Set initial password">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Staff</button>
+                    </form>
+                </div>
+            </div>
+        `,
+        createParent: `
+            <div class="fade-in">
+                <div class="content-header">
+                    <h2>Create Parent Account</h2>
+                    <p>Register a new parent.</p>
+                </div>
+                 <div class="card" style="max-width: 800px;">
+                    <form id="createParentForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Parent Name</label>
+                                <input type="text" name="parentName" required placeholder="Ex: Mr. Sharma">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" name="email" required placeholder="parent@gmail.com">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Mobile</label>
+                                <input type="tel" name="mobile" required placeholder="+91 XXXXX XXXXX">
+                            </div>
+                            <div class="form-group">
+                                <label>Student Name</label>
+                                <input type="text" name="studentName" required placeholder="Child's Name">
+                            </div>
+                        </div>
+                         <div class="form-row">
+                            <div class="form-group">
+                                <label>Class / Section</label>
+                                <input type="text" name="classSection" required placeholder="Ex: 10-A">
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" name="password" required placeholder="Set initial password">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Parent</button>
+                    </form>
+                </div>
+            </div>
+        `,
+        admissions: `<div class="fade-in"><div class="content-header"><h2>Admissions</h2><p>Manage pending admissions.</p></div><div class="card"><p class="text-center">Admissions module placeholder.</p></div></div>`,
+        fees: `<div class="fade-in"><div class="content-header"><h2>Fees Management</h2><p>Track fee payments.</p></div><div class="card"><p class="text-center">Fees module placeholder.</p></div></div>`,
+        attendance: `<div class="fade-in"><div class="content-header"><h2>Attendance</h2><p>Overall attendance stats.</p></div><div class="card"><p class="text-center">Attendance module placeholder.</p></div></div>`,
+        reports: `<div class="fade-in"><div class="content-header"><h2>Reports</h2><p>School performance reports.</p></div><div class="card"><p class="text-center">Reports module placeholder.</p></div></div>`
+    },
+
     // ========================================
     // HOME PAGE
     // ========================================
@@ -596,81 +741,20 @@ const Pages = {
                 <aside class="sidebar">
                     <h2>Admin Panel</h2>
                     <ul class="sidebar-menu">
-                        <li><a href="#" class="active">Dashboard</a></li>
-                        <li><a href="#">Create Staff</a></li>
-                        <li><a href="#">Create Parent</a></li>
-                        <li><a href="#">Admissions</a></li>
-                        <li><a href="#">Fees Management</a></li>
-                        <li><a href="#">Attendance</a></li>
-                        <li><a href="#">Reports</a></li>
+                        <li><a href="#dashboard" class="active">Dashboard</a></li>
+                        <li><a href="#create-staff">Create Staff</a></li>
+                        <li><a href="#create-parent">Create Parent</a></li>
+                        <li><a href="#admissions">Admissions</a></li>
+                        <li><a href="#fees">Fees Management</a></li>
+                        <li><a href="#attendance">Attendance</a></li>
+                        <li><a href="#reports">Reports</a></li>
                         <li><a href="#" id="logoutBtn">Logout</a></li>
                     </ul>
                 </aside>
 
-                <main class="dashboard-content">
-                    <div class="dashboard-header">
-                        <h1>Admin Dashboard</h1>
-                        <p>Welcome, Administrator!</p>
-                    </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <h3>Total Students</h3>
-                            <div class="stat-value">1,245</div>
-                            <div class="stat-label">Active Students</div>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Total Staff</h3>
-                            <div class="stat-value">87</div>
-                            <div class="stat-label">Teaching & Non-teaching</div>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Pending Admissions</h3>
-                            <div class="stat-value">12</div>
-                            <div class="stat-label">Awaiting Approval</div>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Fees Collected</h3>
-                            <div class="stat-value">₹45.2L</div>
-                            <div class="stat-label">This Month</div>
-                        </div>
-                    </div>
-
-                    <section class="section">
-                        <h2 class="section-title">Management Sections</h2>
-                        <div class="card-grid">
-                            <div class="card">
-                                <h3>Create Staff Account</h3>
-                                <p>Add new staff members and assign roles.</p>
-                                <button class="btn btn-primary mt-lg">Create Staff</button>
-                            </div>
-                            <div class="card">
-                                <h3>Create Parent Account</h3>
-                                <p>Create parent accounts linked to students.</p>
-                                <button class="btn btn-primary mt-lg">Create Parent</button>
-                            </div>
-                            <div class="card">
-                                <h3>View Admissions</h3>
-                                <p>Review and approve pending admission applications.</p>
-                                <button class="btn btn-primary mt-lg">View Admissions</button>
-                            </div>
-                            <div class="card">
-                                <h3>Fees Management</h3>
-                                <p>Track fee payments and manage outstanding dues.</p>
-                                <button class="btn btn-primary mt-lg">Manage Fees</button>
-                            </div>
-                            <div class="card">
-                                <h3>Attendance Overview</h3>
-                                <p>View overall attendance statistics and reports.</p>
-                                <button class="btn btn-primary mt-lg">View Attendance</button>
-                            </div>
-                            <div class="card">
-                                <h3>Generate Reports</h3>
-                                <p>Generate comprehensive school management reports.</p>
-                                <button class="btn btn-primary mt-lg">Generate Reports</button>
-                            </div>
-                        </div>
-                    </section>
+                <main class="dashboard-content" id="adminMainContent">
+                    <!-- Dynamic content will happen here via app.js initAdminDashboard -->
+                    ${Pages.adminInner.dashboard}
                 </main>
             </div>
         `;

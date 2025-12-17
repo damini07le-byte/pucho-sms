@@ -626,6 +626,40 @@ body {
     margin-top: var(--spacing-xs);
 }
 
+/* Admin Compact Cards */
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-stat-card {
+    background: var(--white);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--secondary-blue);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.admin-stat-card .stat-value {
+    color: var(--primary-blue);
+    font-size: 1.5rem;
+    /* Smaller than regular stat card */
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.admin-stat-card .stat-label {
+    color: var(--text-gray);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+
 /* ========================================
    RESPONSIVE DESIGN
    ======================================== */
