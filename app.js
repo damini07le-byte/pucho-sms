@@ -396,15 +396,42 @@ class Router {
     // LOGIN HANDLERS
     // ========================================
 
-    handleStaffLogin(form) {
+    async handleStaffLogin(form) {
         const email = form.querySelector('#staffEmail').value;
         const password = form.querySelector('#staffPassword').value;
+        const submitBtn = form.querySelector('button[type="submit"]');
 
-        if (Auth.validateLogin(email, password)) {
-            Auth.login('staff', email, email);
-            this.navigate('/dashboard/staff');
-        } else {
-            alert('Please enter valid credentials');
+        if (!email || !password) {
+            alert('Please enter both email/ID and password.');
+            return;
+        }
+
+        const originalText = submitBtn.innerText;
+        submitBtn.innerText = 'Logging in...';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch('https://studio.pucho.ai/api/v1/webhooks/pqWbODVh8kp0KYtR513fs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (response.ok) {
+                // Success: Webhook validated credentials
+                // Ideally response json has user details, using defaults for now
+                Auth.login('staff', email, 'Staff Member');
+                this.navigate('/dashboard/staff');
+            } else {
+                // Failure: Webhook returned error (401, 403, 404 etc)
+                alert('Invalid credentials');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('Login connection failed. Please try again.');
+        } finally {
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
         }
     }
 
