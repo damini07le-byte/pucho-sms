@@ -339,26 +339,28 @@ body::after {
    HERO SECTION
    ======================================== */
 
+/* ========================================
+   HERO SECTION
+   ======================================== */
+
 .hero {
-    background: linear-gradient(135deg, var(--primary-blue), #1e40af), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(30, 64, 175, 0.95)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
     background-blend-mode: multiply;
     background-size: cover;
     background-position: center;
+    background-attachment: fixed;
     color: var(--white);
-    padding: 8rem 2rem;
+    padding: 10rem 2rem 8rem;
     text-align: center;
     position: relative;
     overflow: hidden;
+    clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+    margin-bottom: 2rem;
 }
 
 .hero::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 100px;
-    background: linear-gradient(to top, var(--white), transparent);
+    display: none;
+    /* Removing old gradient overlay for cleaner look */
 }
 
 .hero-content {
@@ -366,46 +368,57 @@ body::after {
     margin: 0 auto;
     position: relative;
     z-index: 10;
-    animation: fadeIn 1s ease-out;
 }
 
 .hero h1 {
-    font-size: 3.5rem;
+    font-size: 4rem;
     margin-bottom: 1.5rem;
     font-weight: 800;
-    text-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    letter-spacing: -1px;
+    text-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    letter-spacing: -1.5px;
+    animation: slideUp 0.8s ease-out forwards;
 }
 
 .hero h2 {
-    font-size: 1.8rem;
+    font-size: 2rem;
     margin-bottom: 2rem;
     font-weight: 500;
-    opacity: 0.95;
-    color: var(--light-blue);
+    opacity: 0;
+    color: var(--primary-light);
+    animation: slideUp 0.8s ease-out 0.2s forwards;
 }
 
 .hero p {
-    font-size: 1.1rem;
-    margin-bottom: var(--spacing-lg);
+    font-size: 1.25rem;
+    margin-bottom: 3rem;
     line-height: 1.8;
-    opacity: 0.9;
+    opacity: 0;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    animation: slideUp 0.8s ease-out 0.4s forwards;
 }
 
 .hero-buttons {
     display: flex;
-    gap: var(--spacing-md);
+    gap: 1.5rem;
     justify-content: center;
     flex-wrap: wrap;
+    opacity: 0;
+    animation: slideUp 0.8s ease-out 0.6s forwards;
 }
 
 .btn-white {
     background: var(--white);
     color: var(--primary-blue);
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .btn-white:hover {
     background: var(--light-blue);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
 /* ========================================
@@ -911,6 +924,8 @@ body::after {
     font-weight: 800;
     background: linear-gradient(135deg, var(--primary-blue), var(--accent-color));
     -webkit-background-clip: text;
+    background-clip: text;
+    /* Standard property added */
     -webkit-text-fill-color: transparent;
     margin-bottom: 0.5rem;
 }
