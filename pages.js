@@ -713,6 +713,50 @@ const Pages = {
                 <a href="/" class="back-link" data-link>← Back to Home</a>
             </div>
         </div>
+            </div>
+        </div>
+    `,
+
+    // ========================================
+    // FORGOT PASSWORD
+    // ========================================
+    forgotPassword: () => `
+        <div class="login-container">
+            <div class="login-box">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                     <a href="/" class="logo" style="justify-content: center; font-size: 1.5rem;" data-link>
+                        <img src="assets/logo.png" alt="Logo" style="height: 40px;">
+                        Pucho Public School
+                    </a>
+                </div>
+                <h2>Reset Password</h2>
+                <p>Enter your email and new password</p>
+                
+                <form id="forgotPasswordForm">
+                    <div class="form-group">
+                        <label for="resetEmail">Email Address</label>
+                        <input type="email" id="resetEmail" required placeholder="name@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="newPassword" required placeholder="Enter new password">
+                             <span class="password-toggle-icon" onclick="app.togglePasswordVisibility('newPassword')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-full">Update Password</button>
+                </form>
+                
+                <a href="/" class="back-link" data-link>← Back to Home</a>
+            </div>
+        </div>
     `,
 
     // ========================================

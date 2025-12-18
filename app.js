@@ -493,51 +493,51 @@ class Router {
         }
         form.reset();
     }
-}
+
 
     async handleForgotPassword(form) {
-    const email = form.querySelector('#resetEmail').value;
-    const newPassword = form.querySelector('#newPassword').value;
-    const submitBtn = form.querySelector('button[type="submit"]');
+        const email = form.querySelector('#resetEmail').value;
+        const newPassword = form.querySelector('#newPassword').value;
+        const submitBtn = form.querySelector('button[type="submit"]');
 
-    if (!email || !newPassword) {
-        alert('Please fill in all fields.');
-        return;
-    }
-
-    const originalText = submitBtn.innerText;
-    submitBtn.innerText = 'Updating...';
-    submitBtn.disabled = true;
-
-    try {
-        // Webhook for Forgot Password
-        const response = await fetch('https://studio.pucho.ai/api/v1/webhooks/mK8sInaZ5Ai5hFzjcasHK', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, newPassword })
-        });
-
-        if (response.ok) {
-            alert('Password reset request submitted successfully!');
-            this.navigate('/login/staff'); // Or redirect to home
-        } else {
-            alert(`Failed to submit request. Server responded with ${response.status}`);
+        if (!email || !newPassword) {
+            alert('Please fill in all fields.');
+            return;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again.');
-    } finally {
-        submitBtn.innerText = originalText;
-        submitBtn.disabled = false;
-    }
-}
 
-logout() {
-    if (confirm('Are you sure you want to logout?')) {
-        Auth.logout();
-        this.navigate('/');
+        const originalText = submitBtn.innerText;
+        submitBtn.innerText = 'Updating...';
+        submitBtn.disabled = true;
+
+        try {
+            // Webhook for Forgot Password
+            const response = await fetch('https://studio.pucho.ai/api/v1/webhooks/mK8sInaZ5Ai5hFzjcasHK', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, newPassword })
+            });
+
+            if (response.ok) {
+                alert('Password reset request submitted successfully!');
+                this.navigate('/login/staff'); // Or redirect to home
+            } else {
+                alert(`Failed to submit request. Server responded with ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        } finally {
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+        }
     }
-}
+
+    logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            Auth.logout();
+            this.navigate('/');
+        }
+    }
 }
 
 // ========================================
