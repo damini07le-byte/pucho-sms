@@ -632,6 +632,10 @@ const Pages = {
                     </div>
                     
                     <button type="submit" class="btn btn-primary btn-full">Login</button>
+                    
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <a href="/forgot-password" class="back-link" data-link style="font-size: 0.85rem; margin-top: 0;">Forgot Password?</a>
+                    </div>
                 </form>
                 
                 <a href="/" class="back-link" data-link>← Back to Home</a>
@@ -666,6 +670,10 @@ const Pages = {
                     </div>
                     
                     <button type="submit" class="btn btn-primary btn-full">Login</button>
+
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <a href="/forgot-password" class="back-link" data-link style="font-size: 0.85rem; margin-top: 0;">Forgot Password?</a>
+                    </div>
                 </form>
                 
                 <a href="/" class="back-link" data-link>← Back to Home</a>

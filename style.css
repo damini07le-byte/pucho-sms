@@ -528,6 +528,46 @@ body {
     text-decoration: underline;
 }
 
+
+/* ========================================
+   PASSWORD TOGGLE
+   ======================================== */
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 40px;
+    /* Space for the icon */
+}
+
+.password-toggle-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    width: 20px;
+    height: 20px;
+}
+
+.password-toggle-icon:hover {
+    color: var(--primary-blue);
+}
+
+.password-toggle-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
 /* ========================================
    DASHBOARD
    ======================================== */
