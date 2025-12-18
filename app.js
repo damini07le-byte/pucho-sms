@@ -432,19 +432,29 @@ class Router {
                 const data = await response.json();
                 console.log('Login Response:', data);
 
-                // Validation Logic: Check if webhook returned actual user data
-                // Assuming Pucho returns an array if found, or specific success field
-                if (Array.isArray(data) && data.length > 0) {
+                // Handle Workflow Responses based on flowchart branches
+                // Checking for various possible response formats from Pucho Studio
+                const status = data.status || data.message || (data.length > 0 ? 'LOGIN_SUCCESS' : '');
+
+                // Also check if data itself is the string/status
+                const responseString = JSON.stringify(data);
+
+                if (responseString.includes('LOGIN_SUCCESS') || (Array.isArray(data) && data.length > 0)) {
                     // Success: User found
-                    Auth.login('staff', email, data[0].name || 'Staff Member');
+                    // If data is array, use first item. If data is object, check for user field.
+                    const userName = (Array.isArray(data) && data[0]?.name) || data.user?.name || data.name || 'Staff Member';
+
+                    Auth.login('staff', email, userName);
                     this.navigate('/dashboard/staff');
-                } else if (data.status === 'success' || data.user) {
-                    // Alternative success format
-                    Auth.login('staff', email, data.user?.name || 'Staff Member');
-                    this.navigate('/dashboard/staff');
+                } else if (responseString.includes('PASSWORD_INCORRECT')) {
+                    alert('Incorrect password. Please try again.');
+                } else if (responseString.includes('EMAIL_NOT_FOUND')) {
+                    alert('Email not found. Please contact administration.');
+                } else if (responseString.includes('EMPTY_FIELDS')) {
+                    alert('Please fill in all required fields.');
                 } else {
-                    // Webhook 200 OK but "User not found" logic
-                    alert('Invalid credentials: User not found.');
+                    // Fallback generic error
+                    alert('Login failed. Please check your credentials.');
                 }
             } else {
                 alert('Invalid credentials (Server invalid).');
