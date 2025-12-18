@@ -610,35 +610,39 @@ const Pages = {
     // ========================================
     staffLogin: () => `
         <div class="login-container">
-            <div class="login-box">
+            <div class="login-box glass-card">
                 <div style="text-align: center; margin-bottom: 2rem;">
                      <a href="/" class="logo" style="justify-content: center; font-size: 1.5rem;" data-link>
-                        <img src="assets/logo.png" alt="Logo" style="height: 40px;">
+                        <img src="assets/logo.png" alt="Logo" style="height: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                         Pucho Public School
                     </a>
                 </div>
                 <h2>Staff Login</h2>
-                <p>Access the school management system</p>
+                <p>Welcome back! Please access your dashboard.</p>
                 
-                <form id="staffLoginForm">
-                    <div class="form-group">
-                        <label for="staffEmail">Email / Staff ID</label>
-                        <input type="text" id="staffEmail" required placeholder="staff@puchopublicschool.edu.in">
+                <form id="staffLoginForm" autocomplete="off">
+                    <div class="form-group slide-up delay-100">
+                        <input type="email" id="staffEmail" required placeholder=" " autocomplete="new-password">
+                        <label for="staffEmail">Email Address or Staff ID</label>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="staffPassword">Password</label>
-                        <input type="password" id="staffPassword" required placeholder="Enter your password">
+                    <div class="form-group slide-up delay-200">
+                        <div class="password-wrapper">
+                            <input type="password" id="staffPassword" required placeholder=" " autocomplete="new-password">
+                            <label for="staffPassword">Password</label>
+                             <span class="password-toggle-icon" onclick="app.togglePasswordVisibility('staffPassword')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </span>
+                        </div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary btn-full">Login</button>
-                    
-                    <div style="text-align: center; margin-top: 1rem;">
-                        <a href="/forgot-password" class="back-link" data-link style="font-size: 0.85rem; margin-top: 0;">Forgot Password?</a>
+                    <button type="submit" class="btn btn-primary btn-full slide-up delay-300" style="width: 100%;">Sign In</button>
+                    <div style="text-align: center; margin-top: 1rem;" class="slide-up delay-300">
+                      <a href="/forgot-password" data-link style="color: var(--primary-blue); font-size: 0.9rem; text-decoration: none;">Forgot Password?</a>
                     </div>
                 </form>
                 
-                <a href="/" class="back-link" data-link>← Back to Home</a>
+                <a href="/" class="back-link slide-up delay-300" data-link>← Back to Home</a>
             </div>
         </div>
     `,
@@ -648,35 +652,39 @@ const Pages = {
     // ========================================
     parentLogin: () => `
         <div class="login-container">
-            <div class="login-box">
-                <div style="text-align: center; margin-bottom: 2rem;">
+            <div class="login-box glass-card">
+                 <div style="text-align: center; margin-bottom: 2rem;">
                      <a href="/" class="logo" style="justify-content: center; font-size: 1.5rem;" data-link>
-                        <img src="assets/logo.png" alt="Logo" style="height: 40px;">
+                        <img src="assets/logo.png" alt="Logo" style="height: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                         Pucho Public School
                     </a>
                 </div>
-                <h2>Parent Login</h2>
-                <p>View your child's academic progress</p>
+                <h2>Parent Portal</h2>
+                <p>Monitor your child's progress</p>
                 
-                <form id="parentLoginForm">
-                    <div class="form-group">
-                        <label for="parentEmail">Email / Mobile Number</label>
-                        <input type="text" id="parentEmail" required placeholder="parent@example.com or +91 98765 43210">
+                <form id="parentLoginForm" autocomplete="off">
+                    <div class="form-group slide-up delay-100">
+                        <input type="email" id="parentEmail" required placeholder=" " autocomplete="new-password">
+                        <label for="parentEmail">Registered Email</label>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="parentPassword">Password</label>
-                        <input type="password" id="parentPassword" required placeholder="Enter your password">
+                    <div class="form-group slide-up delay-200">
+                        <div class="password-wrapper">
+                            <input type="password" id="parentPassword" required placeholder=" " autocomplete="new-password">
+                            <label for="parentPassword">Password</label>
+                            <span class="password-toggle-icon" onclick="app.togglePasswordVisibility('parentPassword')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </span>
+                        </div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary btn-full">Login</button>
-
-                    <div style="text-align: center; margin-top: 1rem;">
-                        <a href="/forgot-password" class="back-link" data-link style="font-size: 0.85rem; margin-top: 0;">Forgot Password?</a>
+                    <button type="submit" class="btn btn-primary btn-full slide-up delay-300" style="width: 100%;">Access Portal</button>
+                    <div style="text-align: center; margin-top: 1rem;" class="slide-up delay-300">
+                        <a href="/forgot-password" data-link style="color: var(--primary-blue); font-size: 0.9rem; text-decoration: none;">Forgot Password?</a>
                     </div>
                 </form>
                 
-                <a href="/" class="back-link" data-link>← Back to Home</a>
+                <a href="/" class="back-link slide-up delay-300" data-link>← Back to Home</a>
             </div>
         </div>
     `,
@@ -722,26 +730,26 @@ const Pages = {
     // ========================================
     forgotPassword: () => `
         <div class="login-container">
-            <div class="login-box">
+            <div class="login-box glass-card">
                 <div style="text-align: center; margin-bottom: 2rem;">
                      <a href="/" class="logo" style="justify-content: center; font-size: 1.5rem;" data-link>
-                        <img src="assets/logo.png" alt="Logo" style="height: 40px;">
+                        <img src="assets/logo.png" alt="Logo" style="height: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                         Pucho Public School
                     </a>
                 </div>
                 <h2>Reset Password</h2>
                 <p>Enter your email and new password</p>
                 
-                <form id="forgotPasswordForm">
-                    <div class="form-group">
+                <form id="forgotPasswordForm" autocomplete="off">
+                    <div class="form-group slide-up delay-100">
+                        <input type="email" id="resetEmail" required placeholder=" " autocomplete="new-password">
                         <label for="resetEmail">Email Address</label>
-                        <input type="email" id="resetEmail" required placeholder="name@example.com">
                     </div>
                     
-                    <div class="form-group">
-                        <label for="newPassword">New Password</label>
+                    <div class="form-group slide-up delay-200">
                         <div class="password-wrapper">
-                            <input type="password" id="newPassword" required placeholder="Enter new password">
+                            <input type="password" id="newPassword" required placeholder=" " autocomplete="new-password">
+                            <label for="newPassword">New Password</label>
                              <span class="password-toggle-icon" onclick="app.togglePasswordVisibility('newPassword')">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -751,10 +759,10 @@ const Pages = {
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary btn-full">Update Password</button>
+                    <button type="submit" class="btn btn-primary btn-full slide-up delay-300" style="width: 100%;">Update Password</button>
                 </form>
                 
-                <a href="/" class="back-link" data-link>← Back to Home</a>
+                <a href="/" class="back-link slide-up delay-300" data-link>← Back to Home</a>
             </div>
         </div>
     `,
