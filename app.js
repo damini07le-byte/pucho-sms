@@ -424,9 +424,9 @@ class Router {
     // LOGIN HANDLERS
     // ========================================
 
-    async handleStaffLogin(form) {
-        const email = form.querySelector('#staffEmail').value;
-        const password = form.querySelector('#staffPassword').value;
+    handleStaffLogin(form) {
+        const email = form.querySelector('#staffEmail').value.trim();
+        const password = form.querySelector('#staffPassword').value.trim();
         const submitBtn = form.querySelector('button[type="submit"]');
 
         if (!email || !password) {
@@ -434,78 +434,36 @@ class Router {
             return;
         }
 
-        const originalText = submitBtn.innerText;
-        submitBtn.innerText = 'Logging in...';
-        submitBtn.disabled = true;
-
-        try {
-            const response = await fetch('https://studio.pucho.ai/api/v1/webhooks/pqWbODVh8kp0KYtR513fs', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Login Response:', data);
-
-                // Handle Workflow Responses based on flowchart branches
-                // Checking for various possible response formats from Pucho Studio
-                const status = data.status || data.message || (data.length > 0 ? 'LOGIN_SUCCESS' : '');
-
-                // Also check if data itself is the string/status
-                const responseString = JSON.stringify(data);
-
-                if (responseString.includes('LOGIN_SUCCESS') || (Array.isArray(data) && data.length > 0)) {
-                    // Success: User found
-                    // If data is array, use first item. If data is object, check for user field.
-                    const userName = (Array.isArray(data) && data[0]?.name) || data.user?.name || data.name || 'Staff Member';
-
-                    Auth.login('staff', email, userName);
-                    this.navigate('/dashboard/staff');
-                } else if (responseString.includes('PASSWORD_INCORRECT')) {
-                    alert('Incorrect password. Please try again.');
-                } else if (responseString.includes('EMAIL_NOT_FOUND')) {
-                    alert('Email not found. Please contact administration.');
-                } else if (responseString.includes('EMPTY_FIELDS')) {
-                    alert('Please fill in all required fields.');
-                } else {
-                    // Fallback generic error
-                    alert('Login failed. Please check your credentials.');
-                }
-            } else {
-                alert('Invalid credentials (Server invalid).');
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            alert('Login connection failed. Please try again.');
-        } finally {
-            submitBtn.innerText = originalText;
-            submitBtn.disabled = false;
+        // Static Credentials Check
+        if (email === 'staff@pucho.com' && password === 'staff123') {
+            Auth.login('staff', email, 'Staff Member');
+            this.navigate('/dashboard/staff');
+        } else {
+            alert('Invalid staff credentials. Use staff@pucho.com / staff123');
         }
     }
 
     handleParentLogin(form) {
-        const email = form.querySelector('#parentEmail').value;
-        const password = form.querySelector('#parentPassword').value;
+        const email = form.querySelector('#parentEmail').value.trim();
+        const password = form.querySelector('#parentPassword').value.trim();
 
-        if (Auth.validateLogin(email, password)) {
-            Auth.login('parent', email, email);
+        if (email === 'parent@pucho.com' && password === 'parent123') {
+            Auth.login('parent', email, 'Parent User');
             this.navigate('/dashboard/parent');
         } else {
-            alert('Please enter valid credentials');
+            alert('Invalid parent credentials. Use parent@pucho.com / parent123');
         }
     }
 
     handleAdminLogin(form) {
-        const username = form.querySelector('#adminUsername').value;
-        const password = form.querySelector('#adminPassword').value;
+        const username = form.querySelector('#adminUsername').value.trim();
+        const password = form.querySelector('#adminPassword').value.trim();
 
-        if (Auth.validateLogin(username, password)) {
+        if (username === 'admin@pucho.com' && password === 'admin123') {
             Auth.login('admin', username, 'Administrator');
             this.navigate('/dashboard/admin');
         } else {
-            alert('Please enter valid credentials');
+            alert('Invalid admin credentials. Use admin@pucho.com / admin123');
         }
     }
 
