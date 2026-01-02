@@ -18,29 +18,30 @@
 </head>
 
 <body>
-    <div class="dashboard">
+    <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <h2>Staff Portal</h2>
+            <div class="sidebar-header">
+                <img src="assets/logo.png" alt="Logo" style="height: 32px;">
+                <h2>Staff Portal</h2>
+            </div>
             <ul class="sidebar-menu">
-                <li><a href="#" class="active">Dashboard</a></li>
-                <li><a href="#">Admissions</a></li>
-                <li><a href="#">Fees Management</a></li>
-                <li><a href="#">Attendance</a></li>
-                <li><a href="#">Exams</a></li>
-                <li><a href="#">Students</a></li>
-                <li><a href="#">Reports</a></li>
-                <li><a href="#" id="staffLogout">Logout</a></li>
+                <li><a href="#" class="menu-link active">Dashboard</a></li>
+                <li><a href="#" class="menu-link">Admissions</a></li>
+                <li><a href="#" class="menu-link">Fees Management</a></li>
+                <li><a href="#" class="menu-link">Attendance</a></li>
+                <li><a href="#" class="menu-link">Exams</a></li>
+                <li><a href="#" class="menu-link">Students</a></li>
+                <li><a href="#" class="menu-link">Reports</a></li>
+                <li><a href="#" id="staffLogout" class="menu-link">Logout</a></li>
             </ul>
         </aside>
 
         <!-- Main Content -->
-        <!-- Main Content -->
-        <div style="flex: 1; display: flex; flex-direction: column;">
+        <div class="main-content">
             <header class="admin-header">
-                <div class="admin-header-left" style="display: flex; align-items: center; gap: 1rem;">
-                    <img src="assets/logo.png" alt="Logo" style="height: 40px;">
-                    <h1>Pucho Public School - Staff Portal</h1>
+                <div class="admin-header-left">
+                    <h1>Welcome To Staff Portal</h1>
                 </div>
                 <div class="admin-header-right">
                     <div class="admin-profile">
@@ -69,31 +70,36 @@
             </div>
             <form id="markAttendanceForm">
                 <div class="form-group">
-                    <label for="attClass">Class</label>
                     <select id="attClass" required>
                         <option value="">Select Class</option>
                         <option value="10-A">Class 10-A</option>
                         <option value="10-B">Class 10-B</option>
                         <option value="9-A">Class 9-A</option>
                     </select>
+                    <label for="attClass">Class</label>
                 </div>
                 <div class="form-group">
+                    <input type="date" id="attDate" required placeholder=" ">
                     <label for="attDate">Date</label>
-                    <input type="date" id="attDate" required>
                 </div>
-                <div class="form-group">
-                    <label>Status for All</label>
-                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-                        <label><input type="radio" name="attStatus" value="Present" checked> Present</label>
-                        <label><input type="radio" name="attStatus" value="Absent"> Absent</label>
+                <div class="form-group" style="padding-top: 1rem;">
+                    <label
+                        style="position: static; font-size: 0.875rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.5rem; display: block;">Status
+                        for All Students</label>
+                    <div style="display: flex; gap: 1rem;">
+                        <label
+                            style="position: static; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;"><input
+                                type="radio" name="attStatus" value="Present" checked> Present</label>
+                        <label
+                            style="position: static; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;"><input
+                                type="radio" name="attStatus" value="Absent"> Absent</label>
                     </div>
                 </div>
-                <!-- In a real app, this would list students. For now, we simulate bulk action -->
-                <p style="font-size: 0.9rem; color: var(--text-gray); margin-bottom: 1rem;">
-                    * This will mark attendance for all 45 students in the selected class. You can edit individual
-                    records later.
+                <p
+                    style="font-size: 0.85rem; color: var(--text-muted); margin-top: 1rem; background: var(--bg-soft); padding: 0.75rem; border-radius: 8px;">
+                    * This will mark attendance for all students in the selected class.
                 </p>
-                <button type="submit" class="btn btn-primary btn-full">Submit Attendance</button>
+                <button type="submit" class="btn btn-primary btn-full mt-lg">Submit Attendance</button>
             </form>
         </div>
     </div>
@@ -107,31 +113,30 @@
             </div>
             <form id="uploadMarksForm">
                 <div class="form-group">
-                    <label for="marksExam">Exam Name</label>
-                    <input type="text" id="marksExam" required placeholder="e.g. Unit Test 1">
+                    <input type="text" id="marksExam" required placeholder=" ">
+                    <label for="marksExam">Exam Name (e.g. Unit Test 1)</label>
                 </div>
                 <div class="form-group">
-                    <label for="marksClass">Class</label>
                     <select id="marksClass" required>
                         <option value="">Select Class</option>
                         <option value="10-A">Class 10-A</option>
                         <option value="10-B">Class 10-B</option>
                     </select>
+                    <label for="marksClass">Class</label>
                 </div>
                 <div class="form-group">
-                    <label for="marksSubject">Subject</label>
                     <select id="marksSubject" required>
                         <option value="">Select Subject</option>
                         <option value="Maths">Mathematics</option>
                         <option value="Science">Science</option>
                         <option value="English">English</option>
                     </select>
+                    <label for="marksSubject">Subject</label>
                 </div>
                 <div class="form-group">
-                    <label>Upload CSV/Excel File</label>
                     <div
-                        style="border: 2px dashed var(--border-color); padding: 2rem; text-align: center; border-radius: 8px;">
-                        <p>Drag & drop or click to upload</p>
+                        style="border: 2px dashed var(--border-color); padding: 1.5rem; text-align: center; border-radius: 12px; background: var(--bg-soft);">
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Drag & drop or</p>
                         <input type="file" style="display: none;" id="marksFile">
                         <button type="button" class="btn btn-outline btn-sm mt-sm"
                             onclick="document.getElementById('marksFile').click()">Choose File</button>

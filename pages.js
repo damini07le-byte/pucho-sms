@@ -13,6 +13,10 @@ const staffMockData = {
     exams: [
         { id: 1, name: "Mid-Term 2025", class: "10-A", subject: "Maths", date: "2025-10-15" },
         { id: 2, name: "Unit Test 1", class: "9-All", subject: "Science", date: "2025-08-20" }
+    ],
+    notices: [
+        { title: "Annual Sports Day", date: "12 Oct 2025", content: "Sports day will be held on 20th Oct. All class teachers to submit participant lists." },
+        { title: "Diwali Holidays", date: "10 Oct 2025", content: "School will remain closed from 28th Oct to 2nd Nov for Diwali break." }
     ]
 };
 
@@ -21,81 +25,93 @@ const Pages = {
     staffInner: {
         dashboard: `
             <div class="fade-in">
-                <div class="content-header">
-                    <h2>Staff Dashboard</h2>
-                    <p>Welcome, Teacher. Here is your daily overview.</p>
-                </div>
                 <div class="admin-stats-grid">
                     <div class="admin-stat-card">
+                        <div class="stat-label">Assigned Classes</div>
                         <div class="stat-value">3</div>
-                        <div class="stat-label">Classes (10-A, 10-B, 9-A)</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">10-A, 10-B, 9-A</div>
                     </div>
                     <div class="admin-stat-card">
-                        <div class="stat-value">135</div>
                         <div class="stat-label">Total Students</div>
+                        <div class="stat-value">135</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Across your classes</div>
                     </div>
                     <div class="admin-stat-card">
-                        <div class="stat-value">92%</div>
                         <div class="stat-label">Attendance Today</div>
+                        <div class="stat-value">92%</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Average daily rate</div>
                     </div>
                      <div class="admin-stat-card">
-                        <div class="stat-value">2</div>
                         <div class="stat-label">Pending Tasks</div>
+                        <div class="stat-value">2</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Marks upload pending</div>
                     </div>
                 </div>
-                <section class="section">
+                <section class="section slide-up">
                     <h2 class="section-title">Quick Actions</h2>
                     <div class="card-grid">
-                        <div class="card">
+                        <div class="card card-premium delay-100">
                             <h3>Mark Attendance</h3>
                             <p>Mark daily attendance for your assigned classes.</p>
-                            <button class="btn btn-primary mt-lg" onclick="app.openModal('markAttendanceModal')">Mark Attendance</button>
+                            <button class="btn btn-white mt-lg" onclick="app.openModal('markAttendanceModal')">Mark Attendance</button>
                         </div>
-                        <div class="card">
+                        <div class="card card-premium delay-200">
                             <h3>Upload Marks</h3>
                             <p>Upload results for completed examinations.</p>
-                            <button class="btn btn-primary mt-lg" onclick="app.openModal('uploadMarksModal')">Upload Marks</button>
+                            <button class="btn btn-white mt-lg" onclick="app.openModal('uploadMarksModal')">Upload Marks</button>
                         </div>
-                         <div class="card">
+                         <div class="card card-premium delay-300">
                             <h3>View Students</h3>
                             <p>Access student profiles and academic records.</p>
-                            <button class="btn btn-primary mt-lg menu-link" data-dashboard-page="students">Student List</button>
+                            <button class="btn btn-white mt-lg menu-link" data-dashboard-page="students">Student List</button>
                         </div>
-                        <div class="card">
+                        <div class="card card-premium delay-100">
                             <h3>Exam Schedule</h3>
                             <p>View upcoming exams and invigilation duties.</p>
-                            <button class="btn btn-primary mt-lg menu-link" data-dashboard-page="exams">View Exams</button>
+                            <button class="btn btn-white mt-lg menu-link" data-dashboard-page="exams">View Exams</button>
                         </div>
                     </div>
                 </section>
                 <!-- Modals -->
+                <!-- Modals -->
                 <div id="markAttendanceModal" class="modal">
                     <div class="modal-content">
-                        <span class="close" onclick="app.closeModal('markAttendanceModal')">&times;</span>
-                        <h2>Mark Attendance</h2>
+                        <div class="modal-header">
+                            <h3>Mark Attendance</h3>
+                            <button class="modal-close" onclick="app.closeModal('markAttendanceModal')">&times;</button>
+                        </div>
                         <form id="markAttendanceForm">
                              <div class="form-group">
-                                <label>Class</label>
-                                <select class="form-control"><option>10-A</option><option>10-B</option></select>
+                                <select class="form-control" id="swMarkClass" required>
+                                    <option value="">Select Class</option>
+                                    <option value="10-A">10-A</option>
+                                    <option value="10-B">10-B</option>
+                                </select>
+                                <label for="swMarkClass">Class</label>
                             </div>
                             <div class="form-group">
-                                <label>Date</label>
-                                <input type="date" class="form-control" required>
+                                <input type="date" class="form-control" id="swMarkDate" required placeholder=" ">
+                                <label for="swMarkDate">Date</label>
                             </div>
-                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="submit" class="btn btn-primary btn-full mt-lg">Submit</button>
                         </form>
                     </div>
                 </div>
                 <div id="uploadMarksModal" class="modal">
                      <div class="modal-content">
-                        <span class="close" onclick="app.closeModal('uploadMarksModal')">&times;</span>
-                        <h2>Upload Marks</h2>
+                        <div class="modal-header">
+                            <h3>Upload Marks</h3>
+                            <button class="modal-close" onclick="app.closeModal('uploadMarksModal')">&times;</button>
+                        </div>
                         <form id="uploadMarksForm">
                              <div class="form-group">
-                                <label>Exam</label>
-                                <select class="form-control"><option>Mid-Term 2025</option></select>
+                                <select class="form-control" id="swUpExam" required>
+                                    <option value="">Select Exam</option>
+                                    <option value="Mid-Term 2025">Mid-Term 2025</option>
+                                </select>
+                                <label for="swUpExam">Exam</label>
                             </div>
-                            <button type="submit" class="btn btn-primary">Upload</button>
+                            <button type="submit" class="btn btn-primary btn-full mt-lg">Upload</button>
                         </form>
                     </div>
                 </div>
@@ -103,13 +119,11 @@ const Pages = {
         `,
         attendance: `
             <div class="fade-in">
-                <div class="content-header"><h2>Attendance Management</h2><p>Track student attendance.</p></div>
                 <div class="card"><h3>Recent Logs</h3><p>Attendance logs table here...</p></div>
             </div>
         `,
         exams: `
             <div class="fade-in">
-                <div class="content-header"><h2>Exam Management</h2></div>
                 <div class="data-table">
                     <table>
                         <thead><tr><th>Exam</th><th>Class</th><th>Date</th></tr></thead>
@@ -123,7 +137,6 @@ const Pages = {
 
         assignedClasses: `
             <div class="fade-in">
-                <div class="content-header"><h2>Assigned Classes</h2><p>Classes under your supervision.</p></div>
                 <div class="data-table">
                     <table>
                         <thead><tr><th>Class</th><th>Subject</th><th>Students</th><th>Schedule</th></tr></thead>
@@ -206,10 +219,17 @@ const Pages = {
     parentInner: {
         dashboard: `
             <div class="fade-in">
-                <div class="content-header"><h2>Parent Dashboard</h2><p>Welcome, Parent.</p></div>
-                <div class="stats-grid">
-                    <div class="stat-card"><h3>Attendance</h3><div class="stat-value">96%</div></div>
-                    <div class="stat-card"><h3>Fee Status</h3><div class="stat-value">Paid</div></div>
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="stat-label">Total Attendance</div>
+                        <div class="stat-value">96%</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Overall percentage</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="stat-label">Fee Status</div>
+                        <div class="stat-value">Paid</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">No dues remaining</div>
+                    </div>
                 </div>
                 <section class="section">
                     <h2 class="section-title">Quick Access</h2>
@@ -228,47 +248,46 @@ const Pages = {
     adminInner: {
         dashboard: `
             <div class="fade-in">
-                <div class="content-header">
-                    <h2>Admin Dashboard</h2>
-                    <p>Welcome, Administrator!</p>
-                </div>
-
                 <div class="admin-stats-grid">
                     <div class="admin-stat-card">
-                        <div class="stat-value">1,245</div>
                         <div class="stat-label">Total Students</div>
+                        <div class="stat-value">1,245</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Registered students</div>
                     </div>
                     <div class="admin-stat-card">
-                        <div class="stat-value">87</div>
                         <div class="stat-label">Total Staff</div>
+                        <div class="stat-value">87</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Teachers & Support</div>
                     </div>
                     <div class="admin-stat-card">
-                        <div class="stat-value">12</div>
                         <div class="stat-label">Pending Admissions</div>
+                        <div class="stat-value">12</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Awaiting review</div>
                     </div>
                     <div class="admin-stat-card">
-                        <div class="stat-value">₹45.2L</div>
                         <div class="stat-label">Fees Collected</div>
+                        <div class="stat-value">₹45.2L</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">This session</div>
                     </div>
                 </div>
 
-                 <section class="section">
+                 <section class="section slide-up">
                     <h2 class="section-title">Management Sections</h2>
                     <div class="card-grid">
-                        <div class="card">
+                        <div class="card card-premium delay-100">
                             <h3>Create Staff</h3>
                             <p>Add new staff members.</p>
-                            <a href="#create-staff" class="btn btn-primary mt-lg">Add Staff</a>
+                            <a href="#create-staff" class="btn btn-white mt-lg">Add Staff</a>
                         </div>
-                        <div class="card">
+                        <div class="card card-premium delay-200">
                             <h3>Create Parent</h3>
                             <p>Add new parent accounts.</p>
-                            <a href="#create-parent" class="btn btn-primary mt-lg">Add Parent</a>
+                            <a href="#create-parent" class="btn btn-white mt-lg">Add Parent</a>
                         </div>
-                         <div class="card">
+                         <div class="card card-premium delay-300">
                             <h3>Admissions</h3>
                             <p>Manage applications.</p>
-                            <a href="#admissions" class="btn btn-primary mt-lg">View</a>
+                            <a href="#admissions" class="btn btn-white mt-lg">View</a>
                         </div>
                     </div>
                 </section>
@@ -276,10 +295,6 @@ const Pages = {
         `,
         createStaff: `
             <div class="fade-in">
-                <div class="content-header">
-                    <h2>Create Staff Account</h2>
-                    <p>Register a new staff member.</p>
-                </div>
                 <div class="card" style="max-width: 800px;">
                     <form id="createStaffForm">
                         <div class="form-row">
@@ -319,7 +334,12 @@ const Pages = {
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Password</label>
-                                <input type="password" name="password" required placeholder="Set initial password">
+                                <div class="password-wrapper">
+                                    <input type="password" id="staffCreatePassword" name="password" required placeholder="Set initial password">
+                                    <span class="password-toggle-icon" onclick="app.togglePasswordVisibility('staffCreatePassword')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">Create Staff</button>
@@ -362,7 +382,12 @@ const Pages = {
                             </div>
                             <div class="form-group">
                                 <label>Password</label>
-                                <input type="password" name="password" required placeholder="Set initial password">
+                                <div class="password-wrapper">
+                                    <input type="password" id="parentCreatePassword" name="password" required placeholder="Set initial password">
+                                    <span class="password-toggle-icon" onclick="app.togglePasswordVisibility('parentCreatePassword')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">Create Parent</button>
@@ -462,7 +487,7 @@ const Pages = {
                         <img src="assets/logo.png" alt="Logo">
                         Pucho Public School
                     </a>
-                    <ul class="nav-menu">
+                    <ul class="nav-menu" style="gap: 2rem;">
                         <li><a href="/" data-link>Home</a></li>
                         <li><a href="#about" data-scroll>About</a></li>
                         <li><a href="#academics" data-scroll>Academics</a></li>
@@ -478,9 +503,9 @@ const Pages = {
             <!-- Hero Section -->
             <section class="hero">
                 <div class="hero-content">
-                    <h1>Excellence in Education</h1>
-                    <h2>Empowering Minds, Shaping Futures</h2>
-                    <p>Welcome to Pucho Public School, where we nurture curiosity, creativity, and character. Join us in our journey of academic excellence and holistic development.</p>
+                    <h1 style="margin-bottom: 2rem;">Excellence in Education</h1>
+                    <h2 style="color: var(--primary-blue); font-weight: 700; margin-bottom: 1.5rem;">Empowering Minds, Shaping Futures</h2>
+                    <p style="max-width: 700px; margin-bottom: 3.5rem;">Welcome to Pucho Public School, where we nurture curiosity, creativity, and character. Join us in our journey of academic excellence and holistic development.</p>
                     <div class="hero-buttons">
                         <a href="#about" class="btn btn-white" data-scroll>Learn More</a>
                         <a href="#contact" class="btn btn-outline" style="color: white; border-color: white;" data-scroll>Contact Us</a>
@@ -556,16 +581,16 @@ const Pages = {
                     <div class="contact-form">
                         <form id="contactForm">
                             <div class="form-group">
+                                <input type="text" id="name" required placeholder=" ">
                                 <label for="name">Your Name</label>
-                                <input type="text" id="name" required>
                             </div>
                             <div class="form-group">
+                                <input type="email" id="email" required placeholder=" ">
                                 <label for="email">Email Address</label>
-                                <input type="email" id="email" required>
                             </div>
                             <div class="form-group">
+                                <textarea id="message" required placeholder=" "></textarea>
                                 <label for="message">Message</label>
-                                <textarea id="message" required></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary btn-full">Send Message</button>
                         </form>
@@ -706,13 +731,21 @@ const Pages = {
                 
                 <form id="adminLoginForm">
                     <div class="form-group">
+                        <input type="text" id="adminUsername" required placeholder=" ">
                         <label for="adminUsername">Username</label>
-                        <input type="text" id="adminUsername" required placeholder="admin">
                     </div>
                     
                     <div class="form-group">
-                        <label for="adminPassword">Password</label>
-                        <input type="password" id="adminPassword" required placeholder="Enter your password">
+                        <div class="password-wrapper">
+                            <input type="password" id="adminPassword" required placeholder=" ">
+                            <label for="adminPassword">Password</label>
+                            <span class="password-toggle-icon" onclick="app.togglePasswordVisibility('adminPassword')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </span>
+                        </div>
                     </div>
                     
                     <button type="submit" class="btn btn-primary btn-full">Login</button>
@@ -775,7 +808,10 @@ const Pages = {
         return `
             <div class="dashboard">
                 <aside class="sidebar">
-                    <h2>Staff Portal</h2>
+                    <div class="sidebar-header">
+                        <img src="assets/logo.png" alt="Logo" style="height: 32px;">
+                        <h2>Staff Portal</h2>
+                    </div>
                     <ul class="sidebar-menu">
                         <li><a href="#" class="menu-link active" data-dashboard-page="dashboard">Dashboard</a></li>
                         <li><a href="#" class="menu-link" data-dashboard-page="assignedClasses">Assigned Classes</a></li>

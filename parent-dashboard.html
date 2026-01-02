@@ -18,34 +18,36 @@
 </head>
 
 <body>
-    <div class="dashboard">
+    <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <h2>Parent Portal</h2>
+            <div class="sidebar-header">
+                <img src="assets/logo.png" alt="Logo" style="height: 32px;">
+                <h2>Parent Portal</h2>
+            </div>
             <ul class="sidebar-menu">
-                <li><a href="#" class="active">Dashboard</a></li>
-                <li><a href="#">Attendance</a></li>
-                <li><a href="#">Fee Status</a></li>
-                <li><a href="#">Exam Results</a></li>
-                <li><a href="#">Timetable</a></li>
-                <li><a href="#">Notifications</a></li>
-                <li><a href="#" id="parentLogout">Logout</a></li>
+                <li><a href="#" class="menu-link active">Dashboard</a></li>
+                <li><a href="#" class="menu-link">Attendance</a></li>
+                <li><a href="#" class="menu-link">Fees</a></li>
+                <li><a href="#" class="menu-link">Exam Results</a></li>
+                <li><a href="#" class="menu-link">Notices</a></li>
+                <li><a href="#" class="menu-link">School Calendar</a></li>
+                <li><a href="#" id="parentLogout" class="menu-link">Logout</a></li>
             </ul>
         </aside>
 
         <!-- Main Content -->
-        <div style="flex: 1; display: flex; flex-direction: column;">
+        <div class="main-content">
             <header class="admin-header">
-                <div class="admin-header-left" style="display: flex; align-items: center; gap: 1rem;">
-                    <img src="assets/logo.png" alt="Logo" style="height: 40px;">
-                    <h1>Pucho Public School - Parent Portal</h1>
+                <div class="admin-header-left">
+                    <h1>Welcome To Parent Portal</h1>
                 </div>
                 <div class="admin-header-right">
                     <div class="admin-profile">
                         <div class="admin-profile-icon">P</div>
                         <div class="admin-profile-info">
-                            <div class="admin-profile-name">Parent User</div>
-                            <div class="admin-profile-role">Guardian</div>
+                            <div class="admin-profile-name">Parent Name</div>
+                            <div class="admin-profile-role">Parent of Rahul (10-A)</div>
                         </div>
                     </div>
                 </div>

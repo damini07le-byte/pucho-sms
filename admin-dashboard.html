@@ -18,10 +18,13 @@
 </head>
 
 <body>
-    <div class="dashboard">
+    <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <h2>Admin Panel</h2>
+            <div class="sidebar-header">
+                <img src="assets/logo.png" alt="Logo" style="height: 32px;">
+                <h2>Admin Panel</h2>
+            </div>
             <ul class="sidebar-menu">
                 <li><a href="#" class="menu-link active" data-page="dashboard">Dashboard</a></li>
                 <li><a href="#" class="menu-link" data-page="staff">Staff Management</a></li>
@@ -31,17 +34,16 @@
                 <li><a href="#" class="menu-link" data-page="attendance">Attendance</a></li>
                 <li><a href="#" class="menu-link" data-page="exams">Exams</a></li>
                 <li><a href="#" class="menu-link" data-page="reports">Reports</a></li>
-                <li><a href="#" id="adminLogout">Logout</a></li>
+                <li><a href="#" id="adminLogout" class="menu-link">Logout</a></li>
             </ul>
         </aside>
 
         <!-- Main Content -->
-        <div style="flex: 1; display: flex; flex-direction: column;">
+        <div class="main-content">
             <!-- Top Header -->
             <header class="admin-header">
-                <div class="admin-header-left" style="display: flex; align-items: center; gap: 1rem;">
-                    <img src="assets/logo.png" alt="Logo" style="height: 40px;">
-                    <h1>Pucho Public School - Admin Dashboard</h1>
+                <div class="admin-header-left">
+                    <h1>Welcome To Admin Dashboard</h1>
                 </div>
                 <div class="admin-header-right">
                     <div class="admin-profile">
@@ -71,15 +73,14 @@
             </div>
             <form id="addStaffForm">
                 <div class="form-group">
+                    <input type="text" id="staffName" required placeholder=" ">
                     <label for="staffName">Full Name</label>
-                    <input type="text" id="staffName" required>
                 </div>
                 <div class="form-group">
+                    <input type="email" id="staffEmail" required placeholder=" ">
                     <label for="staffEmail">Email</label>
-                    <input type="email" id="staffEmail" required>
                 </div>
                 <div class="form-group">
-                    <label for="staffRole">Role</label>
                     <select id="staffRole" required>
                         <option value="">Select Role</option>
                         <option value="Teacher">Teacher</option>
@@ -87,10 +88,21 @@
                         <option value="Principal">Principal</option>
                         <option value="Vice Principal">Vice Principal</option>
                     </select>
+                    <label for="staffRole">Role</label>
                 </div>
                 <div class="form-group">
-                    <label for="staffPassword">Temporary Password</label>
-                    <input type="text" id="staffPassword" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="staffPassword" required placeholder=" ">
+                        <label for="staffPassword">Temporary Password</label>
+                        <span class="password-toggle-icon" onclick="togglePasswordVisibility('staffPassword')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </span>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Add Staff</button>
             </form>
@@ -106,24 +118,23 @@
             </div>
             <form id="addParentForm">
                 <div class="form-group">
+                    <input type="text" id="studentName" required placeholder=" ">
                     <label for="studentName">Student Name</label>
-                    <input type="text" id="studentName" required>
                 </div>
                 <div class="form-group">
+                    <input type="text" id="parentName" required placeholder=" ">
                     <label for="parentName">Parent Name</label>
-                    <input type="text" id="parentName" required>
                 </div>
                 <div class="form-group">
+                    <input type="email" id="parentEmail" required placeholder=" ">
                     <label for="parentEmail">Parent Email</label>
-                    <input type="email" id="parentEmail" required>
                 </div>
                 <div class="form-group">
+                    <input type="tel" id="parentPhone" required placeholder=" ">
                     <label for="parentPhone">Parent Phone</label>
-                    <input type="tel" id="parentPhone" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="studentClass">Class</label>
                         <select id="studentClass" required>
                             <option value="">Select Class</option>
                             <option value="1">Class 1</option>
@@ -139,15 +150,16 @@
                             <option value="11">Class 11</option>
                             <option value="12">Class 12</option>
                         </select>
+                        <label for="studentClass">Class</label>
                     </div>
                     <div class="form-group">
-                        <label for="studentSection">Section</label>
                         <select id="studentSection" required>
                             <option value="">Select Section</option>
                             <option value="A">Section A</option>
                             <option value="B">Section B</option>
                             <option value="C">Section C</option>
                         </select>
+                        <label for="studentSection">Section</label>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Create Parent Account</button>
@@ -164,19 +176,18 @@
             </div>
             <form id="addAdmissionForm">
                 <div class="form-group">
+                    <input type="text" id="admStudentName" required placeholder=" ">
                     <label for="admStudentName">Student Name</label>
-                    <input type="text" id="admStudentName" required>
                 </div>
                 <div class="form-group">
+                    <input type="text" id="admParentName" required placeholder=" ">
                     <label for="admParentName">Parent Name</label>
-                    <input type="text" id="admParentName" required>
                 </div>
                 <div class="form-group">
+                    <input type="tel" id="admPhone" required placeholder=" ">
                     <label for="admPhone">Phone Number</label>
-                    <input type="tel" id="admPhone" required>
                 </div>
                 <div class="form-group">
-                    <label for="admClass">Class Seeking</label>
                     <select id="admClass" required>
                         <option value="">Select Class</option>
                         <option value="1">Class 1</option>
@@ -190,6 +201,7 @@
                         <option value="9">Class 9</option>
                         <option value="10">Class 10</option>
                     </select>
+                    <label for="admClass">Class Seeking</label>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Submit Application</button>
             </form>
@@ -205,24 +217,24 @@
             </div>
             <form id="addFeeForm">
                 <div class="form-group">
+                    <input type="text" id="feeStudentName" required placeholder=" ">
                     <label for="feeStudentName">Student Name</label>
-                    <input type="text" id="feeStudentName" required>
                 </div>
                 <div class="form-group">
-                    <label for="feeClass">Class</label>
-                    <input type="text" id="feeClass" required placeholder="e.g. 10-A">
+                    <input type="text" id="feeClass" required placeholder=" ">
+                    <label for="feeClass">Class (e.g. 10-A)</label>
                 </div>
                 <div class="form-group">
+                    <input type="number" id="feeAmount" required placeholder=" ">
                     <label for="feeAmount">Total Amount (₹)</label>
-                    <input type="number" id="feeAmount" required>
                 </div>
                 <div class="form-group">
+                    <input type="number" id="feePaid" required placeholder=" ">
                     <label for="feePaid">Paid Amount (₹)</label>
-                    <input type="number" id="feePaid" required>
                 </div>
                 <div class="form-group">
+                    <input type="date" id="feeDueDate" required placeholder=" ">
                     <label for="feeDueDate">Due Date</label>
-                    <input type="date" id="feeDueDate" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Record Payment</button>
             </form>
@@ -238,21 +250,21 @@
             </div>
             <form id="addExamForm">
                 <div class="form-group">
-                    <label for="examName">Exam Name</label>
-                    <input type="text" id="examName" required placeholder="e.g. Mid-Term 2025">
+                    <input type="text" id="examName" required placeholder=" ">
+                    <label for="examName">Exam Name (e.g. Mid-Term 2025)</label>
                 </div>
                 <div class="form-group">
-                    <label for="examClass">Class(es)</label>
-                    <input type="text" id="examClass" required placeholder="e.g. 9-12 or All">
+                    <input type="text" id="examClass" required placeholder=" ">
+                    <label for="examClass">Class(es) (e.g. 9-12 or All)</label>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
+                        <input type="date" id="examStart" required placeholder=" ">
                         <label for="examStart">Start Date</label>
-                        <input type="date" id="examStart" required>
                     </div>
                     <div class="form-group">
+                        <input type="date" id="examEnd" required placeholder=" ">
                         <label for="examEnd">End Date</label>
-                        <input type="date" id="examEnd" required>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Schedule Exam</button>

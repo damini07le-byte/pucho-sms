@@ -28,14 +28,23 @@
 
             <form id="adminLoginForm">
                 <div class="form-group">
+                    <input type="text" id="username" name="username" required placeholder=" ">
                     <label for="username">Email / Username</label>
-                    <input type="text" id="username" name="username" required
-                        placeholder="admin@puchopublicschool.edu.in">
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" required placeholder=" ">
+                        <label for="password">Password</label>
+                        <span class="password-toggle-icon" onclick="togglePasswordVisibility('password')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </span>
+                    </div>
                 </div>
 
                 <div id="errorMessage" class="error-message hidden"></div>

@@ -23,51 +23,51 @@ const parentTemplates = {
             </div>
 
             <!-- Statistics Cards -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Attendance</h3>
+            <div class="admin-stats-grid">
+                <div class="admin-stat-card">
+                    <div class="stat-label">Overall Attendance</div>
                     <div class="stat-value">96.2%</div>
-                    <div class="stat-label">This Month</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Current month</div>
                 </div>
-                <div class="stat-card">
-                    <h3>Fee Status</h3>
+                <div class="admin-stat-card">
+                    <div class="stat-label">Fee Status</div>
                     <div class="stat-value">Paid</div>
-                    <div class="stat-label">All dues cleared</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">No dues remaining</div>
                 </div>
-                <div class="stat-card">
-                    <h3>Last Exam</h3>
+                <div class="admin-stat-card">
+                    <div class="stat-label">Last Exam Result</div>
                     <div class="stat-value">87.5%</div>
-                    <div class="stat-label">Mid-term examination</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Mid-term average</div>
                 </div>
-                <div class="stat-card">
-                    <h3>Class Rank</h3>
+                <div class="admin-stat-card">
+                    <div class="stat-label">Current Rank</div>
                     <div class="stat-value">5th</div>
-                    <div class="stat-label">Out of 45 students</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Out of 45 students</div>
                 </div>
             </div>
 
-            <section class="section">
+            <section class="section slide-up">
                 <h2 class="section-title">Quick Access</h2>
                 <div class="card-grid">
-                    <div class="card">
+                    <div class="card card-premium delay-100">
                         <h3>View Attendance</h3>
                         <p>Check your child's attendance records and monthly reports.</p>
-                        <button class="btn btn-primary mt-lg menu-link" onclick="loadPage('attendance')">View Attendance</button>
+                        <button class="btn btn-white mt-lg menu-link" onclick="loadPage('attendance')">View Attendance</button>
                     </div>
-                    <div class="card">
+                    <div class="card card-premium delay-200">
                         <h3>Fee Status</h3>
                         <p>View fee payment history and pending dues.</p>
-                        <button class="btn btn-primary mt-lg menu-link" onclick="loadPage('fee')">View Fees</button>
+                        <button class="btn btn-white mt-lg menu-link" onclick="loadPage('fee')">View Fees</button>
                     </div>
-                    <div class="card">
+                    <div class="card card-premium delay-300">
                         <h3>Exam Results</h3>
                         <p>View exam results and performance analysis.</p>
-                        <button class="btn btn-primary mt-lg menu-link" onclick="loadPage('results')">View Results</button>
+                        <button class="btn btn-white mt-lg menu-link" onclick="loadPage('results')">View Results</button>
                     </div>
-                    <div class="card">
+                    <div class="card card-premium delay-100">
                         <h3>Timetable</h3>
                         <p>View your child's weekly class schedule.</p>
-                        <button class="btn btn-primary mt-lg menu-link" onclick="loadPage('timetable')">View Timetable</button>
+                        <button class="btn btn-white mt-lg menu-link" onclick="loadPage('timetable')">View Timetable</button>
                     </div>
                 </div>
             </section>

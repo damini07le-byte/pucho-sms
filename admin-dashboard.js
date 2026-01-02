@@ -20,65 +20,60 @@ const mockData = {
 const pageTemplates = {
     dashboard: `
         <div class="fade-in">
-        <div class="content-header">
-            <h2>Dashboard Overview</h2>
-            <p>Welcome to the admin dashboard. Here's a summary of your school management system.</p>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Total Students</h3>
+        <div class="admin-stats-grid">
+            <div class="admin-stat-card">
+                <div class="stat-label">Total Students</div>
                 <div class="stat-value">1,245</div>
-                <div class="stat-label">Active Students</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Active enrollment</div>
             </div>
 
-            <div class="stat-card">
-                <h3>Total Staff</h3>
+            <div class="admin-stat-card">
+                <div class="stat-label">Total Staff</div>
                 <div class="stat-value">${mockData.staff.length}</div>
-                <div class="stat-label">Active Staff Members</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Active staff members</div>
             </div>
 
-            <div class="stat-card">
-                <h3>Pending Admissions</h3>
+            <div class="admin-stat-card">
+                <div class="stat-label">Pending Admissions</div>
                 <div class="stat-value">${mockData.admissions.filter(a => a.status === 'Pending').length}</div>
-                <div class="stat-label">Awaiting Approval</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Awaiting approval</div>
             </div>
 
-            <div class="stat-card">
-                <h3>Pending Fees</h3>
+            <div class="admin-stat-card">
+                <div class="stat-label">Pending Fees</div>
                 <div class="stat-value">₹${mockData.fees.reduce((sum, f) => sum + f.pending, 0).toLocaleString('en-IN')}</div>
-                <div class="stat-label">Total Outstanding</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Total outstanding</div>
             </div>
 
-            <div class="stat-card">
-                <h3>Attendance Today</h3>
+            <div class="admin-stat-card">
+                <div class="stat-label">Attendance Today</div>
                 <div class="stat-value">${mockData.attendance.today.percentage}%</div>
-                <div class="stat-label">${mockData.attendance.today.present} / ${mockData.attendance.today.total} present</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">${mockData.attendance.today.present} / ${mockData.attendance.today.total} present</div>
             </div>
         </div>
 
-        <section class="section">
+        <section class="section slide-up">
             <h2 class="section-title">Quick Actions</h2>
             <div class="card-grid">
-                <div class="card">
+                <div class="card card-premium delay-100">
                     <h3>Staff Management</h3>
                     <p>Manage staff accounts, add new teachers, and update staff information.</p>
-                    <button class="btn btn-primary mt-lg menu-link" data-page="staff">Manage Staff</button>
+                    <button class="btn btn-white mt-lg menu-link" data-page="staff">Manage Staff</button>
                 </div>
-                <div class="card">
+                <div class="card card-premium delay-200">
                     <h3>Admissions</h3>
                     <p>Review and approve pending admission applications.</p>
-                    <button class="btn btn-primary mt-lg menu-link" data-page="admissions">View Admissions</button>
+                    <button class="btn btn-white mt-lg menu-link" data-page="admissions">View Admissions</button>
                 </div>
-                <div class="card">
+                <div class="card card-premium delay-300">
                     <h3>Fee Management</h3>
                     <p>Track fee payments and manage outstanding dues.</p>
-                    <button class="btn btn-primary mt-lg menu-link" data-page="fees">Manage Fees</button>
+                    <button class="btn btn-white mt-lg menu-link" data-page="fees">Manage Fees</button>
                 </div>
-                <div class="card">
+                <div class="card card-premium delay-100">
                     <h3>Reports</h3>
                     <p>Generate and view comprehensive school reports.</p>
-                    <button class="btn btn-primary mt-lg menu-link" data-page="reports">View Reports</button>
+                    <button class="btn btn-white mt-lg menu-link" data-page="reports">View Reports</button>
                 </div>
             </div>
         </section>
@@ -399,26 +394,26 @@ const pageTemplates = {
             <p>Generate and view comprehensive school reports.</p>
         </div>
 
-        <div class="card-grid">
-            <div class="card">
+        <div class="card-grid slide-up">
+            <div class="card card-premium delay-100">
                 <h3>Student Reports</h3>
                 <p>View detailed student performance and attendance reports.</p>
-                <button class="btn btn-primary mt-lg">Generate Report</button>
+                <button class="btn btn-white mt-lg">Generate Report</button>
             </div>
-            <div class="card">
+            <div class="card card-premium delay-200">
                 <h3>Fee Reports</h3>
                 <p>View fee collection reports and outstanding dues summary.</p>
-                <button class="btn btn-primary mt-lg">Generate Report</button>
+                <button class="btn btn-white mt-lg">Generate Report</button>
             </div>
-            <div class="card">
+            <div class="card card-premium delay-300">
                 <h3>Attendance Reports</h3>
                 <p>View class-wise and student-wise attendance reports.</p>
-                <button class="btn btn-primary mt-lg">Generate Report</button>
+                <button class="btn btn-white mt-lg">Generate Report</button>
             </div>
-            <div class="card">
+            <div class="card card-premium delay-100">
                 <h3>Exam Reports</h3>
                 <p>View examination results and performance analysis.</p>
-                <button class="btn btn-primary mt-lg">Generate Report</button>
+                <button class="btn btn-white mt-lg">Generate Report</button>
             </div>
         </div>
 

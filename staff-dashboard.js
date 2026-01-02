@@ -20,56 +20,51 @@ const staffMockData = {
 const staffTemplates = {
     dashboard: `
         <div class="fade-in">
-            <div class="content-header">
-                <h2>Staff Dashboard</h2>
-                <p>Welcome, Teacher. Here is your daily overview.</p>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Assigned Classes</h3>
+            <div class="admin-stats-grid">
+                <div class="admin-stat-card">
+                    <div class="stat-label">Assigned Classes</div>
                     <div class="stat-value">3</div>
-                    <div class="stat-label">Classes 10-A, 10-B, 9-A</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">10-A, 10-B, 9-A</div>
                 </div>
-                <div class="stat-card">
-                    <h3>Total Students</h3>
+                <div class="admin-stat-card">
+                    <div class="stat-label">Total Students</div>
                     <div class="stat-value">135</div>
-                    <div class="stat-label">Under your mentorship</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Across your classes</div>
                 </div>
-                <div class="stat-card">
-                    <h3>Attendance Today</h3>
+                <div class="admin-stat-card">
+                    <div class="stat-label">Attendance Today</div>
                     <div class="stat-value">92%</div>
-                    <div class="stat-label">Average across classes</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Average daily rate</div>
                 </div>
-                <div class="stat-card">
-                    <h3>Pending Tasks</h3>
+                 <div class="admin-stat-card">
+                    <div class="stat-label">Pending Tasks</div>
                     <div class="stat-value">2</div>
-                    <div class="stat-label">Marks upload pending</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Marks upload pending</div>
                 </div>
             </div>
 
-            <section class="section">
+            <section class="section slide-up">
                 <h2 class="section-title">Quick Actions</h2>
                 <div class="card-grid">
-                    <div class="card">
+                    <div class="card card-premium delay-100">
                         <h3>Mark Attendance</h3>
                         <p>Mark daily attendance for your assigned classes.</p>
-                        <button class="btn btn-primary mt-lg" onclick="openModal('markAttendanceModal')">Mark Attendance</button>
+                        <button class="btn btn-white mt-lg" onclick="openModal('markAttendanceModal')">Mark Attendance</button>
                     </div>
-                    <div class="card">
+                    <div class="card card-premium delay-200">
                         <h3>Upload Marks</h3>
                         <p>Upload results for completed examinations.</p>
-                        <button class="btn btn-primary mt-lg" onclick="openModal('uploadMarksModal')">Upload Marks</button>
+                        <button class="btn btn-white mt-lg" onclick="openModal('uploadMarksModal')">Upload Marks</button>
                     </div>
-                    <div class="card">
+                    <div class="card card-premium delay-300">
                         <h3>View Students</h3>
                         <p>Access student profiles and academic records.</p>
-                        <button class="btn btn-primary mt-lg menu-link" data-page="students">Student List</button>
+                        <button class="btn btn-white mt-lg menu-link" data-page="students">Student List</button>
                     </div>
-                    <div class="card">
+                    <div class="card card-premium delay-100">
                         <h3>Exam Schedule</h3>
                         <p>View upcoming exams and invigilation duties.</p>
-                        <button class="btn btn-primary mt-lg menu-link" data-page="exams">View Exams</button>
+                        <button class="btn btn-white mt-lg menu-link" data-page="exams">View Exams</button>
                     </div>
                 </div>
             </section>
