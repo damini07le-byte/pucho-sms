@@ -4,7 +4,7 @@
 
 // Mock admin credentials (for demo purposes)
 const ADMIN_CREDENTIALS = {
-    username: 'admin@puchopublicschool.edu.in',
+    username: 'admin@pucho.com',
     password: 'admin123'
 };
 
