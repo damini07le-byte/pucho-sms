@@ -29,7 +29,6 @@ const dashboard = {
                 { id: 'fees', name: 'Fee Management', icon: '💰' },
                 { id: 'exams', name: 'Exams & Results', icon: '📝' },
                 { id: 'attendance_all', name: 'Attendance', icon: '📅' },
-                { id: 'safety_monitor', name: 'Safety Monitor', icon: '🛡️' },
                 { id: 'ai_insights', name: 'AI Insights', icon: '🧠' },
                 { id: 'communication', name: 'Communication', icon: '📢' },
                 { id: 'reports', name: 'Reports', icon: '📈' },
@@ -128,7 +127,6 @@ const dashboard = {
             fees: { title: 'Finance Center', desc: 'Fee structures, billing, and collection' },
             exams: { title: 'Examination Office', desc: 'Schedule exams and manage academic results' },
             attendance_all: { title: 'Global Attendance', desc: 'Monitor daily presence for students and staff' },
-            safety_monitor: { title: 'Safety & Security', desc: 'Real-time student tracking and emergency alerts' },
             ai_insights: { title: 'AI Academic Insights', desc: 'Predictive analytics and performance intervention' },
             communication: { title: 'Broadcast Room', desc: 'Send circulars and notifications' },
             reports: { title: 'System Reports', desc: 'Detailed analytics and exportable reports' },
@@ -759,46 +757,8 @@ const dashboard = {
                     ${this.card('Total Students', schoolDB.students.length, 'Students', '👨‍🎓')}
                     ${this.card('Faculty Count', schoolDB.staff.length, 'Staff', '👩‍🏫', 'blue')}
                     ${this.card('Pending Admissions', pending, 'Applications', '📝', 'orange')}
-                    ${this.card('Safety Alerts', '2 Critical', 'Security', '🚨', 'red')}
+                    ${this.card('Daily Attendance', '94%', 'Average', '✅', 'green')}
                 </div>`;
-
-                // Add Safety Alert Section for Admin
-                const safetyAlerts = `
-                    <div class="mt-8 bg-white p-8 rounded-[40px] border border-red-100 shadow-glow animate-pulse">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="font-bold text-xl text-red-600 flex items-center gap-2">
-                                <span class="text-2xl">🚨</span> CRITICAL SAFETY ALERTS
-                            </h3>
-                            <div class="flex gap-4">
-                                <button onclick="dashboard.triggerSafetySimulation()" class="text-[10px] font-bold bg-white px-4 py-2 border border-red-200 rounded-xl hover:bg-red-50 transition-all uppercase tracking-widest">Simulate AI Scan</button>
-                                <button class="text-xs font-bold text-red-600 uppercase tracking-widest hover:underline">View All Protocols</button>
-                            </div>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="p-4 bg-red-50 rounded-2xl flex items-center justify-between border border-red-100">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-xl shadow-sm">📍</div>
-                                    <div>
-                                        <p class="font-bold text-pucho-dark">Arjun Das (ID: S001)</p>
-                                        <p class="text-xs text-red-500 font-bold">Attendance Mismatch: Scanned on BUS (08:15 AM) but NO-SHOW in Class 10A.</p>
-                                    </div>
-                                </div>
-                                <button class="bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg" onclick="showToast('Emergency call initiated to Guardian: Vikram Das', 'warning')">CALL PARENT</button>
-                            </div>
-                            <div class="p-4 bg-orange-50 rounded-2xl flex items-center justify-between border border-orange-100 opacity-80">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-xl shadow-sm">🚌</div>
-                                    <div>
-                                        <p class="font-bold text-pucho-dark">Riya Sharma (ID: S002)</p>
-                                        <p class="text-xs text-orange-600 font-bold">Bus Delayed: Route #12 stuck in traffic (预计 10 min delay).</p>
-                                    </div>
-                                </div>
-                                <span class="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Auto-Notified Parents</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                cards += safetyAlerts;
 
             } else if (role === 'staff') {
                 // STAFF DASHBOARD ENHANCEMENTS
@@ -1505,62 +1465,6 @@ const dashboard = {
             return content;
         },
 
-        safety_monitor: function () {
-            return `
-                <div class="space-y-8 animate-fade-in">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="p-8 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:shadow-glow transition-all">
-                            <h4 class="text-gray-500 text-sm font-medium mb-1">Active Buses</h4>
-                            <p class="text-3xl font-bold text-pucho-dark tracking-tight">12 <span class="text-xs text-green-500 uppercase tracking-widest font-bold ml-2">● On Route</span></p>
-                        </div>
-                        <div class="p-8 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:shadow-glow transition-all">
-                            <h4 class="text-gray-500 text-sm font-medium mb-1">Student Check-ins</h4>
-                            <p class="text-3xl font-bold text-pucho-dark tracking-tight">1,492 / 1,500</p>
-                        </div>
-                        <div class="p-8 bg-red-50 border border-red-100 rounded-[32px] shadow-sm hover:shadow-glow transition-all">
-                            <h4 class="text-red-500 text-sm font-medium mb-1">Mismatch Alerts</h4>
-                            <p class="text-3xl font-bold text-red-600 tracking-tight">2 Critical</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-subtle">
-                        <div class="p-8 border-b border-gray-50 flex justify-between items-center">
-                            <div>
-                                <h3 class="font-bold text-2xl">Real-time Safety Logs</h3>
-                                <p class="text-xs text-gray-400 mt-1 font-inter">Last Sync: Just Now</p>
-                            </div>
-                            <span class="px-4 py-2 bg-green-100 text-green-700 rounded-full text-xs font-bold animate-pulse">LIVE TRACKING</span>
-                        </div>
-                        <div class="divide-y divide-gray-50">
-                            <div class="p-6 flex items-center justify-between hover:bg-red-50 transition-colors group">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">⚠️</div>
-                                    <div>
-                                        <h4 class="font-bold text-pucho-dark">Arjun Das (10A)</h4>
-                                        <p class="text-xs text-gray-400">Bus Scan: 08:15 AM | Class Scan: <span class="text-red-600 font-bold uppercase tracking-widest">MISSING</span></p>
-                                    </div>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button class="px-5 py-2.5 bg-pucho-dark text-white rounded-xl text-xs font-bold shadow-lg hover:bg-pucho-purple transition-all" onclick="dashboard.initProtocol('Arjun Das')">LOG PROTOCOL</button>
-                                    <button class="px-5 py-2.5 border-2 border-red-200 text-red-600 rounded-xl text-xs font-bold hover:bg-red-600 hover:text-white transition-all" onclick="showToast('Panic Alert sent to Local Security & Principal', 'error')">EMERGENCY</button>
-                                </div>
-                            </div>
-                            <div class="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors group">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">🚌</div>
-                                    <div>
-                                        <h4 class="font-bold text-pucho-dark">Route #4 (South Campus)</h4>
-                                        <p class="text-xs text-gray-400 font-inter">GPS: Near Central Mall | Status: <span class="text-green-600 font-bold font-sans">On Schedule</span></p>
-                                    </div>
-                                </div>
-                                <button class="text-pucho-purple text-xs font-bold hover:underline underline-offset-4 decoration-2">TRACK BUS</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        },
-
         ai_insights: function () {
             return `
                 <div class="space-y-8 animate-fade-in">
@@ -2176,20 +2080,6 @@ const dashboard = {
             setTimeout(() => showToast('Analyzing 154 pending fee records...', 'info'), 1000);
             setTimeout(() => showToast('AI generated personalized reminders for 12 critical defaults.', 'success'), 2500);
             setTimeout(() => showToast('Multi-channel alerts dispatched (WhatsApp + SMS).', 'success'), 4000);
-        },
-
-        triggerSafetySimulation: function () {
-            showToast('AI Safety Monitor: Real-time scan in progress...', 'info');
-            setTimeout(() => {
-                showToast('ALERT: Attendance Mismatch detected for Arjun Das (10A)', 'error');
-                this.loadPage('safety_monitor');
-            }, 2000);
-        },
-
-        initProtocol: function (studentName) {
-            showToast(`Safety Protocol for ${studentName} initialized.`, 'success');
-            setTimeout(() => showToast(`Guardian notified via prioritized WhatsApp call.`, 'info'), 1500);
-            setTimeout(() => showToast(`Class Teacher (Ms. Priya) alerted for immediate verification.`, 'info'), 3000);
         }
     }
 };
