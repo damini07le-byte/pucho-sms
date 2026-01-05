@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎓 SMS - School Management System</title>
+    <title>Pucho.ai SMS - School Management System</title>
+    <link rel="icon" type="image/png" href="assets/pucho_logo_final.png">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +21,7 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['"Space Grotesk"', 'sans-serif'],
+                        sans: ['"Inter"', 'sans-serif'],
                         inter: ['"Inter"', 'sans-serif'],
                     },
                     colors: {
@@ -49,7 +50,7 @@
             body { 
                 background-color: #f8f9fc;
                 color: #111834;
-                font-family: "Space Grotesk", sans-serif;
+                font-family: "Inter", sans-serif;
                 -webkit-font-smoothing: antialiased;
                 -moz-osx-font-smoothing: grayscale;
             }
@@ -122,9 +123,7 @@
         <header
             class="sticky top-0 z-50 w-full glass h-20 flex items-center justify-between px-6 md:px-12 border-b border-gray-100">
             <div class="flex items-center gap-2">
-                <img src="logo.svg" alt="SMS" class="h-8">
-                <span class="text-xl font-bold tracking-tight text-pucho-dark">pucho.ai <span
-                        class="text-pucho-purple">SMS CLOUD</span></span>
+                <img src="assets/pucho_logo_login.png" alt="Pucho.ai" class="h-8">
             </div>
 
             <nav class="hidden lg:flex items-center gap-6">
@@ -154,7 +153,7 @@
                     </div>
                     <h1 class="text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight text-pucho-dark">
                         Nurturing Minds <br>
-                        <span class="text-pucho-purple underline decoration-4 underline-offset-8">Inspiring</span>
+                        <span class="text-pucho-purple">Inspiring</span>
                         Futures.
                     </h1>
                     <p class="text-lg text-gray-500 font-inter max-w-xl leading-relaxed">
@@ -522,9 +521,7 @@
             <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 font-inter relative z-10">
                 <div class="space-y-6">
                     <div class="flex items-center gap-2">
-                        <img src="logo.svg" alt="SMS" class="h-8 brightness-0 invert">
-                        <span class="text-xl font-bold tracking-tight text-white font-outfit uppercase">pucho.ai <span
-                                class="text-pucho-purple">SMS CLOUD</span></span>
+                        <img src="assets/pucho_logo_login.png" alt="Pucho.ai" class="h-8 brightness-0 invert">
                     </div>
                     <p class="text-gray-400 text-sm leading-relaxed max-w-sm">
                         Defining the future of education through technology and values. Empowering the next generation
@@ -624,74 +621,173 @@
         </div>
     </div>
 
-    <!-- Login Modal -->
+    <!-- Login Modal: Premium Pucho.ai Experience -->
     <div id="loginModal"
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-pucho-dark/40 backdrop-blur-sm hidden animate-fade-in">
-        <div
-            class="bg-white p-8 w-full max-w-md rounded-[32px] border border-white/30 shadow-2xl relative animate-slide-up">
-            <button onclick="router.hideLogin()" class="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-            <div class="text-center mb-8">
-                <img src="logo.svg" alt="Logo" class="h-10 mx-auto mb-6">
-                <h1 id="loginTitle" class="text-3xl font-bold text-pucho-dark mb-2">Login</h1>
-                <p id="loginSubtitle" class="text-gray-500 font-inter">Enter your credentials to continue</p>
-            </div>
+        class="fixed inset-0 z-[100] hidden items-center justify-center bg-[#FAFAFF] overflow-hidden font-sans">
 
-            <form id="loginForm" class="space-y-4 font-inter">
-                <div id="roleSelector">
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Login As</label>
-                    <select id="loginRole"
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none appearance-none cursor-pointer">
-                        <option value="parent">Parent</option>
-                        <option value="staff">Staff / Teacher</option>
-                        <option value="admin">Administrator</option>
-                    </select>
+        <!-- Full Screen Grid Pattern - Base -->
+        <div class="absolute inset-0 z-0 opacity-100 pointer-events-none"
+            style="background-image: linear-gradient(#cbd5e1 1px, transparent 1px), linear-gradient(90deg, #cbd5e1 1px, transparent 1px); background-size: 64px 64px; -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%);">
+        </div>
+
+        <!-- Interactive Grid Spotlight (Purple Glow) -->
+        <div id="loginSpotlight" class="absolute inset-0 z-0 pointer-events-none opacity-50"
+            style="background: radial-gradient(600px circle at 50% 50%, rgba(139, 92, 246, 0.15), transparent 40%);">
+        </div>
+
+        <!-- Ambient Gradients -->
+        <div
+            class="absolute top-0 left-0 w-[800px] h-[800px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none -translate-x-1/2 -translate-y-1/2">
+        </div>
+        <div
+            class="absolute bottom-0 right-0 w-[800px] h-[800px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none translate-x-1/2 translate-y-1/2">
+        </div>
+
+        <!-- Close Button -->
+        <button onclick="router.hideLogin()"
+            class="absolute top-6 right-6 z-50 p-3 bg-white rounded-full shadow-sm border border-gray-100 text-gray-400 hover:text-pucho-dark transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+
+        <!-- Floating Mascots -->
+        <div class="absolute inset-0 pointer-events-none overflow-hidden h-full w-full z-10">
+            <div class="absolute top-[12%] left-4 md:top-[8%] md:left-[5%] animate-float">
+                <div
+                    class="w-16 h-16 rounded-full overflow-hidden shadow-lg border border-white/40 bg-white/50 backdrop-blur-sm">
+                    <img src="assets/mascot_1.png" class="w-full h-full object-cover">
                 </div>
-                <div id="signupFields" class="hidden space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1 text-gray-700">Full Name</label>
-                        <input type="text" id="regName" placeholder="Your Name"
-                            class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none shadow-sm">
-                    </div>
-                    <!-- Email and Pass are shared below -->
+            </div>
+            <div class="absolute top-[15%] right-4 md:right-[5%] animate-float" style="animation-delay: 1.5s">
+                <div
+                    class="w-16 h-16 rounded-full overflow-hidden shadow-lg border border-white/40 bg-white/50 backdrop-blur-sm">
+                    <img src="assets/mascot_5.png" class="w-full h-full object-cover">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Email / Username</label>
-                    <input type="text" id="username"
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple focus:ring-4 focus:ring-pucho-purple/10 outline-none transition-all placeholder:text-gray-400"
-                        placeholder="Enter your ID">
+            </div>
+            <div class="absolute bottom-[10%] left-10 md:bottom-[15%] md:left-[8%] animate-float"
+                style="animation-delay: 0.8s">
+                <div
+                    class="w-16 h-16 rounded-full overflow-hidden shadow-lg border border-white/40 bg-white/50 backdrop-blur-sm">
+                    <img src="assets/mascot_3.png" class="w-full h-full object-cover">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Password</label>
-                    <input type="password" id="password"
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple focus:ring-4 focus:ring-pucho-purple/10 outline-none transition-all placeholder:text-gray-400"
-                        placeholder="••••••••">
-                    <div class="flex justify-end mt-2">
-                        <button type="button" onclick="auth.showForgotPass()"
-                            class="text-xs font-bold text-pucho-purple hover:underline">Forgot Password?</button>
-                    </div>
+            </div>
+            <div class="absolute bottom-[12%] right-10 md:bottom-[8%] md:right-[10%] animate-float"
+                style="animation-delay: 2.2s">
+                <div
+                    class="w-16 h-16 rounded-full overflow-hidden shadow-lg border border-white/40 bg-white/50 backdrop-blur-sm">
+                    <img src="assets/mascot_4.png" class="w-full h-full object-cover">
                 </div>
-                <button type="submit" id="authSubmit"
-                    class="w-full bg-pucho-dark text-white py-4 rounded-2xl font-bold hover:shadow-glow hover:bg-pucho-purple transition-all duration-300 transform active:scale-[0.98] mt-4">
-                    Sign In
-                </button>
-                <div id="loginError" class="text-red-500 text-sm font-medium text-center hidden mt-2">Invalid
-                    credentials for selected role.</div>
-                <div class="text-center mt-6">
-                    <p id="authToggleText" class="text-sm text-gray-500">Don't have an account? <button type="button"
-                            onclick="router.showSignup()" class="text-pucho-purple font-bold hover:underline">Register
-                            as Parent</button></p>
-                </div>
-            </form>
-            <div id="demoAccounts" class="mt-6 pt-6 border-t border-gray-100 text-center">
-                <p class="text-xs text-gray-400 font-inter">Demo Accounts: <b>admin / 123</b> | <b>staff / 123</b> |
-                    <b>parent / 123</b>
-                </p>
             </div>
         </div>
+
+        <div class="w-full max-w-6xl mx-auto grid md:grid-cols-2 gap-12 lg:gap-24 relative z-20 items-center px-4">
+            <!-- Left Side: Pucho branding -->
+            <div class="hidden md:block space-y-8 animate-fade-in pl-12">
+                <img src="assets/pucho_logo_login.png" alt="Pucho" class="h-10">
+                <div class="space-y-4">
+                    <div class="text-[10px] font-bold text-purple-600 tracking-wider uppercase">Built on Pucho.ai</div>
+                    <h1 class="text-6xl font-black text-pucho-dark leading-[0.9] tracking-tighter">
+                        Build.<br>
+                        <span class="text-purple-600/80">Automate.</span><br>
+                        Scale.
+                    </h1>
+                    <p class="text-gray-500 text-sm max-w-xs font-inter leading-relaxed opacity-80">
+                        Access your educational command center to manage school workflows that think.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Side: Login Card -->
+            <div class="flex items-center justify-center md:items-start">
+                <div
+                    class="bg-white/70 backdrop-blur-xl p-8 lg:p-12 rounded-[40px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] w-full max-w-md border border-white/50 relative overflow-hidden">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-black text-pucho-dark tracking-tight">Welcome Back</h2>
+                        <p class="text-gray-400 text-sm mt-1">Enter credentials to access Pucho SMS</p>
+                    </div>
+
+                    <form id="loginForm" class="space-y-6">
+                        <div class="space-y-1">
+                            <label class="text-[10px] uppercase font-black tracking-widest text-pucho-purple ml-2">Login
+                                Role</label>
+                            <select id="loginRole"
+                                class="w-full bg-gray-50 border border-black/5 p-4 rounded-2xl outline-none focus:border-purple-500 transition-all appearance-none cursor-pointer">
+                                <option value="parent">Parent</option>
+                                <option value="staff">Staff / Teacher</option>
+                                <option value="admin">Administrator</option>
+                            </select>
+                        </div>
+
+                        <div id="signupFields" class="hidden animate-slide-up space-y-1">
+                            <label class="text-[10px] uppercase font-black tracking-widest text-pucho-purple ml-2">Full
+                                Name</label>
+                            <input type="text" id="regName" placeholder="Your Name"
+                                class="w-full bg-gray-50 border border-black/5 p-4 rounded-2xl outline-none focus:border-purple-500 transition-all">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] uppercase font-black tracking-widest text-pucho-purple ml-2">Email
+                                / Username</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">👤</span>
+                                <input type="text" id="username" placeholder="Username"
+                                    class="w-full bg-gray-50 border border-black/5 p-4 pl-12 rounded-2xl outline-none focus:border-purple-500 transition-all">
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label
+                                class="text-[10px] uppercase font-black tracking-widest text-pucho-purple ml-2">Password</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔒</span>
+                                <input type="password" id="password" placeholder="••••••••"
+                                    class="w-full bg-gray-50 border border-black/5 p-4 pl-12 rounded-2xl outline-none focus:border-purple-500 transition-all">
+                            </div>
+                            <div class="flex justify-end p-1">
+                                <button type="button" onclick="auth.showForgotPass()"
+                                    class="text-[10px] font-bold text-pucho-purple hover:underline">Forgot
+                                    Password?</button>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="authSubmit"
+                            class="w-full bg-gradient-to-b from-[#5833EF] to-[#3A10CE] text-white h-14 rounded-full font-bold text-lg shadow-[0_5px_15px_rgba(58,16,206,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 relative group overflow-hidden">
+                            <!-- Gloss Effect -->
+                            <div
+                                class="absolute top-[1px] left-[1px] right-[1px] h-[26px] rounded-full pointer-events-none bg-gradient-to-b from-white/20 to-transparent z-1">
+                            </div>
+                            <span id="authText">Sign In</span>
+                            <span
+                                class="text-xl transform -rotate-45 group-hover:translate-x-1 transition-transform">→</span>
+                        </button>
+
+                        <div id="loginError"
+                            class="p-3 rounded-xl bg-red-50 text-red-600 text-[10px] font-bold text-center hidden uppercase tracking-wide">
+                            Invalid Credentials</div>
+
+                        <div class="text-center pt-4 border-t border-gray-50">
+                            <p id="authToggleText" class="text-xs text-gray-400">
+                                Don't have an account? <button type="button" onclick="router.showSignup()"
+                                    class="text-pucho-purple font-black hover:underline">Register as Parent</button>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mouse Interaction Script -->
+        <script>
+            document.getElementById('loginModal').addEventListener('mousemove', (e) => {
+                const spotlight = document.getElementById('loginSpotlight');
+                const x = e.clientX;
+                const y = e.clientY;
+                spotlight.style.background = `radial-gradient(600px circle at ${x}px ${y}px, rgba(139, 92, 246, 0.15), transparent 40%)`;
+            });
+        </script>
     </div>
 
     <!-- Staff Modal -->
@@ -811,8 +907,7 @@
         <aside id="sidebar"
             class="w-[240px] h-screen bg-white border-r border-gray-100 flex flex-col fixed inset-y-0 left-0 z-30 transition-transform duration-300 lg:translate-x-0 -translate-x-full">
             <div class="px-6 py-4 border-b border-gray-50 flex items-center h-[76px] gap-2">
-                <img src="logo.svg" alt="SMS CLOUD" class="h-8 w-auto">
-                <span class="font-bold text-sm">pucho.ai <span class="text-pucho-purple">SMS</span></span>
+                <img src="assets/pucho_logo_sidebar_v2.png" alt="Pucho" class="h-8 w-auto">
             </div>
 
             <nav id="navLinks" class="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
