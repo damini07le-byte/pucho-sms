@@ -55,12 +55,21 @@ const auth = {
 
     checkSession: function () {
         if (this.currentUser) {
-            if (document.getElementById('landingSection')) document.getElementById('landingSection').classList.add('hidden');
-            if (document.getElementById('loginModal')) document.getElementById('loginModal').classList.add('hidden');
-            document.getElementById('appShell').classList.remove('hidden');
-            document.body.classList.remove('overflow-hidden'); // Allow scroll in dashboard if needed, or keep hidden if shell manages it
-            populateUserInfo(this.currentUser);
-            dashboard.init();
+            // Smart Routing: Only redirect if hash indicates a dashboard page
+            const hash = window.location.hash;
+            const isDashboardRoute = hash && hash !== '#home' && hash !== '#' && hash.length > 2;
+
+            if (isDashboardRoute) {
+                // Show Dashboard
+                if (document.getElementById('landingSection')) document.getElementById('landingSection').classList.add('hidden');
+                if (document.getElementById('loginModal')) document.getElementById('loginModal').classList.add('hidden');
+                document.getElementById('appShell').classList.remove('hidden');
+                document.body.classList.remove('overflow-hidden');
+                populateUserInfo(this.currentUser);
+                dashboard.init();
+            } else {
+                // Stay on Landing Page - Logic to modify buttons REMOVED per user request
+            }
         }
     },
 
@@ -146,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (await auth.login(email, pass, role)) {
                 errorDiv.classList.add('hidden');
+                window.location.hash = '#overview'; // Force redirect to Dashboard
                 auth.checkSession();
             } else {
                 errorDiv.classList.remove('hidden');
