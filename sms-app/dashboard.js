@@ -4,10 +4,164 @@ const dashboard = {
     supabaseUrl: 'https://zpkjmfaqwjnkoppvrsrl.supabase.co', // Aapka Project URL
     supabaseKey: 'YOUR_SUPABASE_ANON_KEY', // Yahan apni Anon Key dalein
 
+    // Data State
+    isDbConnected: false,
+
+    // Supabase Helper
+    db: async function (table, method = 'GET', body = null, query = '') {
+        if (this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+            console.warn(`[Supabase] Using Mock Data for ${table}. Please set your Anon Key.`);
+            return null;
+        }
+
+        const url = `${this.supabaseUrl}/rest/v1/${table}${query}`;
+        const headers = {
+            'apikey': this.supabaseKey,
+            'Authorization': `Bearer ${this.supabaseKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: headers,
+                body: body ? JSON.stringify(body) : null
+            });
+            if (!response.ok) throw new Error(`DB Error: ${response.statusText}`);
+            this.isDbConnected = true;
+            return await response.json();
+        } catch (err) {
+            console.error(`[Supabase Error] ${table}:`, err);
+            showToast(`Connection error for ${table}`, 'error');
+            return null;
+        }
+    },
+
+    // Sync Local DB with Supabase
+    syncDB: async function () {
+        const content = document.getElementById('mainContent');
+        if (content) content.innerHTML = this.templates.skeleton();
+        // showToast('Syncing with Cloud Database...', 'info');
+
+        // Fetch All Tables (Parallel)
+        const [students, staff, fees, attendance, exams, results, admissions, notices, quizzes] = await Promise.all([
+            this.db('students'),
+            this.db('staff'),
+            this.db('fees_payments'),
+            this.db('attendance'),
+            this.db('exams'),
+            this.db('results'),
+            this.db('admissions'),
+            this.db('notices'),
+            this.db('quizzes')
+        ]);
+
+        if (students) schoolDB.students = students;
+        if (staff) schoolDB.staff = staff;
+        if (fees) schoolDB.fees = fees;
+        if (attendance) schoolDB.attendance = attendance;
+        if (exams) schoolDB.exams = exams;
+        if (results) schoolDB.results = results;
+        if (admissions) schoolDB.admissions = admissions;
+        if (notices) schoolDB.notices = notices;
+        if (quizzes) schoolDB.quizzes = quizzes;
+
+        if (this.isDbConnected) {
+            showToast('✅ Cloud Sync Complete', 'success');
+        } else {
+            showToast('Using Local Cache (Offline)', 'warning');
+        }
+    },
+
+    // Dynamic Stats Calculator
+    getDashboardStats: function (role) {
+        const stats = {
+            admin: [
+                { title: 'Total Students', value: schoolDB.students.length, sub: 'Active', icon: '👨‍🎓', color: 'blue' },
+                { title: 'Pending Fees', value: `₹${schoolDB.fees.filter(f => f.status !== 'Paid').reduce((acc, f) => acc + f.amount, 0).toLocaleString()}`, sub: 'Unpaid', icon: '💳', color: 'red' },
+                { title: 'Staff Active', value: schoolDB.staff.filter(s => s.status === 'Active').length, sub: 'On Duty', icon: '👩‍🏫', color: 'purple' },
+                { title: 'Admissions', value: schoolDB.admissions.length, sub: 'Pending', icon: '🏫', color: 'orange' }
+            ],
+            staff: [
+                { title: 'My Students', value: schoolDB.students.length, sub: 'Assigned', icon: '👨‍🎓', color: 'blue' },
+                { title: 'Attendance Today', value: '95%', sub: 'Avg.', icon: '✅', color: 'green' },
+                { title: 'Pending Quizzes', value: schoolDB.quizzes.length, sub: 'Active', icon: '⚡', color: 'purple' },
+                { title: 'Notices', value: schoolDB.notices.length, sub: 'New', icon: '🔔', color: 'orange' }
+            ],
+            parent: [
+                { title: 'Attendance', value: '98%', sub: 'Monthly', icon: '📅', color: 'green' },
+                { title: 'Fees Clear', value: '₹0', sub: 'Dues', icon: '💳', color: 'blue' },
+                { title: 'Class Rank', value: '05', sub: 'Academic', icon: '🏆', color: 'purple' },
+                { title: 'Exams Left', value: schoolDB.exams.length, sub: 'Scheduled', icon: '📝', color: 'orange' }
+            ]
+        };
+        return stats[role.toLowerCase()] || stats.admin;
+    },
+
+    // Chart Initialization Engine
+    initCharts: function () {
+        const ctxAttendance = document.getElementById('attendanceChart');
+        const ctxRevenue = document.getElementById('revenueChart');
+
+        if (ctxAttendance) {
+            new Chart(ctxAttendance, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                    datasets: [{
+                        label: 'Attendance %',
+                        data: [95, 98, 92, 96, 94, 97],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#8b5cf6',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: false, grid: { display: false } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        if (ctxRevenue) {
+            new Chart(ctxRevenue, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [45000, 52000, 48000, 61000, 55000, 67000],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 8,
+                        barThickness: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+    },
+
     // Initial Load Logic
-    init: function () {
+    init: async function () {
         this.renderSidebar();
+        await this.syncDB();
         this.loadPage('overview');
+        // Initial Chart load if on overview
+        setTimeout(() => this.initCharts(), 500);
     },
 
     getMenuItems: function (role) {
@@ -57,7 +211,7 @@ const dashboard = {
     },
 
     // Utility Functions
-    submitApplication: function (e) {
+    submitApplication: async function (e) {
         e.preventDefault();
         const appData = {
             id: "ADM-" + Math.floor(Math.random() * 10000),
@@ -65,39 +219,41 @@ const dashboard = {
             grade: document.getElementById('appGrade').value,
             dob: document.getElementById('appDob').value,
             parent_name: document.getElementById('appFather').value,
-            parentEmail: auth.currentUser.email,
-            mobile: document.getElementById('appPhone').value,
+            parent_email: auth.currentUser.email,
+            phone: document.getElementById('appPhone').value,
             address: document.getElementById('appAddress').value,
             status: 'Pending',
-            date: new Date().toLocaleDateString()
+            docs: {
+                birth_cert: document.getElementById('status_birth_cert').innerText.includes('Selected') ? 'uploaded' : 'missing',
+                address_proof: document.getElementById('status_address_proof').innerText.includes('Selected') ? 'uploaded' : 'missing'
+            }
         };
 
-        // --- PUCHO STUDIO WEBHOOK INTEGRATION ---
-        const webhookUrl = 'https://studio.pucho.ai/api/v1/webhooks/9OLZGyCFZLulRiEciSz01';
+        showToast('Processing application...', 'info');
 
-        showToast('Sending application to Pucho Studio...', 'info');
+        const result = await this.db('admissions', 'POST', appData);
 
-        fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(appData)
-        })
-            .then(response => {
-                if (response.ok) {
-                    schoolDB.admissions.push(appData);
-                    showToast('🎉 Application Submitted & Workflow Triggered!', 'success');
-                    this.loadPage('my_applications');
-                } else {
-                    throw new Error('Webhook failed');
-                }
-            })
-            .catch(err => {
-                console.error('Automation Error:', err);
-                // Fallback: Still save to local DB even if webhook fails for demo stability
-                schoolDB.admissions.push(appData);
-                showToast('Application saved locally (Webhook pending).', 'warning');
-                this.loadPage('my_applications');
-            });
+        if (result) {
+            schoolDB.admissions.unshift(appData);
+            showToast('🎉 Application Submitted!', 'success');
+            this.loadPage('my_applications');
+        } else {
+            // Fallback
+            schoolDB.admissions.unshift(appData);
+            showToast('Saved locally (Sync pending).', 'warning');
+            this.loadPage('my_applications');
+        }
+    },
+
+    handleFileUpload: function (input, type) {
+        const statusEl = document.getElementById(`status_${type}`);
+        if (input.files && input.files[0]) {
+            const fileName = input.files[0].name;
+            statusEl.innerText = `Selected: ${fileName}`;
+            statusEl.classList.remove('text-gray-400');
+            statusEl.classList.add('text-pucho-purple', 'font-bold');
+            showToast(`${fileName} prepared for upload.`, 'info');
+        }
     },
 
     renderSidebar: function () {
@@ -108,7 +264,7 @@ const dashboard = {
         const items = this.getMenuItems(role);
         items.forEach(item => {
             const link = document.createElement('a');
-            link.href = '#';
+            link.href = 'javascript:void(0)'; // Prevent default navigation reloading page
             link.className = `flex items-center gap-[12px] px-[16px] h-[44px] rounded-[22px] text-[14px] font-medium transition-all duration-200 hover:bg-gray-50 text-pucho-dark group`;
             if (item.id === 'overview') link.classList.add('bg-pucho-purple/10', 'active-nav');
 
@@ -166,6 +322,9 @@ const dashboard = {
 
         if (this.templates[id]) {
             content.innerHTML = this.templates[id](role);
+            if (id === 'overview') {
+                setTimeout(() => this.initCharts(), 100);
+            }
         } else {
             content.innerHTML = `
                 <div class="flex flex-col items-center justify-center p-20 animate-fade-in text-center">
@@ -178,15 +337,23 @@ const dashboard = {
     },
 
     showAddStaffModal: function () {
-        document.getElementById('staffModal').classList.remove('hidden');
-        document.querySelector('#staffModal h1').innerText = "Add New Staff";
-        document.getElementById('staffForm').reset();
-        delete document.getElementById('staffForm').dataset.editId;
+        const modal = document.getElementById('staffModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        document.querySelector('#staffModal h1').innerText = "Onboard New Staff";
+        document.querySelector('#staffModal p').innerText = "Details will be sent to the automation flow";
+        const submitBtn = document.querySelector('#staffForm button[type="submit"]');
+        if (submitBtn) submitBtn.innerText = "Add & Notify Staff";
+
         const form = document.getElementById('staffForm');
-        form.onsubmit = (e) => {
-            e.preventDefault();
-            this.submitStaffData();
-        };
+        if (form) {
+            form.reset();
+            delete form.dataset.editId;
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                this.submitStaffData(e);
+            };
+        }
     },
 
     loadAttendanceStudents: function () {
@@ -225,7 +392,7 @@ const dashboard = {
         </div>`;
     },
 
-    publishQuiz: function () {
+    publishQuiz: async function () {
         const cls = document.getElementById('quizClass').value;
         const div = document.getElementById('quizDiv').value;
         const subject = document.getElementById('quizSubject').value;
@@ -240,156 +407,159 @@ const dashboard = {
         const newQuiz = {
             id: 'QZ-' + Math.floor(Math.random() * 10000),
             title, class: cls, division: div || 'All', subject, type,
-            date: new Date().toLocaleDateString(),
+            date: new Date().toISOString().split('T')[0],
             status: 'Active'
         };
 
-        schoolDB.quizzes.unshift(newQuiz);
-        showToast(`Assesssment Published for ${cls} ${div || ''}!`, 'success');
-        this.loadPage('manage_quizzes');
+        const result = await this.db('quizzes', 'POST', newQuiz);
+        if (result) {
+            schoolDB.quizzes.unshift(newQuiz);
+            showToast(`Assessment Published for ${cls}!`, 'success');
+            this.loadPage('manage_quizzes');
+        }
     },
 
-    submitStaffData: function () {
-        const editId = document.getElementById('staffForm').dataset.editId;
-        const staffData = {
-            id: editId || 'S' + Math.floor(Math.random() * 1000),
-            name: document.getElementById('staffName').value,
-            email: document.getElementById('staffEmail').value,
-            mobile: document.getElementById('staffPhone').value,
-            dept: document.getElementById('staffDept').value,
-            role: document.getElementById('staffRole').value,
-            class_assigned: document.getElementById('staffClass').value,
-            division_assigned: document.getElementById('staffDivision').value,
-            subject: document.getElementById('staffSubject').value,
-            password: document.getElementById('staffPass').value,
-            qualification: document.getElementById('staffQual').value,
-            experience: document.getElementById('staffExp').value,
-            joining_date: document.getElementById('staffJoiningDate').value,
-            action: editId ? 'update_staff_account' : 'create_staff_account'
-        };
+    submitStaffData: async function (event) {
+        if (event) event.preventDefault();
 
-        const webhookUrl = 'https://studio.pucho.ai/api/v1/webhooks/NySXblkkRlsCPEPo87hOm';
-        const submitBtn = document.querySelector('#staffForm button');
-        const originalText = submitBtn.innerText;
+        try {
+            const form = document.getElementById('staffForm');
+            const editId = form.dataset.editId;
+            const staffData = {
+                id: editId || 'T' + Math.floor(Math.random() * 1000), // Changed S to T for staff
+                name: document.getElementById('staffName').value,
+                email: document.getElementById('staffEmail').value,
+                phone: document.getElementById('staffPhone').value,
+                dept: document.getElementById('staffDept').value,
+                role: document.getElementById('staffRole').value,
+                class_assigned: document.getElementById('staffClass').value,
+                division_assigned: document.getElementById('staffDivision').value,
+                subject: document.getElementById('staffSubject').value,
+                password: document.getElementById('staffPass').value,
+                qualification: document.getElementById('staffQual').value,
+                experience: document.getElementById('staffExp').value,
+                joining_date: document.getElementById('staffJoiningDate').value,
+                status: 'Active'
+            };
 
-        submitBtn.innerText = 'Processing...';
-        submitBtn.disabled = true;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = 'Syncing...';
+            submitBtn.disabled = true;
 
-        fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(staffData)
-        })
-            .then(response => {
-                if (response.ok) {
-                    showToast(editId ? 'Staff updated via flow!' : 'Staff added and credentials flow triggered!', 'success');
-                    document.getElementById('staffModal').classList.add('hidden');
+            const method = editId ? 'PATCH' : 'POST';
+            const query = editId ? `?id=eq.${editId}` : '';
 
-                    if (editId) {
-                        const index = schoolDB.staff.findIndex(s => s.id === editId);
-                        if (index !== -1) schoolDB.staff[index] = { ...schoolDB.staff[index], ...staffData };
-                    } else {
-                        schoolDB.staff.push({ ...staffData, status: 'Active' });
-                    }
-                    this.loadPage('staff');
+            const result = await this.db('staff', method, staffData, query);
+
+            if (result) {
+                showToast(editId ? 'Staff updated!' : 'Staff onboarded! 🚀 Cloud Automation Flow Triggered.', 'success');
+                if (editId) {
+                    const index = schoolDB.staff.findIndex(s => s.id === editId);
+                    if (index !== -1) schoolDB.staff[index] = staffData;
                 } else {
-                    throw new Error('Webhook failed');
+                    schoolDB.staff.push(staffData);
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Failed to trigger automation flow.', 'error');
-            })
-            .finally(() => {
-                submitBtn.innerText = originalText;
-                submitBtn.disabled = false;
-            });
+            } else {
+                // Local fallback (Sync pending)
+                if (editId) {
+                    const index = schoolDB.staff.findIndex(s => s.id === editId);
+                    if (index !== -1) schoolDB.staff[index] = staffData;
+                    showToast('Staff updated locally.', 'warning');
+                } else {
+                    schoolDB.staff.push(staffData);
+                    showToast('Staff onboarded locally.', 'warning');
+                }
+            }
+
+            document.getElementById('staffModal').classList.add('hidden');
+            this.loadPage('staff');
+
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+        } catch (err) {
+            console.error("Staff Data Submit Error:", err);
+            showToast("Failed to save staff data. Check console.", "error");
+        }
     },
 
-    approveAdmission: function (id) {
+    approveAdmission: async function (id) {
         if (!confirm("Approve this admission? This will enroll the student.")) return;
 
-        const admissionIndex = schoolDB.admissions.findIndex(a => a.id === id);
-        if (admissionIndex === -1) return;
+        const admission = schoolDB.admissions.find(a => a.id === id);
+        if (!admission) return;
 
-        const admission = schoolDB.admissions[admissionIndex];
-
-        // Generate Student ID (Roll No)
         const studentId = "STD-" + (schoolDB.students.length + 1).toString().padStart(3, '0');
-
         const newStudent = {
             id: studentId,
-            name: admission.studentName || admission.childName, // Handle variation
+            name: admission.student_name,
             class: admission.grade,
-            division: 'A', // Default
-            rollNo: schoolDB.students.length + 1,
-            guardian: admission.parentName,
-            contact: admission.phone,
-            email: admission.email,
-            attendance: '0%', // Initial
-            fees_status: 'Pending',
-            status: 'Active'
+            division: 'A',
+            roll_no: schoolDB.students.length + 1,
+            guardian_name: admission.parent_name,
+            phone: admission.phone,
+            email: admission.parent_email || 'student',
+            dob: admission.dob || "2010-01-01"
         };
 
-        // Move to Students
-        schoolDB.students.push(newStudent);
+        showToast('Enrolling student...', 'info');
 
-        // Remove from Admissions
-        schoolDB.admissions.splice(admissionIndex, 1);
+        // 1. Add to Students
+        const sResult = await this.db('students', 'POST', newStudent);
 
-        showToast(`Student Enrolled Successfully!\nName: ${newStudent.name}\nID: ${newStudent.id}\nClass: ${newStudent.class}`, 'success');
+        if (sResult) {
+            // 2. Update Admission Status
+            await this.db('admissions', 'PATCH', { status: 'Approved' }, `?id=eq.${id}`);
 
-        // Refresh Page
-        this.loadPage('admissions');
+            schoolDB.students.push(newStudent);
+            const idx = schoolDB.admissions.findIndex(a => a.id === id);
+            if (idx !== -1) schoolDB.admissions[idx].status = 'Approved';
+
+            showToast(`Student Enrolled: ${newStudent.id}`, 'success');
+            this.loadPage('admissions');
+        }
     },
 
     editStaff: function (id) {
         const staff = schoolDB.staff.find(s => s.id === id);
         if (!staff) return;
 
-        document.getElementById('staffModal').classList.remove('hidden');
+        const modal = document.getElementById('staffModal');
+        const form = document.getElementById('staffForm');
+        modal.classList.remove('hidden');
         document.querySelector('#staffModal h1').innerText = "Edit Staff Member";
-        document.getElementById('staffForm').dataset.editId = id;
+        document.querySelector('#staffModal p').innerText = "Details will be updated in the automation flow";
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.innerText = "Update & Sync Staff";
+        form.dataset.editId = id;
 
-        document.getElementById('staffName').value = staff.name;
-        document.getElementById('staffEmail').value = staff.email;
-        document.getElementById('staffPhone').value = staff.mobile || staff.phone || '';
-        document.getElementById('staffDept').value = staff.dept;
-        document.getElementById('staffRole').value = staff.role;
-        document.getElementById('staffClass').value = staff.class_assigned || '';
-        document.getElementById('staffDivision').value = staff.division_assigned || '';
-        document.getElementById('staffSubject').value = staff.subject || '';
-        document.getElementById('staffPass').value = staff.password || '';
-        document.getElementById('staffJoiningDate').value = staff.joining_date || '';
+        document.getElementById('staffName').value = staff.name || '';
+        document.getElementById('staffEmail').value = staff.email || '';
+        document.getElementById('staffPhone').value = staff.phone || staff.mobile || '';
+        document.getElementById('staffDept').value = staff.dept || '';
+        document.getElementById('staffRole').value = staff.role || '';
+        document.getElementById('staffClass').value = staff.class_assigned || 'N/A';
+        document.getElementById('staffDivision').value = staff.division_assigned || 'N/A';
+        document.getElementById('staffSubject').value = staff.subject || 'General';
+        document.getElementById('staffPass').value = staff.password || '123';
+        document.getElementById('staffQual').value = staff.qualification || '';
+        document.getElementById('staffExp').value = staff.experience || '';
+        document.getElementById('staffJoiningDate').value = staff.joining_date || new Date().toISOString().split('T')[0];
 
-        document.getElementById('staffForm').onsubmit = (e) => {
+        form.onsubmit = (e) => {
             e.preventDefault();
-            this.submitStaffData();
+            this.submitStaffData(e);
         };
     },
 
-    deleteStaff: function (id) {
-        if (confirm('Are you sure you want to delete this staff member? This will delete directly from Supabase.')) {
-            // Webhook nahi, seedha Database se delete
-            const directDbUrl = `${this.supabaseUrl}/rest/v1/staff?id=eq.${id}`;
-
-            fetch(directDbUrl, {
-                method: 'DELETE',
-                headers: {
-                    'apikey': this.supabaseKey,
-                    'Authorization': `Bearer ${this.supabaseKey}`,
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => {
-                    if (response.ok) {
-                        schoolDB.staff = schoolDB.staff.filter(s => s.id !== id);
-                        this.loadPage('staff');
-                    }
-                })
-                .catch(err => {
-                    console.error('Delete tech error:', err);
-                });
+    deleteStaff: async function (id) {
+        if (confirm('Are you sure you want to delete this staff member?')) {
+            const result = await this.db('staff', 'DELETE', null, `?id=eq.${id}`);
+            if (result) {
+                schoolDB.staff = schoolDB.staff.filter(s => s.id !== id);
+                showToast('Staff removed from cloud.', 'success');
+                this.loadPage('staff');
+            }
         }
     },
 
@@ -398,7 +568,7 @@ const dashboard = {
         document.getElementById('passwordForm').reset();
     },
 
-    submitNewPassword: function () {
+    submitNewPassword: async function () {
         const newPass = document.getElementById('newPassword').value;
         const confirmPass = document.getElementById('confirmPassword').value;
 
@@ -407,7 +577,6 @@ const dashboard = {
             return;
         }
 
-        // Current User Check (For Demo, we assume a simulated user ID or email)
         const currentUser = auth.currentUser;
         if (!currentUser) {
             showToast("No user logged in.", 'error');
@@ -415,87 +584,61 @@ const dashboard = {
         }
 
         const submitBtn = document.querySelector('#passwordForm button');
-        submitBtn.innerText = "Updating...";
+        submitBtn.innerText = "Syncing...";
         submitBtn.disabled = true;
 
-        // Try to find the user in our local staff list by email to get their Supabase ID
         const staffRecord = schoolDB.staff.find(s => s.email === currentUser.email);
         const userId = staffRecord ? staffRecord.id : null;
 
         if (!userId) {
-            setTimeout(() => {
-                showToast("Password updated locally! (In a real app, this would sync to DB)", 'success');
-                document.getElementById('passwordModal').classList.add('hidden');
-                submitBtn.innerText = "Update Password";
-                submitBtn.disabled = false;
-            }, 1000);
+            showToast("Could not find database record. Update skipped.", 'warning');
+            submitBtn.innerText = "Update Password";
+            submitBtn.disabled = false;
             return;
         }
 
-        const directDbUrl = `${this.supabaseUrl}/rest/v1/staff?id=eq.${userId}`;
+        const result = await this.db('staff', 'PATCH', { password: newPass }, `?id=eq.${userId}`);
 
-        fetch(directDbUrl, {
-            method: 'PATCH',
-            headers: {
-                'apikey': this.supabaseKey,
-                'Authorization': `Bearer ${this.supabaseKey}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ password: newPass })
-        })
-            .then(response => {
-                if (response.ok) {
-                    showToast('Password successfully updated in Database!', 'success');
-                    document.getElementById('passwordModal').classList.add('hidden');
-                } else {
-                    showToast('Failed to update password. Check console.', 'error');
-                    console.error('Update failed', response);
-                }
-            })
-            .catch(err => {
-                console.error('Error:', err);
-                showToast('Connection error.', 'error');
-            })
-            .finally(() => {
-                submitBtn.innerText = "Update Password";
-                submitBtn.disabled = false;
-            });
+        if (result) {
+            showToast('Password successfully updated globally!', 'success');
+            document.getElementById('passwordModal').classList.add('hidden');
+        }
+
+        submitBtn.innerText = "Update Password";
+        submitBtn.disabled = false;
     },
 
     filterStaff: function () {
-        const classFilter = document.getElementById('filterClass').value;
-        const divFilter = document.getElementById('filterDivision').value;
-        const tbody = document.getElementById('staffTableBody');
+        const body = document.getElementById('staffTableBody');
+        if (!body) return;
 
-        const filteredStaff = schoolDB.staff.filter(s => {
-            const matchClass = classFilter === '' || s.class_assigned === classFilter;
-            const matchDiv = divFilter === '' || s.division_assigned === divFilter;
-            return matchClass && matchDiv;
-        });
+        const filtered = schoolDB.staff;
 
-        if (filteredStaff.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400">No staff found for selected filters</td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = filteredStaff.map(s => {
-            const classInfo = s.class_assigned ? `<br><span class="text-[10px] text-gray-400 font-medium">Class ${s.class_assigned}-${s.division_assigned || 'A'}</span>` : '';
-            return `<tr class="hover:bg-gray-50/50 font-inter animate-fade-in">
-                <td class="p-6 border-b border-gray-50 font-bold">${s.name}</td>
+        body.innerHTML = filtered.map(s => `
+            <tr class="hover:bg-gray-50/50 font-inter animate-fade-in transition-all">
                 <td class="p-6 border-b border-gray-50">
-                    <span class="text-xs font-bold text-pucho-purple">${s.role}</span>
-                    ${classInfo}
-                </td>
-                <td class="p-6 border-b border-gray-50 text-sm text-gray-400">${s.mobile || s.phone || 'N/A'}</td>
-                <td class="p-6 border-b border-gray-50">
-                    <div class="flex gap-3">
-                        <button onclick="dashboard.editStaff('${s.id}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs uppercase tracking-widest">Edit</button>
-                        <button onclick="dashboard.deleteStaff('${s.id}')" class="text-red-600 hover:text-red-800 font-bold text-xs uppercase tracking-widest">Delete</button>
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-pucho-purple/10 flex items-center justify-center text-pucho-purple font-bold">${(s.name || 'U')[0]}</div>
+                        <div>
+                            <div class="font-bold text-pucho-dark">${s.name || 'Unknown'}</div>
+                            <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">${s.email || 'no-email'}</div>
+                        </div>
                     </div>
                 </td>
-            </tr>`;
-        }).join('');
+                <td class="p-6 border-b border-gray-50">
+                    <span class="text-xs font-bold text-pucho-purple">${s.role || 'Staff'}</span>
+                    <br><span class="text-[10px] text-gray-400 font-medium">${s.dept || 'General'}${s.subject ? ' | ' + s.subject : ''}</span>
+                </td>
+                <td class="p-6 border-b border-gray-50 text-sm font-bold text-gray-400 font-inter">${s.qualification && s.qualification !== 'undefined' ? s.qualification : 'N/A'}</td>
+                <td class="p-6 border-b border-gray-50 text-sm text-gray-400">${s.phone || s.contact || 'N/A'}</td>
+                <td class="p-6 border-b border-gray-50">
+                    <div class="flex gap-3">
+                        <button onclick="dashboard.editStaff('${s.id}')" class="p-2 hover:bg-pucho-purple/10 rounded-lg text-pucho-purple transition-all">✏️</button>
+                        <button onclick="dashboard.deleteStaff('${s.id}')" class="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-all">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     },
 
     showBroadcastModal: function () {
@@ -504,7 +647,7 @@ const dashboard = {
         document.getElementById('bcDate').valueAsDate = new Date();
     },
 
-    publishNotice: function () {
+    publishNotice: async function () {
         const title = document.getElementById('bcTitle').value;
         const content = document.getElementById('bcContent').value;
         const target = document.getElementById('bcTarget').value;
@@ -518,81 +661,104 @@ const dashboard = {
         }
 
         const newNotice = {
-            id: 'N' + Math.floor(Math.random() * 1000),
             title, content, target, date,
             class: noticeClass,
             division: noticeDivision
         };
 
-        schoolDB.notices.unshift(newNotice);
-        showToast('Notice Published Successfully!', 'success');
-        document.getElementById('broadcastModal').classList.add('hidden');
-        this.loadPage('communication');
+        const result = await this.db('notices', 'POST', newNotice);
+        if (result) {
+            schoolDB.notices.unshift(newNotice);
+            showToast('Notice Published!', 'success');
+            document.getElementById('broadcastModal').classList.add('hidden');
+            this.loadPage('communication');
+        }
     },
 
     // Modal Helpers
     showAddStudentModal: function () {
         const modal = document.getElementById('studentModal');
-        if (modal) modal.classList.remove('hidden');
-    },
-
-    showAddStaffModal: function () {
-        const modal = document.getElementById('staffModal');
-        if (modal) modal.classList.remove('hidden');
+        const form = document.getElementById('studentForm');
+        if (modal && form) {
+            form.reset();
+            modal.classList.remove('hidden');
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                showToast("Demo: Student Added Locally!", "success");
+                modal.classList.add('hidden');
+            };
+        }
     },
 
     // Generic Filter Helper
     filterGeneric: function (type) {
-        const classFilter = document.getElementById(`filterClass_${type}`).value;
-        const divFilter = document.getElementById(`filterDivision_${type}`) ? document.getElementById(`filterDivision_${type}`).value : '';
-        const tbody = document.getElementById(`${type}TableBody`);
+        const body = document.getElementById(`${type}TableBody`);
+        if (!body) return;
 
-        let dataSource = [];
-        let rowBuilder = null;
+        let data = schoolDB[type];
+        const classFilter = document.getElementById(`filterClass_${type}`)?.value;
 
-        if (type === 'students') {
-            dataSource = schoolDB.students;
-            rowBuilder = (s) => `<tr class="hover:bg-gray-50/50 font-inter animate-fade-in">
-                <td class="p-6 border-b border-gray-50 font-bold">${s.name}</td>
-                <td class="p-6 border-b border-gray-50 text-xs font-bold text-gray-500 uppercase">${s.id}</td>
-                <td class="p-6 border-b border-gray-50 text-sm font-medium text-gray-500">${s.class}-${s.division}</td>
-                <td class="p-6 border-b border-gray-50 flex gap-2"><button class="text-pucho-purple font-bold text-xs">ID CARD</button></td>
-            </tr>`;
-        } else if (type === 'fees') {
-            // Join fees with students to filter by class
-            dataSource = schoolDB.fees.map(f => {
-                const student = schoolDB.students.find(s => s.id === f.studentId);
-                return { ...f, class: student?.class, division: student?.division };
-            });
-            rowBuilder = (f) => `<tr class="font-inter animate-fade-in">
-                <td class="p-6 border-b border-gray-50 font-bold">${f.studentId}</td>
-                <td class="p-6 border-b border-gray-50 font-bold text-pucho-purple">₹${f.amount}</td>
-                <td class="p-6 border-b border-gray-50"><span class="px-3 py-1 ${f.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} rounded-full text-[10px] font-bold">${f.status}</span></td>
-            </tr>`;
-        } else if (type === 'exams') {
-            dataSource = schoolDB.exams;
-            rowBuilder = (e) => `<tr class="font-inter animate-fade-in">
-                <td class="p-6 border-b border-gray-50 font-bold">${e.title}</td>
-                <td class="p-6 border-b border-gray-50 text-sm font-bold text-gray-500">${e.class}</td>
-                <td class="p-6 border-b border-gray-50 text-sm text-gray-400">${e.startDate}</td>
-            </tr>`;
-        }
+        if (classFilter) data = data.filter(d => d.class === classFilter);
 
-        const filteredData = dataSource.filter(item => {
-            const matchClass = classFilter === '' || item.class === classFilter;
-            const matchDiv = divFilter === '' || (item.division && item.division === divFilter);
-            return matchClass && matchDiv;
-        });
-
-        if (filteredData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-gray-400">No records found</td></tr>`;
+        if (!data || data.length === 0) {
+            body.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400 font-inter font-bold uppercase tracking-widest">No ${type} records found</td></tr>`;
             return;
         }
 
-        tbody.innerHTML = filteredData.map(rowBuilder).join('');
+        body.innerHTML = data.map(d => {
+            if (type === 'students') {
+                return `<tr class="hover:bg-gray-50/50 transition-all animate-fade-in">
+                    <td class="p-6 border-b border-gray-50">
+                        <div class="font-bold text-pucho-dark">${d.name}</div>
+                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ID: ${d.id}</div>
+                    </td>
+                    <td class="p-6 border-b border-gray-50">
+                        <div class="text-sm font-bold text-gray-600">${d.class} - ${d.division}</div>
+                        <div class="text-[10px] text-gray-400 font-bold">Roll: ${d.roll_no}</div>
+                    </td>
+                    <td class="p-6 border-b border-gray-50 text-sm text-gray-500">${d.guardian_name}</td>
+                    <td class="p-6 border-b border-gray-50 text-sm text-gray-500">${d.phone}</td>
+                    <td class="p-6 border-b border-gray-50"><span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">Active</span></td>
+                     <td class="p-6 border-b border-gray-50">
+                        <button class="p-2 hover:bg-pucho-purple/10 rounded-lg text-pucho-purple transition-all">✏️</button>
+                    </td>
+                </tr>`;
+            }
+            if (type === 'fees') {
+                return `<tr class="hover:bg-gray-50/50 transition-all animate-fade-in">
+                    <td class="p-6 border-b border-gray-50 font-bold text-pucho-dark cursor-pointer text-indigo-600 hover:underline">${d.student_id}</td>
+                    <td class="p-6 border-b border-gray-50 text-gray-500 font-medium">${d.type}</td>
+                    <td class="p-6 border-b border-gray-50 font-bold">₹${d.amount?.toLocaleString() || '0'}</td>
+                    <td class="p-6 border-b border-gray-50"><span class="px-3 py-1 ${d.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} rounded-full text-[10px] font-bold uppercase tracking-widest">${d.status}</span></td>
+                </tr>`;
+            }
+            if (type === 'exams') {
+                return `<tr class="hover:bg-gray-50/50 transition-all animate-fade-in font-inter">
+                    <td class="p-6 border-b border-gray-50 font-bold text-pucho-dark">${d.subject}</td>
+                    <td class="p-6 border-b border-gray-50 text-gray-500 text-sm font-medium">${d.class}</td>
+                    <td class="p-6 border-b border-gray-50 text-gray-400 text-sm font-bold uppercase tracking-tighter">${new Date(d.date || d.exam_date || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                </tr>`;
+            }
+            return '';
+        }).join('');
     },
 
     templates: {
+        skeleton: function () {
+            return `<div class="p-8 space-y-8 animate-pulse">
+                <div class="h-48 skeleton rounded-[40px] w-full"></div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="h-32 skeleton rounded-[32px]"></div>
+                    <div class="h-32 skeleton rounded-[32px]"></div>
+                    <div class="h-32 skeleton rounded-[32px]"></div>
+                    <div class="h-32 skeleton rounded-[32px]"></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="h-64 skeleton rounded-[40px]"></div>
+                    <div class="h-64 skeleton rounded-[40px]"></div>
+                </div>
+            </div>`;
+        },
         new_application: function () {
             return `<div class="max-w-4xl mx-auto bg-white rounded-[40px] p-10 border border-gray-100 shadow-subtle animate-fade-in relative overflow-hidden">
                  <div class="absolute top-0 right-0 w-64 h-64 bg-pucho-purple/5 rounded-full blur-[80px]"></div>
@@ -622,6 +788,30 @@ const dashboard = {
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Previous School (Optional)</label>
                             <input type="text" id="appPrevSchool" class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 focus:border-pucho-purple outline-none" placeholder="e.g. St. Mary's">
+                        </div>
+                    </div>
+                    
+                    <div class="pt-6 border-t border-gray-50">
+                        <h4 class="font-bold text-gray-500 text-sm uppercase tracking-widest mb-4">Required Documents</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="p-6 border-2 border-dashed border-gray-100 rounded-[32px] hover:border-pucho-purple/30 transition-all group bg-gray-50/30">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Birth Certificate</label>
+                                <div class="flex flex-col items-center justify-center py-4">
+                                    <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">📄</div>
+                                    <input type="file" id="appDocBirth" class="hidden" onchange="dashboard.handleFileUpload(this, 'birth_cert')">
+                                    <button type="button" onclick="document.getElementById('appDocBirth').click()" class="text-xs font-bold text-pucho-purple hover:underline uppercase tracking-tighter">Choose File</button>
+                                    <p id="status_birth_cert" class="text-[10px] text-gray-400 mt-2 italic font-medium">No file selected</p>
+                                </div>
+                            </div>
+                            <div class="p-6 border-2 border-dashed border-gray-100 rounded-[32px] hover:border-pucho-purple/30 transition-all group bg-gray-50/30">
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Residential Proof (Aadhaar/Bill)</label>
+                                <div class="flex flex-col items-center justify-center py-4">
+                                    <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🏠</div>
+                                    <input type="file" id="appDocAddress" class="hidden" onchange="dashboard.handleFileUpload(this, 'address_proof')">
+                                    <button type="button" onclick="document.getElementById('appDocAddress').click()" class="text-xs font-bold text-pucho-purple hover:underline uppercase tracking-tighter">Choose File</button>
+                                    <p id="status_address_proof" class="text-[10px] text-gray-400 mt-2 italic font-medium">No file selected</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -675,6 +865,10 @@ const dashboard = {
                             <div class="flex items-center gap-4">
                                 <div class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest ${app.status === 'Pending' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}">
                                     ${app.status === 'Pending' ? '⏳ Application Under Review' : '✅ Admission Granted'}
+                                </div>
+                                <div class="flex gap-2">
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center border border-gray-100 ${app.docs?.birth_cert === 'uploaded' ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}" title="Birth Cert">📄</div>
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center border border-gray-100 ${app.docs?.address_proof === 'uploaded' ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}" title="Address Proof">🏠</div>
                                 </div>
                                 ${app.status !== 'Pending' ? '<button onclick="showToast(\'Please visit the school office to complete formalities.\', \'info\')" class="text-pucho-purple font-bold text-xs underline">Next Steps</button>' : ''}
                             </div>
@@ -735,181 +929,85 @@ const dashboard = {
         },
 
         overview: function (role) {
-            role = role.toLowerCase();
-            // Check if New Parent (Logic repeated for template safety)
-            let isNewParent = false;
-            if (role === 'parent') {
-                const myKids = schoolDB.students.filter(s => s.guardian === auth.currentUser.name);
-                isNewParent = myKids.length === 0;
-            }
+            const stats = dashboard.getDashboardStats(role);
+            const cards = stats.map(s => this.card(s.title, s.value, s.sub, s.icon, s.color)).join('');
 
-            // --- HELPER: Simple CSS Bar Graph ---
-            const createBarGraph = (title, labels, values, color = 'bg-pucho-purple') => {
-                const max = Math.max(...values);
-                const bars = values.map((v, i) => `
-                    <div class="flex-1 flex flex-col items-center gap-2 group cursor-pointer">
-                        <div class="w-full bg-gray-50 rounded-t-xl relative h-full flex items-end">
-                            <div class="w-full ${color} rounded-t-xl transition-all duration-1000 relative group-hover:opacity-80" style="height: ${(v / max) * 100}%">
-                                <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">${v}%</div>
-                            </div>
-                        </div>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">${labels[i]}</span>
-                    </div>
-                `).join('');
-                return `<div class="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm mt-6">
-                    <h4 class="font-bold text-gray-500 text-xs uppercase tracking-widest mb-4">${title}</h4>
-                    <div class="h-40 flex items-end gap-3">${bars}</div>
-                </div>`;
-            };
-
-            let cards = '';
-            let charts = ''; // New section for graphs
-
-            if (role === 'admin') {
-                // ... (Admin Logic remains same for now) ...
-                const pending = schoolDB.admissions.filter(a => a.status === 'Pending').length;
-                cards = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-                    ${this.card('Total Students', schoolDB.students.length, 'Students', '👨‍🎓')}
-                    ${this.card('Faculty Count', schoolDB.staff.length, 'Staff', '👩‍🏫', 'blue')}
-                    ${this.card('Pending Admissions', pending, 'Applications', '📝', 'orange')}
-                    ${this.card('Daily Attendance', '94%', 'Average', '✅', 'green')}
-                </div>`;
-
-            } else if (role === 'staff') {
-                // STAFF DASHBOARD ENHANCEMENTS
-                cards = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-                    ${this.card('My Classes', '5 Classes', 'Schedule', '📚')}
-                    ${this.card('Avg Attendance', '88%', 'Overall', '📈', 'green')}
-                    ${this.card('Pending Evaluations', '3 Batches', 'To Check', '📝', 'orange')}
-                </div>`;
-
-                // Staff Charts
-                charts = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-slide-up bg-w">
-                    ${createBarGraph('Class-wise Attendance Avg', ['9th A', '9th B', '10th A', '10th B', '11th Sci'], [92, 85, 96, 88, 90], 'bg-green-500')}
-                    ${createBarGraph('Syllabus Completion', ['Maths', 'Physics', 'Chem', 'Bio', 'Eng'], [65, 40, 55, 70, 80], 'bg-blue-500')}
-                </div>`;
-
-            } else if (role === 'student' || (!isNewParent && role === 'parent')) {
-                // STUDENT DASHBOARD (Keep as is)
-                // PARENT DASHBOARD: OVERVIEW = ACTION CENTER
-                if (role === 'parent') {
-                    // Parent Overview: Focus on "What's Next?" & "Notifications"
-                    cards = `<div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
-                        <div class="p-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-[32px] text-white shadow-lg relative overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer" onclick="dashboard.loadPage('parent_fees')">
-                            <h4 class="font-bold text-white/70 text-sm uppercase tracking-widest mb-1">Fee Status</h4>
-                            <p class="text-3xl font-bold tracking-tight">Paid</p>
-                            <p class="text-xs mt-4 opacity-80">Next Due: 10 Apr 2024</p>
-                        </div>
-                        <div class="p-8 bg-white border border-gray-100 rounded-[32px] shadow-sm relative overflow-hidden group hover:border-pucho-purple transition-colors cursor-pointer" onclick="dashboard.loadPage('parent_homework')">
-                            <h4 class="font-bold text-gray-400 text-sm uppercase tracking-widest mb-1">Homework</h4>
-                            <p class="text-3xl font-bold text-pucho-dark tracking-tight">2 Pending</p>
-                            <p class="text-xs text-orange-500 font-bold mt-4">Mathemtics due tomorrow</p>
-                        </div>
-                         <div class="p-8 bg-white border border-gray-100 rounded-[32px] shadow-sm relative overflow-hidden group hover:border-pucho-purple transition-colors cursor-pointer" onclick="dashboard.loadPage('parent_notices')">
-                            <h4 class="font-bold text-gray-400 text-sm uppercase tracking-widest mb-1">Notices</h4>
-                            <p class="text-3xl font-bold text-pucho-dark tracking-tight">3 New</p>
-                            <p class="text-xs text-blue-500 font-bold mt-4">Latest: Annual Day</p>
-                        </div>
-                    </div>`;
-
-                    charts = `<div class="mt-8 bg-white p-8 rounded-[40px] border border-gray-100 shadow-subtle">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="font-bold text-xl text-pucho-dark">Upcoming Events</h3>
-                            <button class="text-xs font-bold text-pucho-purple">View Calendar</button>
-                        </div>
-                        <div class="space-y-4">
-                            <div class="flex gap-4 items-center p-4 hover:bg-gray-50 rounded-2xl transition-colors">
-                                <div class="w-16 h-16 bg-orange-100 rounded-2xl flex flex-col items-center justify-center text-orange-600 font-bold leading-tight">
-                                    <span class="text-xl">15</span><span class="text-[10px] uppercase">Jan</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-pucho-dark">Science Fair Exhibition</h4>
-                                    <p class="text-xs text-gray-500">School Auditorium • 10:00 AM</p>
-                                </div>
-                            </div>
-                             <div class="flex gap-4 items-center p-4 hover:bg-gray-50 rounded-2xl transition-colors">
-                                <div class="w-16 h-16 bg-blue-100 rounded-2xl flex flex-col items-center justify-center text-blue-600 font-bold leading-tight">
-                                    <span class="text-xl">20</span><span class="text-[10px] uppercase">Jan</span>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-pucho-dark">Inter-House Football</h4>
-                                    <p class="text-xs text-gray-500">Main Ground • 03:00 PM</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                } else {
-                    // STUDENT OVERVIEW (Keep existing graphs)
-                    const studentName = auth.currentUser.name;
-                    // ... (Existing Student Logic: mock data init) ...
-                    const attendanceData = [95, 80, 100, 90, 85, 92]; // Last 6 months
-                    const attLabels = ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'];
-
-                    const marksData = [78, 85, 92, 68, 88];
-                    const subjectLabels = ['Maths', 'Sci', 'Eng', 'Hist', 'Comp'];
-
-                    // Get Quizzes
-                    const studentProfile = schoolDB.students.find(s => s.name === studentName) || { class: 'Grade 10', division: 'A' };
-                    const myQuizzes = schoolDB.quizzes.filter(q => q.class === studentProfile.class);
-
-                    const quizIcon = myQuizzes.length > 0 ? `<div class="relative">⚡ <span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span></span></div>` : '⚡';
-
-                    cards = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-                        ${this.card('Attendance', '92%', 'Yearly Avg', '📅')}
-                        ${this.card('Last Grade', 'A', 'Result', '🏆', 'blue')}
-                        ${this.card('Assessments', `${myQuizzes.length} Active`, 'To Do', quizIcon, 'orange')}
-                    </div>`;
-
-                    charts = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-slide-up">
-                        ${createBarGraph('Monthly Attendance Trends', attLabels, attendanceData, 'bg-pucho-purple')}
-                        ${createBarGraph('Academic Performance (Last Term)', subjectLabels, marksData, 'bg-indigo-500')}
-                    </div>
-                
-                <!-- Recent Targeted Quizzes List -->
-                 ${myQuizzes.length > 0 ? `
-                <div class="mt-8">
-                    <h3 class="font-bold text-xl mb-4 flex items-center gap-2">📢 Latest Updates for ${studentProfile.class} - ${studentProfile.division}</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        ${myQuizzes.slice(0, 4).map(q => `
-                            <div class="bg-white p-6 rounded-3xl border border-orange-100 shadow-sm flex items-center justify-between">
-                                <div>
-                                    <span class="text-[10px] font-bold bg-orange-50 text-orange-600 px-2 py-1 rounded-md uppercase tracking-wider mb-2 inline-block">${q.type}</span>
-                                    <h4 class="font-bold text-pucho-dark">${q.title}</h4>
-                                    <p class="text-xs text-gray-400 font-bold mt-1">${q.subject}</p>
-                                </div>
-                                <button class="bg-pucho-dark text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-pucho-purple transition-colors">START</button>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>` : ''}`;
-                }
-            } else if (isNewParent) {
-                // New Parent (No Student yet)
-                const myApps = schoolDB.admissions.filter(a => a.parentEmail === auth.currentUser.email || a.parentName === auth.currentUser.name);
-                cards = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-                ${this.card('Applications', myApps.length, 'Submitted', '📂')}
-                ${this.card('Action Required', 'None', 'Status', '✅', 'green')}
+            return `
+            <div class="space-y-10 animate-fade-in">
+                <!-- Top Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    ${cards}
                 </div>
-                <div class="bg-blue-50 border border-blue-100 p-6 rounded-3xl flex items-center justify-between mt-6">
-                    <div>
-                        <h4 class="font-bold text-blue-800">Complete Your Profile!</h4>
-                        <p class="text-sm text-blue-600">Apply for admission to unlock full parent features.</p>
-                    </div>
-                    <button onclick="dashboard.loadPage('new_application')" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors">Apply Now</button>
-                </div>`;
-            }
 
-            return `<div class="space-y-8 animate-slide-up">
-                <div class="bg-gradient-to-r from-pucho-dark to-pucho-purple p-12 rounded-[40px] text-white relative overflow-hidden shadow-glow">
-                    <div class="relative z-10 max-w-2xl">
-                        <h2 class="text-5xl font-bold mb-4 tracking-tight">System Operational.</h2>
-                        <p class="text-xl opacity-80 font-inter leading-relaxed">Welcome, ${auth.currentUser.name}. You are logged into the Master School Node: <b>${schoolDB.schoolInfo.academicYear}</b></p>
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Attendance Analytics -->
+                    <div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-subtle relative overflow-hidden">
+                        <div class="flex justify-between items-center mb-8">
+                            <div>
+                                <h3 class="font-bold text-xl text-pucho-dark">Attendance Trend</h3>
+                                <p class="text-xs text-gray-400 font-medium">Weekly percentage overview</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="w-3 h-3 rounded-full bg-pucho-purple"></span>
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active</span>
+                            </div>
+                        </div>
+                        <div class="h-[250px] relative">
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
                     </div>
-                    <div class="absolute -right-20 -top-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-                    <div class="absolute right-12 bottom-0 opacity-10 text-[180px]">🏫</div>
+
+                    <!-- Financial Analytics -->
+                    <div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-subtle relative overflow-hidden">
+                        <div class="flex justify-between items-center mb-8">
+                            <div>
+                                <h3 class="font-bold text-xl text-pucho-dark">Fee Collection</h3>
+                                <p class="text-xs text-gray-400 font-medium">Monthly revenue cycle</p>
+                            </div>
+                            <select class="bg-gray-50 border-none text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl outline-none">
+                                <option>Term 1</option>
+                                <option>Term 2</option>
+                            </select>
+                        </div>
+                        <div class="h-[250px] relative">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
                 </div>
-                ${cards}
-                ${charts}
+
+                <!-- Recent Activity / Action Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-6 bg-gradient-to-br from-pucho-purple to-pucho-light rounded-[32px] text-white space-y-4 shadow-glow group cursor-pointer overflow-hidden relative">
+                        <div class="absolute -right-4 -bottom-4 text-8xl opacity-10 group-hover:scale-110 transition-transform">📢</div>
+                        <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">Broadcast</p>
+                        <h4 class="text-xl font-bold">Post New Announcement</h4>
+                        <button onclick="dashboard.showBroadcastModal()" class="bg-white/20 backdrop-blur-md px-6 py-2 rounded-full text-xs font-bold hover:bg-white/40 transition-all">START FLOW</button>
+                    </div>
+                    
+                    <div class="p-6 bg-gradient-to-br from-pucho-blue to-pucho-light rounded-[32px] text-white space-y-4 shadow-glow group cursor-pointer overflow-hidden relative">
+                         <div class="absolute -right-4 -bottom-4 text-8xl opacity-10 group-hover:scale-110 transition-transform">📝</div>
+                        <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">Academic</p>
+                        <h4 class="text-xl font-bold">Schedule Examination</h4>
+                        <button onclick="dashboard.loadPage('exams')" class="bg-white/20 backdrop-blur-md px-6 py-2 rounded-full text-xs font-bold hover:bg-white/40 transition-all">OPEN MODULE</button>
+                    </div>
+
+                    <div class="p-6 bg-white border border-gray-100 rounded-[32px] space-y-4 shadow-subtle group cursor-pointer hover:border-pucho-purple/20 transition-all">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold text-pucho-dark">System Health</h4>
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-[10px] uppercase font-bold text-gray-400">
+                                <span>DB Sync</span>
+                                <span class="text-pucho-purple">${dashboard.isDbConnected ? 'Active' : 'Offline'}</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-gray-50 rounded-full overflow-hidden">
+                                <div class="h-full bg-pucho-purple rounded-full" style="width: ${dashboard.isDbConnected ? '100%' : '20%'}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>`;
         },
 
@@ -923,10 +1021,10 @@ const dashboard = {
             }
 
             let rows = schoolDB.admissions.map(a => `<tr class="hover:bg-gray-50/50 transition-all font-inter">
-                <td class="p-6 font-bold text-pucho-dark border-b border-gray-50">${a.studentName}</td>
+                <td class="p-6 font-bold text-pucho-dark border-b border-gray-50">${a.student_name}</td>
                 <td class="p-6 text-gray-500 text-sm border-b border-gray-50">${a.grade}</td>
-                <td class="p-6 text-gray-500 text-sm border-b border-gray-50">${a.parentName}</td>
-                 <td class="p-6 text-gray-400 text-sm border-b border-gray-50">${a.date}</td>
+                <td class="p-6 text-gray-500 text-sm border-b border-gray-50">${a.parent_name}</td>
+                <td class="p-6 text-gray-400 text-sm border-b border-gray-50">${new Date(a.applied_at || Date.now()).toLocaleDateString()}</td>
                 <td class="p-6 border-b border-gray-50"><span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-[10px] font-bold uppercase tracking-widest">${a.status}</span></td>
                 <td class="p-6 border-b border-gray-50">
                     <button onclick="dashboard.approveAdmission('${a.id}')" class="px-4 py-2 bg-pucho-dark text-white rounded-xl text-xs font-bold hover:bg-pucho-purple transition-all shadow-glow">Approve & Enroll</button>
@@ -966,7 +1064,29 @@ const dashboard = {
                 </div>`;
             }
 
-            setTimeout(() => dashboard.filterGeneric('students'), 0);
+            setTimeout(() => {
+                const body = document.getElementById('studentsTableBody');
+                if (!body) return;
+                body.innerHTML = schoolDB.students.map(s => `
+            <tr class="hover:bg-gray-50/50 transition-all">
+                <td class="p-6 border-b border-gray-50">
+                    <div class="font-bold text-pucho-dark">${s.name}</div>
+                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ID: ${s.id}</div>
+                </td>
+                <td class="p-6 border-b border-gray-50">
+                    <div class="text-sm font-bold text-gray-600">${s.class} - ${s.division}</div>
+                    <div class="text-[10px] text-gray-400 font-bold">Roll: ${s.roll_no}</div>
+                </td>
+                <td class="p-6 border-b border-gray-50 text-sm text-gray-500">${s.guardian_name}</td>
+                <td class="p-6 border-b border-gray-50 text-sm text-gray-500">${s.phone}</td>
+                <td class="p-6 border-b border-gray-50"><span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">Active</span></td>
+                <td class="p-6 border-b border-gray-50">
+                    <button class="p-2 hover:bg-pucho-purple/10 rounded-lg text-pucho-purple transition-all">✏️</button>
+                </td>
+            </tr>
+        `).join('');
+            }, 100);
+
             return `<div class="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-subtle animate-fade-in">
                 <div class="p-8 border-b border-gray-50 flex justify-between items-center">
                     <div>
@@ -974,8 +1094,7 @@ const dashboard = {
                         <p class="text-gray-400 text-sm">Total Students: ${schoolDB.students.length}</p>
                     </div>
                     <div class="flex gap-4">
-                        <select id="filterClass_students" onchange="dashboard.filterGeneric('students')" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 outline-none"><option value="">All Classes</option><option value="LKG">LKG</option><option value="UKG">UKG</option><option value="1st">1st</option><option value="2nd">2nd</option><option value="3rd">3rd</option><option value="4th">4th</option><option value="5th">5th</option><option value="6th">6th</option><option value="7th">7th</option><option value="8th">8th</option><option value="9th">9th</option><option value="10th">10th</option><option value="11th">11th</option><option value="12th">12th</option></select>
-                        <select id="filterDivision_students" onchange="dashboard.filterGeneric('students')" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 outline-none"><option value="">All Div</option><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
+                        <select id="filterClass_students" onchange="dashboard.filterGeneric('students')" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 outline-none"><option value="">All Classes</option><option value="10th">10th</option><option value="9th">9th</option></select>
                         <button onclick="dashboard.showAddStudentModal()" class="bg-pucho-dark text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-pucho-purple transition-all">+ ADD</button>
                     </div>
                 </div>
@@ -1093,35 +1212,96 @@ const dashboard = {
         },
 
         renderStaffModal: function () {
-            return `<div id="staffModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-pucho-dark/40 backdrop-blur-sm hidden animate-fade-in">
-                <div class="bg-white p-8 w-full max-w-2xl rounded-[32px] border border-white/30 shadow-2xl relative animate-slide-up max-h-[90vh] overflow-y-auto">
-                    <button onclick="document.getElementById('staffModal').classList.add('hidden')" class="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full">✕</button>
-                    <div class="mb-8 border-b border-gray-50 pb-4">
-                        <h1 class="text-3xl font-bold text-pucho-dark mb-1">Onboard New Staff</h1>
-                        <p class="text-gray-500 font-inter">Faculty & Admin Roles</p>
+            const labelClass = "block text-[10px] uppercase font-bold text-pucho-purple tracking-widest mb-1.5 text-left w-full";
+            const inputClass = "w-full px-5 py-3.5 rounded-[20px] border border-black/5 bg-gray-50/50 focus:bg-white focus:border-pucho-purple focus:ring-4 focus:ring-pucho-purple/5 outline-none transition-all placeholder:text-gray-300 shadow-sm text-sm text-pucho-dark font-medium";
+
+            return `<div id="staffModal" class="fixed inset-0 z-[100] flex items-start justify-center p-4 bg-pucho-dark/40 backdrop-blur-sm hidden animate-fade-in overflow-y-auto">
+                <div class="bg-white p-10 w-full max-w-3xl rounded-[40px] border border-white/30 shadow-2xl relative animate-slide-up my-20 custom-scrollbar">
+                    <button onclick="document.getElementById('staffModal').classList.add('hidden')" class="absolute top-8 right-8 p-3 hover:bg-gray-100 rounded-full transition-colors">
+                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    <div class="mb-10">
+                        <h1 class="text-4xl font-black text-pucho-dark tracking-tight mb-2">Onboard New Staff</h1>
+                        <p class="text-gray-500 font-inter text-sm opacity-80">Syncing details with the educational automation flow.</p>
                     </div>
-                    <form id="staffForm" class="space-y-6 font-inter">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div><label class="label-sm">Full Name</label><input type="text" id="staffName" class="input-field" required placeholder="Dr. S. K. Sharma"></div>
-                            <div><label class="label-sm">Password</label><input type="password" id="staffPass" class="input-field" required value="123"></div>
+                    <form id="staffForm" class="space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            <div class="col-span-1">
+                                <label class="${labelClass}">Full Name</label>
+                                <input type="text" id="staffName" class="${inputClass}" required placeholder="e.g. Rahul Sharma">
+                            </div>
+                            <div class="col-span-1">
+                                <label class="${labelClass}">Email Address</label>
+                                <input type="email" id="staffEmail" class="${inputClass}" required placeholder="rahul@school.com">
+                            </div>
                             
-                            <div><label class="label-sm">Role</label><select id="staffRole" class="input-field"><option>Teacher</option><option>Admin</option><option>Support</option></select></div>
-                            <div><label class="label-sm">Department</label><select id="staffDept" class="input-field"><option>Science</option><option>Maths</option><option>Languages</option><option>Sports</option></select></div>
+                            <div class="col-span-1 md:col-span-2">
+                                <label class="${labelClass}">Qualification</label>
+                                <input type="text" id="staffQual" class="${inputClass}" placeholder="e.g. B.Ed, M.Sc, PhD" required>
+                            </div>
 
-                            <div><label class="label-sm">Qualification</label><input type="text" id="staffQual" class="input-field" placeholder="M.Sc, B.Ed"></div>
-                            <div><label class="label-sm">Experience (Yrs)</label><input type="number" id="staffExp" class="input-field" placeholder="5"></div>
+                            <div class="col-span-1">
+                                <label class="${labelClass}">Phone Number</label>
+                                <input type="tel" id="staffPhone" class="${inputClass}" required placeholder="+91 98765 43210">
+                            </div>
+                            <div class="col-span-1">
+                                <label class="${labelClass}">Subject Specialization</label>
+                                <input type="text" id="staffSubject" class="${inputClass}" placeholder="e.g. Mathematics, Science" required>
+                            </div>
 
-                            <div><label class="label-sm">Email</label><input type="email" id="staffEmail" class="input-field" required placeholder="staff@school.com"></div>
-                            <div><label class="label-sm">Phone</label><input type="tel" id="staffPhone" class="input-field" required placeholder="+91..."></div>
+                            <div class="col-span-1">
+                                <label class="${labelClass}">Portal Password</label>
+                                <input type="password" id="staffPass" class="${inputClass}" required placeholder="Set initial password">
+                            </div>
+                            <div class="col-span-1">
+                                <label class="${labelClass}">Department</label>
+                                <select id="staffDept" class="${inputClass}">
+                                    <option>Mathematics</option>
+                                    <option>Science</option>
+                                    <option>Languages</option>
+                                    <option>Sports</option>
+                                    <option>Admin</option>
+                                </select>
+                            </div>
 
-                            <input type="hidden" id="staffClass" value="N/A">
-                            <input type="hidden" id="staffDivision" value="N/A">
-                            <input type="hidden" id="staffSubject" value="General">
-                            <input type="hidden" id="staffJoiningDate" value="${new Date().toLocaleDateString()}">
+                            <div class="col-span-1">
+                                <label class="${labelClass}">Joining Date</label>
+                                <input type="date" id="staffJoiningDate" class="${inputClass}" required>
+                            </div>
+                            <div class="col-span-1">
+                                <label class="${labelClass}">Staff Role</label>
+                                <select id="staffRole" class="${inputClass}">
+                                    <option>Teacher</option>
+                                    <option>Clerk</option>
+                                    <option>Accountant</option>
+                                    <option>Office Staff</option>
+                                </select>
+                            </div>
+
+                            <div class="col-span-1">
+                                <label class="${labelClass}">Class Assigned</label>
+                                <select id="staffClass" class="${inputClass}">
+                                    <option value="N/A">None</option>
+                                    <option>12th</option><option>11th</option><option>10th</option>
+                                    <option>9th</option><option>8th</option><option>7th</option>
+                                    <option>6th</option><option>5th</option>
+                                </select>
+                            </div>
+                            <div class="col-span-1">
+                                <label class="${labelClass}">Division</label>
+                                <select id="staffDivision" class="${inputClass}">
+                                    <option value="N/A">None</option>
+                                    <option>A</option><option>B</option><option>C</option><option>D</option>
+                                </select>
+                            </div>
+                            
+                            <input type="hidden" id="staffExp" value="0">
                         </div>
-                        <div class="pt-6 border-t border-gray-50 flex justify-end gap-4">
-                            <button type="button" onclick="document.getElementById('staffModal').classList.add('hidden')" class="px-6 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
-                            <button type="button" onclick="dashboard.submitStaffData()" class="btn-primary px-8 py-3 rounded-2xl">Onboard Staff</button>
+                        <div class="pt-8 border-t border-gray-50 flex justify-end items-center gap-6">
+                            <button type="button" onclick="document.getElementById('staffModal').classList.add('hidden')" class="text-sm font-bold text-gray-400 hover:text-pucho-dark transition-colors">Discard Changes</button>
+                            <button type="submit" class="bg-gradient-to-b from-[#5833EF] to-[#3A10CE] text-white px-10 py-4 rounded-full font-bold text-sm shadow-[0_5px_15px_rgba(58,16,206,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all">
+                                Add & Notify Staff
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -1130,20 +1310,24 @@ const dashboard = {
 
         fees: function () {
             setTimeout(() => dashboard.filterGeneric('fees'), 0);
+            const totalPaid = schoolDB.fees.filter(f => f.status === 'Paid').reduce((sum, f) => sum + f.amount, 0);
+            const totalPending = schoolDB.fees.filter(f => f.status === 'Pending').reduce((sum, f) => sum + f.amount, 0);
+            const pendingCount = schoolDB.fees.filter(f => f.status === 'Pending').length;
+
             return `<div class="space-y-8 animate-fade-in">
                 <!-- Finance Stats -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="p-8 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:shadow-glow transition-all">
-                        <h4 class="text-gray-500 text-sm font-medium mb-1">M-o-M Collection</h4>
-                        <p class="text-3xl font-bold text-pucho-dark tracking-tight">₹4.2L <span class="text-xs text-green-500 font-bold ml-2">↑ 12%</span></p>
+                    <div class="p-8 bg-white border border-gray-100 rounded-[40px] shadow-subtle hover:shadow-glow transition-all">
+                        <h4 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">M-o-M Collection</h4>
+                        <p class="text-3xl font-black text-pucho-dark tracking-tight">₹${(totalPaid / 1000).toFixed(1)}K <span class="text-xs text-green-500 font-bold ml-2">↑ 12%</span></p>
                     </div>
-                    <div class="p-8 bg-white border border-gray-100 rounded-[32px] shadow-sm hover:shadow-glow transition-all">
-                        <h4 class="text-gray-500 text-sm font-medium mb-1">Total Outstanding</h4>
-                        <p class="text-3xl font-bold text-red-500 tracking-tight">₹1.8L</p>
+                    <div class="p-8 bg-white border border-gray-100 rounded-[40px] shadow-subtle hover:shadow-glow transition-all">
+                        <h4 class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">Total Outstanding</h4>
+                        <p class="text-3xl font-bold text-red-500 tracking-tight">₹${(totalPending / 1000).toFixed(1)}K</p>
                     </div>
-                    <div class="p-8 bg-indigo-50 border border-indigo-100 rounded-[32px] shadow-sm hover:shadow-glow transition-all group">
-                        <h4 class="text-indigo-600 text-sm font-medium mb-1">Recovery Flow Active</h4>
-                        <p class="text-3xl font-bold text-indigo-700 tracking-tight">85% <span class="text-xs text-indigo-400 font-bold ml-2">Progressive</span></p>
+                    <div class="p-8 bg-pucho-purple/5 border border-pucho-purple/10 rounded-[40px] shadow-subtle group">
+                        <h4 class="text-pucho-purple text-xs font-bold uppercase tracking-widest mb-1">Recovery Flow</h4>
+                        <p class="text-3xl font-black text-pucho-purple tracking-tight">${pendingCount} <span class="text-xs text-indigo-400 font-bold ml-1">Pending Requests</span></p>
                     </div>
                 </div>
 
@@ -1151,30 +1335,25 @@ const dashboard = {
                     <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div class="flex flex-col md:flex-row items-center gap-4">
                             <div class="flex gap-2">
-                                <select id="filterClass_fees" onchange="dashboard.filterGeneric('fees')" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 outline-none hover:border-pucho-purple transition-all">
-                                    <option value="">All Classes</option>
-                                    <option value="9th">9th</option>
-                                    <option value="10th">10th</option>
-                                </select>
-                                <select id="filterDivision_fees" onchange="dashboard.filterGeneric('fees')" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 outline-none hover:border-pucho-purple transition-all">
-                                    <option value="">All Div</option>
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
+                                <select id="filterClass_fees" onchange="dashboard.filterGeneric('fees')" class="px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50 text-sm font-bold text-gray-600 outline-none focus:border-pucho-purple transition-all">
+                                    <option value="">All Classes</option><option>Grade 10</option><option>Grade 9</option>
                                 </select>
                             </div>
-                            <button onclick="dashboard.runRecoveryFlow()" class="bg-indigo-600 text-white px-8 py-3 rounded-2xl text-xs font-bold shadow-glow hover:bg-pucho-purple transition-all">RECOVERY FLOW</button>
+                            <button onclick="dashboard.runRecoveryFlow()" class="bg-pucho-dark text-white px-10 py-4 rounded-2xl text-xs font-bold shadow-glow hover:bg-pucho-purple transition-all transform active:scale-95 uppercase tracking-widest">Run Recovery Flow</button>
                         </div>
                     </div>
-                <table class="w-full text-left font-inter">
-                     <thead class="bg-gray-50/50">
-                        <tr>
-                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student ID</th>
-                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Amount</th>
-                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="feesTableBody"></tbody>
-                </table>
+                    <table class="w-full text-left font-inter">
+                        <thead class="bg-gray-50/50">
+                            <tr>
+                                <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student Details</th>
+                                <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category</th>
+                                <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Amount</th>
+                                <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feesTableBody"></tbody>
+                    </table>
+                </div>
             </div>`;
         },
 
@@ -1217,46 +1396,35 @@ const dashboard = {
         },
 
         attendance_all: function () {
+            const studentAttendance = schoolDB.attendance;
+            const totalS = studentAttendance.length;
+            const presentS = studentAttendance.filter(a => a.status === 'Present').length;
+            const studentPct = totalS > 0 ? ((presentS / totalS) * 100).toFixed(1) : "94.2";
+
+            const totalStaff = schoolDB.staff.length;
+            const activeStaff = schoolDB.staff.filter(s => s.status === 'Active').length;
+            const staffPct = totalStaff > 0 ? ((activeStaff / totalStaff) * 100).toFixed(1) : "98.5";
+
             return `<div class="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-subtle animate-fade-in mb-8">
                 <div class="p-8 border-b border-gray-50 flex justify-between items-center">
                     <h3 class="font-bold text-2xl">Global Attendance</h3>
                     <div class="flex gap-4">
                         <select class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 outline-none">
                             <option value="">Overall</option>
-                            <option value="LKG">LKG</option>
-                            <option value="UKG">UKG</option>
-                            <option value="1st">1st</option>
-                            <option value="2nd">2nd</option>
-                            <option value="3rd">3rd</option>
-                            <option value="4th">4th</option>
-                            <option value="5th">5th</option>
-                            <option value="6th">6th</option>
-                            <option value="7th">7th</option>
-                            <option value="8th">8th</option>
-                            <option value="9th">9th</option>
-                            <option value="10th">10th</option>
-                            <option value="11th">11th</option>
-                            <option value="12th">12th</option>
-                        </select>
-                        <select class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 outline-none">
-                            <option value="">All Div</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                            <option value="D">D</option>
+                            <option value="10th">10th</option><option value="9th">9th</option>
                         </select>
                     </div>
                 </div>
                 <div class="p-12 grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div class="bg-green-50/50 p-12 rounded-[32px] text-center relative overflow-hidden group hover:bg-green-50 transition-all">
                          <div class="absolute top-0 right-0 p-8 opacity-10 text-6xl group-hover:scale-110 transition-transform">👨‍🎓</div>
-                        <h4 class="text-6xl font-bold text-green-600 mb-2 tracking-tighter">94.2%</h4>
+                        <h4 class="text-6xl font-bold text-green-600 mb-2 tracking-tighter">${studentPct}%</h4>
                         <p class="text-green-800/60 text-xs font-bold tracking-widest uppercase">Student Attendance</p>
                     </div>
                     <div class="bg-blue-50/50 p-12 rounded-[32px] text-center relative overflow-hidden group hover:bg-blue-50 transition-all">
                         <div class="absolute top-0 right-0 p-8 opacity-10 text-6xl group-hover:scale-110 transition-transform">👩‍🏫</div>
-                        <h4 class="text-6xl font-bold text-blue-600 mb-2 tracking-tighter">98.5%</h4>
-                        <p class="text-blue-800/60 text-xs font-bold tracking-widest uppercase">Staff Attendance</p>
+                        <h4 class="text-6xl font-bold text-blue-600 mb-2 tracking-tighter">${staffPct}%</h4>
+                        <p class="text-blue-800/60 text-xs font-bold tracking-widest uppercase">Staff Presence</p>
                     </div>
                 </div>
             </div>`;
@@ -1307,7 +1475,7 @@ const dashboard = {
             const totalFees = schoolDB.fees.reduce((acc, curr) => acc + curr.amount, 0);
             const collectedFees = schoolDB.fees.filter(f => f.status === 'Paid').reduce((acc, curr) => acc + curr.amount, 0);
             const pendingFees = totalFees - collectedFees;
-            const collectionPercentage = Math.round((collectedFees / totalFees) * 100);
+            const collectionPercentage = totalFees > 0 ? Math.round((collectedFees / totalFees) * 100) : 0;
 
             return `<div class="space-y-8 animate-fade-in font-inter">
                 <div class="flex justify-between items-center">
@@ -1359,8 +1527,8 @@ const dashboard = {
 
                 <!-- Academic Performance -->
                 <div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-subtle">
-                     <h4 class="font-bold text-lg mb-6">Class-wise Performance (Avg GPA)</h4>
-                     <div class="flex items-end gap-4 h-64 pb-8 border-b border-gray-50 overflow-x-auto">
+                    <h4 class="font-bold text-lg mb-6">Class-wise Performance (Avg GPA)</h4>
+                    <div class="flex items-end gap-4 h-64 pb-8 border-b border-gray-50 overflow-x-auto">
                         ${['10th', '9th', '8th', '7th', '6th'].map(cls => {
                 const height = Math.floor(Math.random() * (95 - 60) + 60);
                 return `<div class="flex-1 flex flex-col items-center gap-2 group cursor-pointer">
@@ -1372,7 +1540,7 @@ const dashboard = {
                                 <span class="text-xs font-bold text-gray-400">${cls}</span>
                             </div>`;
             }).join('')}
-                     </div>
+                    </div>
                 </div>
             </div>`;
         },
@@ -1413,7 +1581,7 @@ const dashboard = {
                         <p class="text-lg font-bold text-pucho-dark mt-1">Mathematics</p>
                         <p class="text-xs text-red-500 font-bold">In 3 Days</p>
                     </div>
-                     <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                         <p class="text-xs font-bold text-gray-400 uppercase">Fees Due</p>
                         <p class="text-lg font-bold text-pucho-dark mt-1">₹0</p>
                         <p class="text-xs text-green-500 font-bold">Paid</p>
@@ -1486,6 +1654,13 @@ const dashboard = {
         },
 
         ai_insights: function () {
+            const highRisk = schoolDB.results.filter(r => r.marks < 40).map(r => {
+                const s = schoolDB.students.find(st => st.id === r.student_id);
+                return { ...r, studentName: s ? s.name : r.student_id, class: s ? s.class : 'N/A' };
+            });
+
+            const stability = 100 - (highRisk.length * 2);
+
             return `
                 <div class="space-y-8 animate-fade-in">
                     <div class="bg-gradient-to-r from-pucho-purple to-indigo-600 p-8 rounded-[40px] text-white shadow-glow relative overflow-hidden mb-8">
@@ -1493,15 +1668,15 @@ const dashboard = {
                         <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
                             <div class="max-w-xl">
                                 <h3 class="text-3xl font-bold mb-2">Predictive Academic Analysis</h3>
-                                <p class="text-white/70">AI has analyzed 450+ data points across attendance, test scores, and behavior modules.</p>
+                                <p class="text-white/70">AI has analyzed ${schoolDB.results.length} results across all active modules.</p>
                             </div>
                             <div class="flex gap-4">
                                 <div class="bg-white/10 backdrop-blur-md p-4 rounded-3xl border border-white/10 text-center min-w-[120px]">
-                                    <p class="text-2xl font-bold">84%</p>
+                                    <p class="text-2xl font-bold">${stability}%</p>
                                     <p class="text-[10px] uppercase font-bold opacity-60">Avg Stability</p>
                                 </div>
                                 <div class="bg-white/10 backdrop-blur-md p-4 rounded-3xl border border-white/10 text-center min-w-[120px]">
-                                    <p class="text-2xl font-bold text-orange-300">12</p>
+                                    <p class="text-2xl font-bold text-orange-300">${highRisk.length}</p>
                                     <p class="text-[10px] uppercase font-bold opacity-60">High Risk</p>
                                 </div>
                             </div>
@@ -1513,23 +1688,25 @@ const dashboard = {
                         <div class="bg-white rounded-[40px] p-8 border border-gray-100 shadow-subtle">
                             <h3 class="font-bold text-xl mb-6 flex items-center gap-2">⚠️ Performance Drop Alerts</h3>
                             <div class="space-y-6">
+                                ${highRisk.length > 0 ? highRisk.map(r => `
                                 <div class="p-6 bg-orange-50 rounded-3xl border border-orange-100 hover:scale-[1.02] transition-transform cursor-pointer">
                                     <div class="flex justify-between items-start mb-4">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-orange-600">AS</div>
+                                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-orange-600">${r.studentName[0]}</div>
                                             <div>
-                                                <p class="font-bold text-pucho-dark">Aarav Gupta</p>
-                                                <p class="text-[10px] text-gray-400 font-bold uppercase">Grade 10-A</p>
+                                                <p class="font-bold text-pucho-dark">${r.studentName}</p>
+                                                <p class="text-[10px] text-gray-400 font-bold uppercase">${r.class}</p>
                                             </div>
                                         </div>
-                                        <span class="px-3 py-1 bg-red-100 text-red-600 rounded-full text-[10px] font-bold">-22% Drop</span>
+                                        <span class="px-3 py-1 bg-red-100 text-red-600 rounded-full text-[10px] font-bold">${r.marks}% Marks</span>
                                     </div>
-                                    <p class="text-sm text-gray-600 mb-4">Significant decline in <span class="font-bold">Mathematics</span> and <span class="font-bold">Physics</span> over the last 2 unit tests.</p>
+                                    <p class="text-sm text-gray-600 mb-4">Critical alert in <span class="font-bold">${r.subject}</span>. Student is performing below the 40% threshold.</p>
                                     <div class="flex gap-2">
                                         <button class="flex-1 py-2 bg-pucho-dark text-white rounded-xl text-xs font-bold" onclick="showToast('Academic Support Kit emailed to parents.', 'success')">SEND SUPPORT KIT</button>
                                         <button class="py-2 px-4 border border-gray-200 rounded-xl text-xs font-bold">IGNORE</button>
                                     </div>
                                 </div>
+                                `).join('') : `<p class="text-center text-gray-400 font-bold py-10">All students are performing well! 🎉</p>`}
                             </div>
                         </div>
 
@@ -1554,8 +1731,7 @@ const dashboard = {
                              </div>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         },
 
         manage_profile: function () {
@@ -1647,12 +1823,12 @@ const dashboard = {
                         
                         <div class="flex-1 text-center md:text-left">
                             <h2 class="text-4xl font-bold text-pucho-dark mb-2">${student.name}</h2>
-                            <p class="text-xl text-gray-400 font-light mb-6">Class ${student.class} - Division ${student.division}</p>
+                            <p class="text-xl text-gray-400 font-light mb-6">${student.class} - Div ${student.division}</p>
                             
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                                 <div>
                                     <p class="text-xs font-bold text-gray-400 uppercase mb-1">Roll Number</p>
-                                    <p class="font-bold text-lg text-pucho-dark">#${student.roll}</p>
+                                    <p class="font-bold text-lg text-pucho-dark">#${student.roll || student.rollNo}</p>
                                 </div>
                                 <div>
                                     <p class="text-xs font-bold text-gray-400 uppercase mb-1">Blood Group</p>
@@ -1660,11 +1836,11 @@ const dashboard = {
                                 </div>
                                 <div>
                                     <p class="text-xs font-bold text-gray-400 uppercase mb-1">Date of Birth</p>
-                                    <p class="font-bold text-lg text-pucho-dark">12 Aug 2008</p>
+                                    <p class="font-bold text-lg text-pucho-dark">${student.dob || '12 Aug 2009'}</p>
                                 </div>
                                 <div>
-                                    <p class="text-xs font-bold text-gray-400 uppercase mb-1">House</p>
-                                    <p class="font-bold text-lg text-red-500">Ruby (Red)</p>
+                                    <p class="text-xs font-bold text-gray-400 uppercase mb-1">Contact</p>
+                                    <p class="font-bold text-lg text-pucho-purple">${student.phone || '9876543210'}</p>
                                 </div>
                             </div>
                         </div>
@@ -1679,7 +1855,7 @@ const dashboard = {
                 </div>
                 
                 <!-- Teacher Remarks -->
-                 <div class="bg-gray-50 rounded-[40px] p-8 border border-gray-100">
+                <div class="bg-gray-50 rounded-[40px] p-8 border border-gray-100">
                     <h3 class="font-bold text-xl mb-6">Teacher Remarks</h3>
                     <div class="space-y-4">
                         <div class="bg-white p-6 rounded-3xl border border-gray-100 flex gap-4">
@@ -1708,10 +1884,7 @@ const dashboard = {
                 let absent = 0;
 
                 for (let i = 1; i <= daysInMonth; i++) {
-                    // Deterministic "random" based on day index to keep it consistent per month for demo
                     const isAbsent = (i + monthIndex) % 7 === 0;
-                    if (isAbsent) absent++; else present++;
-
                     const statusClass = isAbsent ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700';
                     gridHtml += `<div class="${statusClass} aspect-square rounded-xl flex items-center justify-center font-bold text-sm animate-fade-in" style="animation-delay: ${i * 10}ms">${i}</div>`;
                 }
@@ -1727,180 +1900,166 @@ const dashboard = {
                     const data = generateGrid(monthIdx);
                     document.getElementById('attGrid').innerHTML = data.html;
                     document.getElementById('attStats').innerHTML = `
-                        <span class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-green-500"></span> Present (${data.p})</span>
-                        <span class="flex items-center gap-2 bg-red-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-red-500"></span> Absent (${data.a})</span>
-                    `;
+                    <span class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-green-500"></span> Present (${data.p})</span>
+                    <span class="flex items-center gap-2 bg-red-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-red-500"></span> Absent (${data.a})</span>
+                `;
                 }
             }, 100);
 
             return `<div class="bg-white rounded-[40px] p-8 border border-gray-100 shadow-subtle animate-fade-in text-center font-inter">
-                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <div>
-                        <h3 class="font-bold text-2xl text-pucho-dark">Attendance Record</h3>
-                        <p class="text-gray-400 text-sm">Track daily presence</p>
-                    </div>
-                    <div class="relative">
-                         <select onchange="dashboard.updateAttendance(this)" class="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-6 py-2 font-bold text-sm outline-none text-pucho-dark pr-10 hover:border-pucho-purple transition-colors cursor-pointer min-w-[150px]">
-                            ${months.map((m, i) => `<option value="${i}" ${i === currentMonthIndex ? 'selected' : ''}>${m} 2024</option>`).join('')}
-                        </select>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
-                    </div>
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h3 class="font-bold text-2xl text-pucho-dark">Attendance Record</h3>
+                    <p class="text-gray-400 text-sm">Track daily presence</p>
                 </div>
+                <div class="relative">
+                     <select onchange="dashboard.updateAttendance(this)" class="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-6 py-2 font-bold text-sm outline-none text-pucho-dark pr-10 hover:border-pucho-purple transition-colors cursor-pointer min-w-[150px]">
+                        ${months.map((m, i) => `<option value="${i}" ${i === currentMonthIndex ? 'selected' : ''}>${m} 2024</option>`).join('')}
+                    </select>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+                </div>
+            </div>
 
-                <div id="attGrid" class="grid grid-cols-7 gap-3 max-w-md mx-auto mb-8">
-                     ${initialData.html}
-                </div>
-                
-                <div id="attStats" class="flex justify-center gap-6 text-sm font-bold text-gray-500">
-                    <span class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-green-500"></span> Present (${initialData.p})</span>
-                    <span class="flex items-center gap-2 bg-red-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-red-500"></span> Absent (${initialData.a})</span>
-                </div>
-            </div>`;
+            <div id="attGrid" class="grid grid-cols-7 gap-3 max-w-md mx-auto mb-8">
+                 ${initialData.html}
+            </div>
+            
+            <div id="attStats" class="flex justify-center gap-6 text-sm font-bold text-gray-500">
+                <span class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-green-500"></span> Present (${initialData.p})</span>
+                <span class="flex items-center gap-2 bg-red-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-red-500"></span> Absent (${initialData.a})</span>
+            </div>
+        </div>`;
         },
 
         parent_fees: function () { return this.my_fees(); },
         my_fees: function () {
-            return `<div class="bg-white rounded-[40px] p-10 border border-gray-100 shadow-subtle text-center animate-fade-in relative overflow-hidden">
-                <div class="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm">✅</div>
-                <h3 class="text-3xl font-bold text-pucho-dark tracking-tight mb-2">No Due Payments</h3>
-                <p class="text-gray-400 mb-8 max-w-sm mx-auto">Great! You have cleared all pending invoices for the current academic session.</p>
-                
-                <div class="bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl p-8 text-left max-w-2xl mx-auto shadow-sm">
-                    <div class="flex justify-between items-center mb-6">
-                        <h4 class="font-bold text-sm uppercase text-gray-400 tracking-widest">Transaction History</h4>
-                        <button class="text-pucho-purple text-xs font-bold hover:underline">Download Statement</button>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-50 hover:shadow-md transition-shadow">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-lg">💰</div>
-                                <div>
-                                    <p class="font-bold text-pucho-dark">Term 1 Tuition Fee</p>
-                                    <p class="text-xs text-gray-400 font-bold">Paid on 10 Apr 2024</p>
-                                </div>
-                            </div>
-                            <span class="font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg text-sm">₹15,000</span>
-                        </div>
-                         <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-50 hover:shadow-md transition-shadow">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 text-lg">🚌</div>
-                                <div>
-                                    <p class="font-bold text-pucho-dark">Transport (Q1)</p>
-                                    <p class="text-xs text-gray-400 font-bold">Paid on 05 Apr 2024</p>
-                                </div>
-                            </div>
-                            <span class="font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg text-sm">₹4,500</span>
-                        </div>
+            const myKids = schoolDB.students.filter(s => s.guardian === auth.currentUser.name);
+            const childId = myKids[0]?.id || 'S001';
+            const history = schoolDB.fees.filter(f => f.studentId === childId);
+            const pendingFee = history.find(f => f.status === 'Pending');
+
+            const rows = history.map(f => `
+            <div class="flex justify-between items-center bg-white p-6 rounded-3xl border border-gray-100 hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full ${f.status === 'Paid' ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'} flex items-center justify-center text-xl">💰</div>
+                    <div>
+                        <p class="font-bold text-pucho-dark">${f.type}</p>
+                        <p class="text-xs text-gray-400 font-bold">${f.status === 'Paid' ? 'Paid on ' + f.date : 'Due ' + f.date}</p>
                     </div>
                 </div>
-            </div>`;
+                <div class="text-right">
+                    <p class="font-black ${f.status === 'Paid' ? 'text-green-600' : 'text-red-500'} text-lg">₹${f.amount.toLocaleString()}</p>
+                    ${f.status === 'Pending' ? `<button onclick="showToast('Redirecting to Payment Gateway...', 'info')" class="text-[10px] font-black uppercase text-pucho-purple hover:underline">Pay Now</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+
+            return `<div class="animate-fade-in space-y-8">
+            <div class="bg-white rounded-[40px] p-10 border border-gray-100 shadow-subtle text-center relative overflow-hidden">
+                <div class="w-24 h-24 ${pendingFee ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'} rounded-full flex items-center justify-center text-4xl mx-auto mb-6 shadow-sm">${pendingFee ? '⚠️' : '✅'}</div>
+                <h3 class="text-3xl font-bold text-pucho-dark tracking-tight mb-2">${pendingFee ? 'Payment Pending' : 'All Dues Cleared'}</h3>
+                <p class="text-gray-400 mb-8 max-w-sm mx-auto">${pendingFee ? 'Your ' + pendingFee.type + ' is due for payment.' : 'Great! You have cleared all pending invoices for the current session.'}</p>
+            </div>
+            
+            <div class="max-w-2xl mx-auto space-y-4">
+                <h4 class="font-bold text-xs uppercase text-gray-400 tracking-widest ml-4">Fee statement</h4>
+                ${rows}
+            </div>
+        </div>`;
         },
 
         parent_leave: function () {
+            const requests = schoolDB.leaveRequests.filter(r => r.requesterId === auth.currentUser.id || r.role === 'parent');
+
             return `<div class="bg-white rounded-[40px] p-8 border border-gray-100 shadow-subtle animate-fade-in font-inter">
-                <div class="flex flex-col md:flex-row justify-between items-start mb-8 gap-6">
-                    <div>
-                         <h3 class="font-bold text-2xl text-pucho-dark">Leave Application</h3>
-                         <p class="text-gray-400 text-sm mt-1">Submit leave requests for your child</p>
-                    </div>
-                    <button class="bg-pucho-dark text-white px-6 py-3 rounded-xl font-bold hover:bg-pucho-purple transition-colors shadow-lg" onclick="document.getElementById('leaveForm').classList.toggle('hidden')">+ New Request</button>
+            <div class="flex flex-col md:flex-row justify-between items-start mb-8 gap-6">
+                <div>
+                     <h3 class="font-bold text-2xl text-pucho-dark">Leave Application</h3>
+                     <p class="text-gray-400 text-sm mt-1">Submit leave requests for your child</p>
                 </div>
+                <button class="bg-pucho-dark text-white px-6 py-3 rounded-xl font-bold hover:bg-pucho-purple transition-colors shadow-lg" onclick="document.getElementById('leaveForm').classList.toggle('hidden')">+ New Request</button>
+            </div>
 
-                <div id="leaveForm" class="hidden bg-gray-50 p-6 rounded-3xl mb-8 border border-gray-100 animate-slide-up">
-                    <h4 class="font-bold text-lg mb-4">Compose Application</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">From Date</label>
-                            <input type="date" class="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-pucho-purple">
-                        </div>
-                         <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1">To Date</label>
-                            <input type="date" class="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-pucho-purple">
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                         <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Reason</label>
-                         <textarea class="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-pucho-purple" rows="3" placeholder="e.g. Family Function, Medical..."></textarea>
-                    </div>
-                    <div class="flex justify-end gap-2">
-                        <button class="px-4 py-2 text-gray-500 font-bold hover:bg-gray-200 rounded-lg" onclick="document.getElementById('leaveForm').classList.add('hidden')">Cancel</button>
-                        <button class="px-6 py-2 bg-pucho-purple text-white font-bold rounded-xl hover:shadow-lg" onclick="showToast('Leave Applied Successfully!', 'success'); document.getElementById('leaveForm').classList.add('hidden')">Submit</button>
-                    </div>
+            <div id="leaveForm" class="hidden bg-gray-50 p-6 rounded-3xl mb-8 border border-gray-100 animate-slide-up">
+                <h4 class="font-bold text-lg mb-4 text-pucho-dark">Compose Application</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div><label class="label-sm">From Date</label><input type="date" id="leaveFrom" class="input-field"></div>
+                    <div><label class="label-sm">To Date</label><input type="date" id="leaveTo" class="input-field"></div>
                 </div>
+                <div class="mb-4">
+                     <label class="label-sm">Reason</label>
+                     <textarea id="leaveReason" class="input-field" rows="3" placeholder="e.g. Family Function, Medical..."></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button class="px-4 py-2 text-gray-500 font-bold hover:bg-gray-200 rounded-lg" onclick="document.getElementById('leaveForm').classList.add('hidden')">Cancel</button>
+                    <button class="px-6 py-2 bg-pucho-purple text-white font-bold rounded-xl hover:shadow-lg" onclick="dashboard.submitLeaveRequest()">Submit</button>
+                </div>
+            </div>
 
-                <h4 class="font-bold text-xs uppercase text-gray-400 tracking-widest mb-4">Past Records</h4>
-                <div class="space-y-4">
+            <h4 class="font-bold text-xs uppercase text-gray-400 tracking-widest mb-4">Past Records</h4>
+            <div class="space-y-4">
+                ${requests.map(r => `
                     <div class="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl">
                         <div class="flex gap-4 items-center">
-                             <div class="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center font-bold text-xl">✓</div>
+                             <div class="w-12 h-12 rounded-full ${r.status === 'Approved' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'} flex items-center justify-center font-bold text-xl">${r.status === 'Approved' ? '✓' : '⏳'}</div>
                              <div>
-                                <h5 class="font-bold text-pucho-dark">Medical Leave</h5>
-                                <p class="text-xs text-gray-400 font-bold">12 Dec - 14 Dec 2023 (3 Days)</p>
+                                <h5 class="font-bold text-pucho-dark">${r.reason}</h5>
+                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">${r.fromDate} to ${r.toDate}</p>
                              </div>
                         </div>
-                        <span class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold uppercase">Approved</span>
+                        <span class="px-3 py-1 ${r.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'} rounded-lg text-[10px] font-black uppercase">${r.status}</span>
                     </div>
-                     <div class="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl opacity-70">
-                        <div class="flex gap-4 items-center">
-                             <div class="w-12 h-12 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center font-bold text-xl">✓</div>
-                             <div>
-                                <h5 class="font-bold text-pucho-dark">Family Function</h5>
-                                <p class="text-xs text-gray-400 font-bold">10 Nov 2023 (1 Day)</p>
-                             </div>
-                        </div>
-                        <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold uppercase">Approved</span>
-                    </div>
-                </div>
-            </div>`;
+                `).join('')}
+                ${requests.length === 0 ? `<div class="text-center py-10 text-gray-400">No leave history found.</div>` : ''}
+            </div>
+        </div>`;
         },
 
         parent_homework: function () {
-            const homeworks = [
-                { subject: 'Mathematics', title: 'Quadratic Equations Exercise 4.2', due: 'Tomorrow', status: 'Pending' },
-                { subject: 'Science', title: 'Draw Human Heart Diagram', due: '12 Jan', status: 'Pending' },
-                { subject: 'English', title: 'Essay on Artificial Intelligence', due: '15 Jan', status: 'Submitted' }
-            ];
+            const homeworks = schoolDB.homework || [];
 
             return `<div class="bg-white rounded-[40px] p-8 border border-gray-100 shadow-subtle animate-fade-in font-inter">
-                <div class="flex justify-between items-center mb-8">
-                     <h3 class="font-bold text-2xl text-pucho-dark">Homework & Assignments</h3>
-                     <span class="bg-pucho-purple/10 text-pucho-purple px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest">Class 10-A</span>
-                </div>
+            <div class="flex justify-between items-center mb-8">
+                 <h3 class="font-bold text-2xl text-pucho-dark">Homework & Assignments</h3>
+                 <span class="bg-pucho-purple/10 text-pucho-purple px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest">Class 10-A</span>
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    ${homeworks.map(h => `
-                        <div class="p-6 rounded-[32px] border ${h.status === 'Pending' ? 'bg-orange-50 border-orange-100' : 'bg-green-50 border-green-100'} relative overflow-hidden group">
-                           <div class="flex justify-between items-start mb-4">
-                                <span class="text-[10px] font-bold uppercase tracking-widest ${h.status === 'Pending' ? 'text-orange-500' : 'text-green-600'}">${h.subject}</span>
-                                ${h.status === 'Pending' ? '⏳' : '✅'}
-                           </div>
-                           <h4 class="font-bold text-lg mb-2 text-pucho-dark leading-tight">${h.title}</h4>
-                           <p class="text-xs font-bold text-gray-500 mb-6">Due: ${h.due}</p>
-                           
-                           <button class="w-full py-3 bg-white/50 hover:bg-white rounded-xl text-xs font-bold transition-all border border-black/5 shadow-sm">View Details</button>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>`;
+                ${homeworks.length > 0 ? homeworks.map(h => `
+                    <div class="p-6 rounded-[32px] border ${h.status === 'Pending' ? 'bg-orange-50 border-orange-100' : 'bg-green-50 border-green-100'} relative overflow-hidden group">
+                       <div class="flex justify-between items-start mb-4">
+                            <span class="text-[10px] font-bold uppercase tracking-widest ${h.status === 'Pending' ? 'text-orange-500' : 'text-green-600'}">${h.subject}</span>
+                            ${h.status === 'Pending' ? '⏳' : '✅'}
+                       </div>
+                       <h4 class="font-bold text-lg mb-2 text-pucho-dark leading-tight">${h.title}</h4>
+                       <p class="text-xs font-bold text-gray-500 mb-6">Due: ${h.due}</p>
+                       
+                       <button class="w-full py-3 bg-white/50 hover:bg-white rounded-xl text-xs font-bold transition-all border border-black/5 shadow-sm">View Details</button>
+                    </div>
+                `).join('') : '<div class="col-span-full py-20 text-center text-gray-400 font-bold uppercase tracking-widest italic animate-pulse">No assignments found for your class.</div>'}
+            </div>
+        </div>`;
         },
 
         // --- STAFF DASHBOARD TEMPLATES ---
         my_classes: function () {
+            const staff = schoolDB.staff.find(s => s.email === auth.currentUser.email);
+            const classes = staff && staff.class_assigned !== 'N/A' ? [`${staff.class_assigned}-${staff.division_assigned || 'A'} (${staff.subject || 'General'})`] : [];
+
             return `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-                ${['10th - A (Maths)', '9th - B (Physics)', '12th - A (Maths)'].map(cls => `
+                ${classes.length > 0 ? classes.map(cls => `
                     <div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-subtle hover:shadow-glow transition-all cursor-pointer group">
                         <div class="flex justify-between items-start mb-6">
                             <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl font-bold group-hover:scale-110 transition-transform">📚</div>
                             <span class="bg-gray-100 px-3 py-1 rounded-lg text-[10px] font-bold uppercase text-gray-500">09:00 AM</span>
                         </div>
                         <h3 class="text-xl font-bold text-pucho-dark mb-1">${cls}</h3>
-                        <p class="text-gray-400 text-sm mb-6">45 Students</p>
+                        <p class="text-gray-400 text-sm mb-6">Active Class</p>
                         <div class="flex gap-2">
                             <button onclick="dashboard.loadPage('mark_attendance')" class="flex-1 bg-pucho-dark text-white py-3 rounded-xl text-xs font-bold hover:bg-pucho-purple transition-all">Attendance</button>
                             <button onclick="dashboard.loadPage('exam_marks')" class="flex-1 bg-gray-50 text-pucho-dark py-3 rounded-xl text-xs font-bold hover:bg-gray-100 transition-all">Marks</button>
                         </div>
                     </div>
-                `).join('')}
+                `).join('') : '<div class="col-span-full py-20 text-center text-gray-400 font-bold uppercase tracking-widest italic animate-pulse">No classes assigned to your profile yet.</div>'}
             </div>`;
         },
 
@@ -1972,13 +2131,13 @@ const dashboard = {
                             </tr>
                         </thead>
                         <tbody>
-                            ${Array.from({ length: 5 }, (_, i) => `
+                            ${(schoolDB.students.slice(0, 10)).map(s => `
                             <tr class="border-b border-gray-50">
-                                <td class="px-6 py-4 font-bold text-gray-500">${20 + i}</td>
-                                <td class="px-6 py-4 font-bold text-pucho-dark">Student Name ${i + 1}</td>
+                                <td class="px-6 py-4 font-bold text-gray-500">${s.roll || s.roll_no || 'N/A'}</td>
+                                <td class="px-6 py-4 font-bold text-pucho-dark">${s.name}</td>
                                 <td class="px-6 py-4"><input type="number" class="w-20 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 font-bold text-center outline-none focus:border-pucho-purple" value="${Math.floor(Math.random() * 40) + 60}"></td>
                                 <td class="px-6 py-4 font-bold text-gray-400">100</td>
-                                <td class="px-6 py-4"><span class="bg-green-50 text-green-700 px-3 py-1 rounded-lg text-xs font-bold">A</span></td>
+                                <td class="px-6 py-4"><span class="bg-green-50 text-green-700 px-3 py-1 rounded-lg text-xs font-bold">${['A', 'A+', 'B', 'B+'][Math.floor(Math.random() * 4)]}</span></td>
                             </tr>
                             `).join('')}
                         </tbody>
@@ -2035,7 +2194,7 @@ const dashboard = {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     ${schoolDB.quizzes.map(q => `
                         <div class="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden group hover:border-pucho-purple transition-all">
-                            <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-110 transition-transform">📝</div>
+                            <div class="absolute top-0 right-0 p-4 opacity-10 text-4xl group-hover:scale-110 transition-transform">📝</div>
                             <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold uppercase tracking-widest mb-2 inline-block">${q.type}</span>
                             <h4 class="font-bold text-xl text-pucho-dark mb-1 relative z-10">${q.title}</h4>
                             <p class="text-sm font-bold text-gray-400 mb-4 relative z-10">${q.subject} • ${q.class} - ${q.division}</p>
@@ -2048,43 +2207,84 @@ const dashboard = {
                     ${schoolDB.quizzes.length === 0 ? `<div class="col-span-2 text-center py-10 text-gray-400">No active quizzes found. Create one to get started!</div>` : ''}
                 </div>
             </div>
-            <style>.input-field { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e7eb; background: white; outline: none; font-weight: 600; font-size: 0.875rem; color: #1f2937; }</style>`;
+            <style>.input-field {width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e7eb; background: white; outline: none; font-weight: 600; font-size: 0.875rem; color: #1f2937; }</style>`;
         },
 
         homework: function () {
-            return `<div class="bg-white rounded-[40px] p-12 border border-gray-100 text-center animate-fade-in font-inter"><h3 class="text-2xl font-bold mb-6">Drop Materials Here</h3><div class="p-20 border-2 border-dashed rounded-[40px] text-gray-400">PDF, XLS, DOC Support</div></div>`;
+            return `<div class="bg-white rounded-[40px] p-12 border border-gray-100 text-center animate-fade-in font-inter">
+                <h3 class="text-2xl font-bold mb-6">Drop Materials Here</h3>
+                <div class="p-20 border-2 border-dashed rounded-[40px] text-gray-400">PDF, XLS, DOC Support</div>
+            </div>`;
         },
 
         // --- PARENT / SHARED ---
         // Note: student_profile, parent_attendance, parent_fees are aliased above.
 
-
-
         parent_results: function () {
-            return `<div class="bg-white p-10 rounded-[40px] border border-gray-100 animate-fade-in font-inter"><h3 class="text-2xl font-bold mb-10">Mid-Term Result</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-8 font-inter"><div><p class="text-xs font-bold text-gray-400 uppercase">Grade</p><p class="text-2xl font-bold text-blue-500">A+</p></div></div></div>`;
+            const myKids = schoolDB.students.filter(s => s.guardian === auth.currentUser.name);
+            const childId = myKids[0]?.id || 'S001';
+            const results = schoolDB.results.filter(r => r.student_id === childId);
+
+            return `<div class="bg-white p-10 rounded-[40px] border border-gray-100 shadow-subtle animate-fade-in font-inter">
+                <div class="flex justify-between items-center mb-10">
+                    <div>
+                        <h3 class="text-3xl font-bold text-pucho-dark tracking-tight">Academic Report Card</h3>
+                        <p class="text-gray-400 font-bold text-xs uppercase tracking-widest mt-1">Session 2024-25 • Term 1</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-gray-400 uppercase">Avg GPA</p>
+                        <p class="text-4xl font-black text-pucho-purple tracking-tighter">A+</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${results.map(r => `
+                        <div class="p-6 bg-gray-50 rounded-3xl border border-gray-100 flex justify-between items-center group hover:bg-white hover:shadow-md transition-all">
+                            <div>
+                                <h4 class="font-bold text-pucho-dark">${r.subject}</h4>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Score: ${r.marks}/100</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center font-black text-pucho-purple shadow-sm">${r.grade}</div>
+                        </div>
+                    `).join('')}
+                    ${results.length === 0 ? `<div class="col-span-3 text-center py-10 text-gray-400">Results are currently under preparation.</div>` : ''}
+                </div>
+
+                <div class="mt-12 pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
+                     <p class="text-sm text-gray-400 max-w-md italic">"Arjun is showing excellent progress in core sciences and mathematics." — Class Teacher</p>
+                     <button class="px-8 py-3 bg-pucho-dark text-white rounded-2xl font-bold hover:bg-pucho-purple transition-all shadow-glow uppercase text-xs tracking-widest">Download Full PDF</button>
+                </div>
+            </div>`;
         },
 
         parent_notices: function () {
             // Filter notices for Parents
-            let notices = schoolDB.notices.filter(n => n.target === 'Parents' || n.target === 'All').map(n => `<div class="p-6 bg-gray-50 rounded-3xl border border-gray-100">
-                <h4 class="font-bold text-pucho-dark text-lg mb-2">${n.title}</h4>
-                <p class="text-xs font-bold text-gray-400 mb-2 uppercase">${n.date}</p>
-                <p class="text-sm text-gray-500">${n.content}</p>
-            </div>`).join('');
+            let notices = schoolDB.notices.filter(n => n.target === 'Parents' || n.target === 'All').map(n => `
+                <div class="p-6 bg-gray-50 rounded-3xl border border-gray-100">
+                    <h4 class="font-bold text-pucho-dark text-lg mb-2">${n.title}</h4>
+                    <p class="text-xs font-bold text-gray-400 mb-2 uppercase">${n.date}</p>
+                    <p class="text-sm text-gray-500">${n.content}</p>
+                </div>
+            `).join('');
 
             if (!notices) notices = `<div class="text-center text-gray-400 py-10">No new notices.</div>`;
 
-            return `<div class="bg-white rounded-[40px] p-8 border border-gray-100 animate-fade-in font-inter"><h3 class="font-bold text-2xl mb-8">Parent Circulars</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-inter">${notices}</div></div>`;
+            return `<div class="bg-white rounded-[40px] p-8 border border-gray-100 animate-fade-in font-inter">
+                <h3 class="font-bold text-2xl mb-8">Parent Circulars</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-inter">${notices}</div>
+            </div>`;
         },
 
         staff_notices: function () {
             // Filter notices for Staff
-            let notices = schoolDB.notices.filter(n => n.target === 'Staff' || n.target === 'All').map(n => `<div class="p-6 bg-blue-50 rounded-3xl border border-blue-100 relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-10 text-4xl">📢</div>
-                <h4 class="font-bold text-pucho-dark text-lg mb-1 relative z-10">${n.title}</h4>
-                <p class="text-xs font-bold text-blue-400 mb-4 uppercase relative z-10">${n.date}</p>
-                <p class="text-sm text-gray-600 relative z-10">${n.content}</p>
-            </div>`).join('');
+            let notices = schoolDB.notices.filter(n => n.target === 'Staff' || n.target === 'All').map(n => `
+                <div class="p-6 bg-blue-50 rounded-3xl border border-blue-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-4xl">📢</div>
+                    <h4 class="font-bold text-pucho-dark text-lg mb-1 relative z-10">${n.title}</h4>
+                    <p class="text-xs font-bold text-blue-400 mb-4 uppercase relative z-10">${n.date}</p>
+                    <p class="text-sm text-gray-600 relative z-10">${n.content}</p>
+                </div>
+            `).join('');
 
             if (!notices) notices = `<div class="text-center text-gray-400 py-10">No new notices for staff.</div>`;
 
@@ -2096,10 +2296,32 @@ const dashboard = {
 
         // --- ADVANCED FLOW SIMULATIONS ---
         runRecoveryFlow: function () {
-            showToast('Initiating Smart Recovery Flow...', 'info');
-            setTimeout(() => showToast('Analyzing 154 pending fee records...', 'info'), 1000);
-            setTimeout(() => showToast('AI generated personalized reminders for 12 critical defaults.', 'success'), 2500);
-            setTimeout(() => showToast('Multi-channel alerts dispatched (WhatsApp + SMS).', 'success'), 4000);
+            const pendingCount = schoolDB.fees.filter(f => f.status === 'Pending').length;
+            showToast(`Initiating Smart Recovery Flow for ${pendingCount} records...`, 'info');
+            setTimeout(() => showToast(`AI analyzing payment history for critical defaults...`, 'info'), 1500);
+            setTimeout(() => showToast(`Successfully dispatched alerts to ${pendingCount} parents via WhatsApp & SMS.`, 'success'), 3500);
+        },
+
+        submitLeaveRequest: function () {
+            const from = document.getElementById('leaveFrom').value;
+            const to = document.getElementById('leaveTo').value;
+            const reason = document.getElementById('leaveReason').value;
+
+            if (!from || !to || !reason) {
+                showToast("Please fill all fields", 'error');
+                return;
+            }
+
+            const newReq = {
+                id: 'L-' + Math.floor(Math.random() * 1000),
+                requesterId: auth.currentUser.id,
+                role: auth.currentUser.role,
+                reason, fromDate: from, toDate: to, status: 'Pending'
+            };
+
+            schoolDB.leaveRequests.unshift(newReq);
+            showToast('Leave Request Submitted!', 'success');
+            this.loadPage('parent_leave');
         }
     }
 };

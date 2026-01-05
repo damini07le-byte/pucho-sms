@@ -10,28 +10,39 @@ const auth = {
         parent: { email: "parent", password: "123", role: "parent", name: "Vikram Das" }
     },
 
-    login: function (email, password, role) {
-        // Search for user in credentials object by value
-        let user = null;
+    login: async function (email, password, role) {
+        // Fallback to static credentials if Supabase not ready
+        if (dashboard.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+            let user = this.credentials[email] || Object.values(this.credentials).find(u => u.email === email && u.role === role);
+            if (!user && this.credentials[role] && this.credentials[role].email === email) user = this.credentials[role];
 
-        // precise lookup if key matches (for demo accounts like 'admin', 'staff')
-        if (this.credentials[email]) {
-            user = this.credentials[email];
-        } else {
-            // Search values for matching email
-            user = Object.values(this.credentials).find(u => u.email === email && u.role === role);
+            if (user && user.password === String(password)) {
+                this.currentUser = user;
+                localStorage.setItem('sms_user', JSON.stringify(user));
+                return true;
+            }
+            return false;
         }
 
-        // Check if user exists and password matches
-        // Also allow the fallback "demo" accounts (e.g. role='parent' matches email='parent')
-        if (!user && this.credentials[role] && this.credentials[role].email === email) {
-            user = this.credentials[role];
-        }
+        // --- SUPABASE AUTH LOGIC ---
+        try {
+            const table = (role === 'admin' || role === 'staff') ? 'staff' : 'students';
+            const query = `?email=eq.${email}&password=eq.${password}`;
+            const users = await dashboard.db(table, 'GET', null, query);
 
-        if (user && user.password === password) {
-            this.currentUser = user;
-            localStorage.setItem('sms_user', JSON.stringify(user));
-            return true;
+            if (users && users.length > 0) {
+                const user = users[0];
+                // Map DB keys to expected UI keys if needed
+                this.currentUser = {
+                    ...user,
+                    role: user.role || role,
+                    name: user.name || user.student_name || 'User'
+                };
+                localStorage.setItem('sms_user', JSON.stringify(this.currentUser));
+                return true;
+            }
+        } catch (err) {
+            console.error("Auth Fail:", err);
         }
         return false;
     },
@@ -107,15 +118,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Login Form Listener
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const isSignup = !document.getElementById('signupFields').classList.contains('hidden');
             const errorDiv = document.getElementById('loginError');
 
-            // Extract values common to both or needed
             const emailInput = document.getElementById('username');
             const passInput = document.getElementById('password');
-
             const email = emailInput.value.trim();
             const pass = passInput.value.trim();
 
@@ -124,31 +133,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isSignup) {
                 const name = document.getElementById('regName').value.trim();
-
                 if (!name || !email || !pass) {
                     showToast("Please fill all fields.", 'error');
                     return;
                 }
-
-                // Add to Mock Credentials
-                // Use email as the key to allow login later
                 auth.credentials[email] = { email: email, password: pass, role: 'parent', name: name };
-
                 showToast(`Account Created!\nWelcome, ${name}.\nPlease login with your new credentials.`, 'success');
-
-                // Switch back to login view
                 router.showLogin();
-                // Pre-fill
                 emailInput.value = email;
                 return;
             }
 
-            if (auth.login(email, pass, role)) {
+            if (await auth.login(email, pass, role)) {
                 errorDiv.classList.add('hidden');
                 auth.checkSession();
             } else {
                 errorDiv.classList.remove('hidden');
-                // Shake effect for feedback
                 loginForm.classList.add('animate-pulse');
                 setTimeout(() => loginForm.classList.remove('animate-pulse'), 500);
             }

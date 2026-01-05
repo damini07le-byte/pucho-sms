@@ -16,6 +16,8 @@
 
     <!-- Tailwind Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Dynamic Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -111,6 +113,23 @@
         .btn-outline:hover {
             background-color: #111834;
             color: white;
+        }
+    </style>
+    <style>
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
         }
     </style>
 </head>
@@ -627,7 +646,7 @@
 
         <!-- Full Screen Grid Pattern - Base -->
         <div class="absolute inset-0 z-0 opacity-100 pointer-events-none"
-            style="background-image: linear-gradient(#cbd5e1 1px, transparent 1px), linear-gradient(90deg, #cbd5e1 1px, transparent 1px); background-size: 64px 64px; -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%);">
+            style="background-image: linear-gradient(#cbd5e1 1px, transparent 1px), linear-gradient(90deg, #cbd5e1 1px, transparent 1px); background-size: 64px 64px; -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%); mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%);">
         </div>
 
         <!-- Interactive Grid Spotlight (Purple Glow) -->
@@ -705,12 +724,13 @@
                 <div
                     class="bg-white/70 backdrop-blur-xl p-8 lg:p-12 rounded-[40px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] w-full max-w-md border border-white/50 relative overflow-hidden">
                     <div class="mb-8">
-                        <h2 class="text-2xl font-black text-pucho-dark tracking-tight">Welcome Back</h2>
-                        <p class="text-gray-400 text-sm mt-1">Enter credentials to access Pucho SMS</p>
+                        <h2 id="loginTitle" class="text-2xl font-black text-pucho-dark tracking-tight">Welcome Back</h2>
+                        <p id="loginSubtitle" class="text-gray-400 text-sm mt-1">Enter credentials to access Pucho SMS
+                        </p>
                     </div>
 
                     <form id="loginForm" class="space-y-6">
-                        <div class="space-y-1">
+                        <div id="roleSelector" class="space-y-1">
                             <label class="text-[10px] uppercase font-black tracking-widest text-pucho-purple ml-2">Login
                                 Role</label>
                             <select id="loginRole"
@@ -790,116 +810,6 @@
         </script>
     </div>
 
-    <!-- Staff Modal -->
-    <div id="staffModal"
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-pucho-dark/40 backdrop-blur-sm hidden animate-fade-in">
-        <div
-            class="bg-white p-8 w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar rounded-[32px] border border-white/30 shadow-2xl relative animate-slide-up">
-            <button onclick="document.getElementById('staffModal').classList.add('hidden')"
-                class="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-pucho-dark mb-2">Add New Staff</h1>
-                <p class="text-gray-500 font-inter">Details will be sent to the automation flow</p>
-            </div>
-
-            <form id="staffForm" class="space-y-4 font-inter">
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Full Name</label>
-                    <input type="text" id="staffName" required
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none shadow-sm"
-                        placeholder="e.g. Rahul Sharma">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Email Address</label>
-                    <input type="email" id="staffEmail" required
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none shadow-sm"
-                        placeholder="rahul@school.com">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Phone Number (Mobile)</label>
-                    <input type="text" id="staffPhone" required
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none shadow-sm"
-                        placeholder="+91 98765 43210">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Subject</label>
-                    <input type="text" id="staffSubject" required
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none shadow-sm"
-                        placeholder="e.g. Mathematics, Science">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Initial Password</label>
-                    <div class="relative">
-                        <input type="text" id="staffPass" required
-                            class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none shadow-sm"
-                            placeholder="e.g. staff@123">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Department</label>
-                    <input type="text" id="staffDept" required
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none shadow-sm"
-                        placeholder="e.g. Mathematics">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Joining Date</label>
-                    <input type="date" id="staffJoiningDate" required
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none shadow-sm">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Role</label>
-                    <select id="staffRole"
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none appearance-none cursor-pointer">
-                        <option value="Teacher">Teacher</option>
-                        <option value="Accountant">Accountant</option>
-                        <option value="Clerk">Clerk</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1 text-gray-700">Class Assigned</label>
-                        <select id="staffClass"
-                            class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none appearance-none cursor-pointer">
-                            <option value="">None</option>
-                            <option value="LKG">LKG</option>
-                            <option value="UKG">UKG</option>
-                            <option value="1st">1st</option>
-                            <option value="2nd">2nd</option>
-                            <option value="3rd">3rd</option>
-                            <option value="4th">4th</option>
-                            <option value="5th">5th</option>
-                            <option value="6th">6th</option>
-                            <option value="7th">7th</option>
-                            <option value="8th">8th</option>
-                            <option value="9th">9th</option>
-                            <option value="10th">10th</option>
-                            <option value="11th">11th</option>
-                            <option value="12th">12th</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1 text-gray-700">Division</label>
-                        <select id="staffDivision"
-                            class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none appearance-none cursor-pointer">
-                            <option value="">None</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                            <option value="D">D</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="submit"
-                    class="w-full bg-pucho-dark text-white py-4 rounded-2xl font-bold hover:shadow-glow hover:bg-pucho-purple transition-all duration-300 transform active:scale-[0.98] mt-4">
-                    Add & Notify Staff
-                </button>
-            </form>
-        </div>
-    </div>
 
     <!-- Dashboard Layout (Initially Hidden) -->
     <div id="appShell" class="flex h-screen overflow-hidden hidden">
@@ -966,134 +876,7 @@
         </div>
     </div>
 
-    <!-- Change Password Modal -->
-    <div id="passwordModal"
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-pucho-dark/40 backdrop-blur-sm hidden animate-fade-in">
-        <div
-            class="bg-white p-8 w-full max-w-md rounded-[32px] border border-white/30 shadow-2xl relative animate-slide-up">
-            <button onclick="document.getElementById('passwordModal').classList.add('hidden')"
-                class="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-pucho-dark mb-2">Change Password</h1>
-                <p class="text-gray-500 font-inter">Update your secure password</p>
-            </div>
 
-            <form id="passwordForm" class="space-y-4 font-inter">
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">New Password</label>
-                    <input type="password" id="newPassword" required
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none shadow-sm"
-                        placeholder="Enter new password">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Confirm Password</label>
-                    <input type="password" id="confirmPassword" required
-                        class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none shadow-sm"
-                        placeholder="Confirm new password">
-                </div>
-                <button type="button" onclick="dashboard.submitNewPassword()"
-                    class="w-full bg-pucho-dark text-white py-4 rounded-2xl font-bold hover:shadow-glow hover:bg-pucho-purple transition-all duration-300 transform active:scale-[0.98] mt-4">
-                    Update Password
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Broadcast Modal -->
-    <div id="broadcastModal"
-        class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-pucho-dark/40 backdrop-blur-sm hidden animate-fade-in">
-        <div
-            class="bg-white p-8 w-full max-w-lg rounded-[32px] border border-white/30 shadow-2xl relative animate-slide-up">
-            <button onclick="document.getElementById('broadcastModal').classList.add('hidden')"
-                class="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-            <div class="mb-6">
-                <h1 class="text-3xl font-bold text-pucho-dark mb-1">New Broadcast</h1>
-                <p class="text-gray-500 font-inter">Publish notice to the notice board</p>
-            </div>
-
-            <form id="broadcastForm" class="space-y-4 font-inter">
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Notice Title</label>
-                    <input type="text" id="bcTitle" required
-                        class="form-input w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none"
-                        placeholder="e.g. Annual Day Details">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-gray-700">Content</label>
-                    <textarea id="bcContent" required
-                        class="form-input w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none h-24"
-                        placeholder="Type your message here..."></textarea>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1 text-gray-700">Target Audience</label>
-                        <select id="bcTarget"
-                            class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none cursor-pointer">
-                            <option value="All">Everyone</option>
-                            <option value="Parents">Parents Only</option>
-                            <option value="Student">Students Only</option>
-                            <option value="Staff">Staff Only</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1 text-gray-700">Date</label>
-                        <input type="date" id="bcDate" required
-                            class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none">
-                    </div>
-                </div>
-                <!-- Optional Filters -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1 text-gray-700">Class (Optional)</label>
-                        <select id="bcClass"
-                            class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none cursor-pointer">
-                            <option value="">All Classes</option>
-                            <option value="LKG">LKG</option>
-                            <option value="UKG">UKG</option>
-                            <option value="1st">1st</option>
-                            <option value="2nd">2nd</option>
-                            <option value="3rd">3rd</option>
-                            <option value="4th">4th</option>
-                            <option value="5th">5th</option>
-                            <option value="6th">6th</option>
-                            <option value="7th">7th</option>
-                            <option value="8th">8th</option>
-                            <option value="9th">9th</option>
-                            <option value="10th">10th</option>
-                            <option value="11th">11th</option>
-                            <option value="12th">12th</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1 text-gray-700">Division (Optional)</label>
-                        <select id="bcDivision"
-                            class="w-full px-4 py-3 rounded-2xl border border-black/5 bg-gray-50 focus:border-pucho-purple outline-none cursor-pointer">
-                            <option value="">All Divisions</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                            <option value="D">D</option>
-                        </select>
-                    </div>
-                </div>
-        </div>
-
-        <div class="flex justify-end mt-4">
-            <button type="button" onclick="dashboard.publishNotice()"
-                class="w-full bg-pucho-dark text-white py-4 rounded-2xl font-bold hover:shadow-glow hover:bg-pucho-purple transition-all duration-300">
-                Publish Notice
-            </button>
-        </div>
-        </form>
-    </div>
     </div>
 
     <!-- Broadcast Modal (Communication Center) -->
@@ -1241,9 +1024,9 @@
                 document.getElementById('roleSelector').classList.remove('hidden');
                 document.getElementById('signupFields').classList.add('hidden');
                 document.getElementById('authSubmit').innerText = "Sign In";
-                document.getElementById('authToggleText').innerHTML = `Don't have an account? <button type="button" onclick="router.showSignup()" class="text-pucho-purple font-bold hover:underline">Register as Parent</button>`;
-                document.getElementById('demoAccounts').classList.remove('hidden');
+                document.getElementById('authToggleText').innerHTML = `Don't have an account? <button type="button" onclick="router.showSignup()" class="text-pucho-purple font-black hover:underline">Register as Parent</button>`;
                 modal.classList.remove('hidden');
+                modal.classList.add('flex');
             },
             showSignup: function () {
                 const modal = document.getElementById('loginModal');
@@ -1252,12 +1035,14 @@
                 document.getElementById('roleSelector').classList.add('hidden');
                 document.getElementById('signupFields').classList.remove('hidden');
                 document.getElementById('authSubmit').innerText = "Create Parent Account";
-                document.getElementById('authToggleText').innerHTML = `Already have an account? <button type="button" onclick="router.showLogin()" class="text-pucho-purple font-bold hover:underline">Sign In Instead</button>`;
-                document.getElementById('demoAccounts').classList.add('hidden');
+                document.getElementById('authToggleText').innerHTML = `Already have an account? <button type="button" onclick="router.showLogin()" class="text-pucho-purple font-black hover:underline">Sign In Instead</button>`;
                 modal.classList.remove('hidden');
+                modal.classList.add('flex');
             },
             hideLogin: function () {
-                document.getElementById('loginModal').classList.add('hidden');
+                const modal = document.getElementById('loginModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
                 document.getElementById('loginError').classList.add('hidden');
             }
         };
