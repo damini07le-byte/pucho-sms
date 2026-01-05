@@ -156,12 +156,29 @@ const dashboard = {
     },
 
     // Initial Load Logic
+    // Initial Load Logic
     init: async function () {
         this.renderSidebar();
         await this.syncDB();
-        this.loadPage('overview');
+
+        // Hash Routing Logic
+        const hash = window.location.hash.substring(1); // Remove '#'
+        if (hash) {
+            this.loadPage(hash);
+        } else {
+            this.loadPage('overview');
+        }
+
+        // Handle Back/Forward Browser Navigation
+        window.addEventListener('hashchange', () => {
+            const newHash = window.location.hash.substring(1);
+            if (newHash) this.loadPage(newHash);
+        });
+
         // Initial Chart load if on overview
-        setTimeout(() => this.initCharts(), 500);
+        if (!hash || hash === 'overview') {
+            setTimeout(() => this.initCharts(), 500);
+        }
     },
 
     getMenuItems: function (role) {
@@ -260,29 +277,50 @@ const dashboard = {
         const role = auth.currentUser.role.toLowerCase();
         const nav = document.getElementById('navLinks');
         nav.innerHTML = '';
+        const currentHash = window.location.hash.substring(1) || 'overview';
 
         const items = this.getMenuItems(role);
         items.forEach(item => {
             const link = document.createElement('a');
-            link.href = 'javascript:void(0)'; // Prevent default navigation reloading page
+            link.href = `#${item.id}`; // Proper Hash Link
             link.className = `flex items-center gap-[12px] px-[16px] h-[44px] rounded-[22px] text-[14px] font-medium transition-all duration-200 hover:bg-gray-50 text-pucho-dark group`;
-            if (item.id === 'overview') link.classList.add('bg-pucho-purple/10', 'active-nav');
+
+            // Highlight active link primarily based on hash
+            if (item.id === currentHash) link.classList.add('bg-pucho-purple/10', 'active-nav');
 
             link.innerHTML = `
                 <span class="text-xl opacity-70 group-hover:scale-110 transition-transform">${item.icon}</span> 
                 <span class="truncate">${item.name}</span>
             `;
+
             link.onclick = (e) => {
-                e.preventDefault();
+                // Let default anchor behavior handle hash update
                 document.querySelectorAll('#navLinks a').forEach(l => l.classList.remove('bg-pucho-purple/10', 'active-nav'));
                 link.classList.add('bg-pucho-purple/10', 'active-nav');
-                this.loadPage(item.id);
+                // this.loadPage(item.id) is now called via hashchange event or fallback
+                // However, for smoother feel, we can call it directly too, 
+                // but let's rely on standard hash navigation or call loadPage to be safe + visual update
+                e.preventDefault();
+                window.location.hash = item.id;
+                // The hash change listener in init() will catch this and call loadPage
             };
             nav.appendChild(link);
         });
     },
 
     loadPage: function (id) {
+        // Update hash without triggering reload loop if handled
+        if (window.location.hash.substring(1) !== id) {
+            window.location.hash = id;
+            // active state update in sidebar is handled by hash check mostly, 
+            // but visually we might want to ensure it syncs if loaded programmatically
+            const links = document.querySelectorAll('#navLinks a');
+            links.forEach(l => {
+                l.classList.toggle('bg-pucho-purple/10', l.getAttribute('href') === `#${id}`);
+                l.classList.toggle('active-nav', l.getAttribute('href') === `#${id}`);
+            });
+        }
+
         const content = document.getElementById('mainContent');
         const title = document.getElementById('pageTitle');
         const desc = document.getElementById('pageDesc');
