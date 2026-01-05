@@ -71,20 +71,43 @@ const dashboard = {
         e.preventDefault();
         const appData = {
             id: "ADM-" + Math.floor(Math.random() * 10000),
-            studentName: document.getElementById('appName').value,
+            student_name: document.getElementById('appName').value,
             grade: document.getElementById('appGrade').value,
             dob: document.getElementById('appDob').value,
-            parentName: document.getElementById('appFather').value,
-            parentEmail: auth.currentUser.email, // Link to logged in user
-            phone: document.getElementById('appPhone').value,
+            parent_name: document.getElementById('appFather').value,
+            parentEmail: auth.currentUser.email,
+            mobile: document.getElementById('appPhone').value,
             address: document.getElementById('appAddress').value,
             status: 'Pending',
             date: new Date().toLocaleDateString()
         };
 
-        schoolDB.admissions.push(appData);
-        showToast('🎉 Application Submitted Successfully!\nYou can track the status in "My Applications".', 'success');
-        this.loadPage('my_applications');
+        // --- PUCHO STUDIO WEBHOOK INTEGRATION ---
+        const webhookUrl = 'https://studio.pucho.ai/api/v1/webhooks/9OLZGyCFZLulRiEciSz01';
+
+        showToast('Sending application to Pucho Studio...', 'info');
+
+        fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(appData)
+        })
+            .then(response => {
+                if (response.ok) {
+                    schoolDB.admissions.push(appData);
+                    showToast('🎉 Application Submitted & Workflow Triggered!', 'success');
+                    this.loadPage('my_applications');
+                } else {
+                    throw new Error('Webhook failed');
+                }
+            })
+            .catch(err => {
+                console.error('Automation Error:', err);
+                // Fallback: Still save to local DB even if webhook fails for demo stability
+                schoolDB.admissions.push(appData);
+                showToast('Application saved locally (Webhook pending).', 'warning');
+                this.loadPage('my_applications');
+            });
     },
 
     renderSidebar: function () {
