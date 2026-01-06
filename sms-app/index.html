@@ -62,8 +62,8 @@
         
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: transparent; border-radius: 2px; transition: background-color 0.2s; }
-        .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 2px; }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
 
         .glass { 
             background-color: rgba(255, 255, 255, 0.7);
@@ -113,6 +113,52 @@
         .btn-outline:hover {
             background-color: #111834;
             color: white;
+        }
+
+        /* Custom Scrollable Dropdown */
+        .dropdown-container {
+            position: relative;
+            user-select: none;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: white;
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 1rem;
+            margin-top: 0.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            max-height: 240px;
+            overflow-y: auto;
+            visibility: hidden;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dropdown-menu.show {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .dropdown-item {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4b5563;
+            transition: all 0.2s;
+        }
+        .dropdown-item:hover {
+            background: #f9fafb;
+            color: #8b5cf6;
+        }
+        .dropdown-item.selected {
+            background: #f5f3ff;
+            color: #8b5cf6;
+            font-weight: 700;
         }
     </style>
     <style>

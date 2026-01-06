@@ -464,7 +464,7 @@ const dashboard = {
             const form = document.getElementById('staffForm');
             const editId = form.dataset.editId;
             const staffData = {
-                id: editId || 'T' + Math.floor(Math.random() * 1000), // Changed S to T for staff
+                id: editId || 'T' + Math.floor(Math.random() * 1000),
                 name: document.getElementById('staffName').value,
                 email: document.getElementById('staffEmail').value,
                 phone: document.getElementById('staffPhone').value,
@@ -482,16 +482,25 @@ const dashboard = {
 
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerText;
-            submitBtn.innerText = 'Syncing...';
+            submitBtn.innerText = 'Sending to Webhook...';
             submitBtn.disabled = true;
 
-            const method = editId ? 'PATCH' : 'POST';
-            const query = editId ? `?id=eq.${editId}` : '';
+            // Webhook URL provided by user
+            const webhookUrl = 'https://studio.pucho.ai/api/v1/webhooks/NySXblkkRlsCPEPo87hOm';
 
-            const result = await this.db('staff', method, staffData, query);
+            // Send data to Webhook
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(staffData)
+            });
 
-            if (result) {
-                showToast(editId ? 'Staff updated!' : 'Staff onboarded! 🚀 Cloud Automation Flow Triggered.', 'success');
+            if (response.ok) {
+                showToast(editId ? 'Staff updated via Webhook!' : 'Staff onboarded! 🚀 Webhook Triggered.', 'success');
+
+                // Optimistic UI Update
                 if (editId) {
                     const index = schoolDB.staff.findIndex(s => s.id === editId);
                     if (index !== -1) schoolDB.staff[index] = staffData;
@@ -499,15 +508,7 @@ const dashboard = {
                     schoolDB.staff.push(staffData);
                 }
             } else {
-                // Local fallback (Sync pending)
-                if (editId) {
-                    const index = schoolDB.staff.findIndex(s => s.id === editId);
-                    if (index !== -1) schoolDB.staff[index] = staffData;
-                    showToast('Staff updated locally.', 'warning');
-                } else {
-                    schoolDB.staff.push(staffData);
-                    showToast('Staff onboarded locally.', 'warning');
-                }
+                throw new Error(`Webhook Error: ${response.statusText}`);
             }
 
             document.getElementById('staffModal').classList.add('hidden');
@@ -517,7 +518,14 @@ const dashboard = {
             submitBtn.disabled = false;
         } catch (err) {
             console.error("Staff Data Submit Error:", err);
-            showToast("Failed to save staff data. Check console.", "error");
+            showToast("Failed to send data to webhook. Check console.", "error");
+
+            // Revert button state
+            const submitBtn = document.querySelector('#staffForm button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerText = 'Add & Notify Staff';
+                submitBtn.disabled = false;
+            }
         }
     },
 
@@ -591,13 +599,25 @@ const dashboard = {
     },
 
     deleteStaff: async function (id) {
-        if (confirm('Are you sure you want to delete this staff member?')) {
-            const result = await this.db('staff', 'DELETE', null, `?id=eq.${id}`);
+        if (!confirm('Are you sure you want to delete this staff member?')) return;
+
+        // Try cloud delete
+        const result = await this.db('staff', 'DELETE', null, `?id=eq.${id}`);
+
+        // Optimistic Update: Remove locally regardless of cloud status
+        // This ensures the UI works even if keys are missing or offline
+        const initialLength = schoolDB.staff.length;
+        schoolDB.staff = schoolDB.staff.filter(s => s.id !== id);
+
+        if (schoolDB.staff.length < initialLength) {
             if (result) {
-                schoolDB.staff = schoolDB.staff.filter(s => s.id !== id);
                 showToast('Staff removed from cloud.', 'success');
-                this.loadPage('staff');
+            } else {
+                showToast('Staff removed locally (Offline/Mock).', 'warning');
             }
+            this.loadPage('staff');
+        } else {
+            showToast('Staff member not found.', 'error');
         }
     },
 
@@ -779,6 +799,104 @@ const dashboard = {
             }
             return '';
         }).join('');
+    },
+
+    runRecoveryFlow: async function () {
+        const classFilter = document.getElementById('filterClass_fees')?.value;
+        const pendingFees = schoolDB.fees.filter(f => f.status === 'Pending');
+
+        // Enrich data with student/parent info for the Automation Loop
+        const enrichedFees = pendingFees.map(f => {
+            const student = schoolDB.students.find(s => s.id === f.student_id);
+            return {
+                ...f,
+                student_name: student ? student.name : 'Unknown',
+                parent_name: student ? (student.guardian_name || student.parent_name) : 'Unknown',
+                parent_email: student ? student.email : (student ? student.parent_email : 'Unknown'),
+                student_class: student ? student.class : 'N/A'
+            };
+        });
+
+        // Filter by class if selected
+        let finalFees = enrichedFees;
+        if (classFilter) {
+            finalFees = enrichedFees.filter(f => f.student_class === classFilter);
+        }
+
+        if (finalFees.length === 0) {
+            showToast("No pending fees found for recovery.", "info");
+            return;
+        }
+
+        showToast(`Processing ${finalFees.length} recovery requests...`, "info");
+
+        // New Webhook URL for Email Automation Loop
+        const webhookUrl = 'https://studio.pucho.ai/api/v1/webhooks/9OLZGyCFZLulRiEciSz01';
+
+        try {
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'FEE_RECOVERY_AUTOMATION_LOOP',
+                    total_amount: finalFees.reduce((sum, f) => sum + (f.amount || 0), 0),
+                    count: finalFees.length,
+                    grade_filter: classFilter || 'All Grades',
+                    data: finalFees // This list contains emails and amounts for Studio to loop
+                })
+            });
+
+            if (response.ok) {
+                showToast("🚀 Recovery Flow Sent to Pucho Studio!", "success");
+            } else {
+                throw new Error("Flow trigger failed");
+            }
+        } catch (err) {
+            console.error("Recovery Flow Error:", err);
+            showToast("Failed to trigger flow. Check your internet.", "error");
+        }
+    },
+
+    toggleCustomDropdown: function (event) {
+        event.stopPropagation();
+        const menu = document.getElementById('dropdownMenu_fees');
+        const arrow = document.getElementById('dropdownArrow');
+        if (!menu) return;
+
+        const isShow = menu.classList.contains('show');
+        menu.classList.toggle('show');
+        if (arrow) arrow.style.transform = isShow ? 'rotate(0deg)' : 'rotate(180deg)';
+
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.classList.remove('show');
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+                window.removeEventListener('click', closeMenu);
+            }
+        };
+        window.addEventListener('click', closeMenu);
+    },
+
+    selectDropdownOption: function (val, text) {
+        const input = document.getElementById('filterClass_fees');
+        const toggleText = document.getElementById('selectedClassText');
+        const menu = document.getElementById('dropdownMenu_fees');
+        const arrow = document.getElementById('dropdownArrow');
+
+        if (input) input.value = val;
+        if (toggleText) toggleText.innerText = text;
+
+        if (menu) {
+            const items = menu.querySelectorAll('.dropdown-item');
+            items.forEach(item => {
+                if (item.innerText === text) item.classList.add('selected');
+                else item.classList.remove('selected');
+            });
+            menu.classList.remove('show');
+        }
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+
+        this.filterGeneric('fees');
     },
 
     templates: {
@@ -1351,6 +1469,7 @@ const dashboard = {
             const totalPaid = schoolDB.fees.filter(f => f.status === 'Paid').reduce((sum, f) => sum + f.amount, 0);
             const totalPending = schoolDB.fees.filter(f => f.status === 'Pending').reduce((sum, f) => sum + f.amount, 0);
             const pendingCount = schoolDB.fees.filter(f => f.status === 'Pending').length;
+            const classes = ['LKG', 'UKG', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'];
 
             return `<div class="space-y-8 animate-fade-in">
                 <!-- Finance Stats -->
@@ -1369,17 +1488,32 @@ const dashboard = {
                     </div>
                 </div>
 
-                <div class="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-subtle">
-                    <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div class="flex flex-col md:flex-row items-center gap-4">
-                            <div class="flex gap-2">
-                                <select id="filterClass_fees" onchange="dashboard.filterGeneric('fees')" class="px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50 text-sm font-bold text-gray-600 outline-none focus:border-pucho-purple transition-all">
-                                    <option value="">All Classes</option><option>Grade 10</option><option>Grade 9</option>
-                                </select>
-                            </div>
-                            <button onclick="dashboard.runRecoveryFlow()" class="bg-pucho-dark text-white px-10 py-4 rounded-2xl text-xs font-bold shadow-glow hover:bg-pucho-purple transition-all transform active:scale-95 uppercase tracking-widest">Run Recovery Flow</button>
-                        </div>
+                <div id="fees_container" class="bg-white rounded-[40px] border border-gray-100 shadow-subtle animate-fade-in mb-20">
+                <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div class="space-y-1">
+                        <h3 class="font-bold text-2xl">Financial Center</h3>
+                        <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Fee structure and collection</p>
                     </div>
+                    <div class="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                        <!-- Custom Scrollable Dropdown -->
+                        <div class="dropdown-container w-full md:w-64">
+                            <div onclick="dashboard.toggleCustomDropdown(event)" id="dropdownToggle_fees" class="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50 text-sm font-bold text-gray-600 outline-none flex justify-between items-center cursor-pointer hover:bg-white transition-all shadow-sm">
+                                <span id="selectedClassText">All Classes</span>
+                                <svg class="w-4 h-4 transition-transform" id="dropdownArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                            <!-- Hidden input for filterGeneric compatibility -->
+                            <input type="hidden" id="filterClass_fees" value="">
+                            
+                            <div id="dropdownMenu_fees" class="dropdown-menu custom-scrollbar">
+                                <div class="dropdown-item selected" onclick="dashboard.selectDropdownOption('', 'All Classes')">All Classes</div>
+                                ${classes.map(c => `<div class="dropdown-item" onclick="dashboard.selectDropdownOption('${c}', '${c}')">${c}</div>`).join('')}
+                            </div>
+                        </div>
+                        
+                        <button onclick="dashboard.runRecoveryFlow()" class="w-full md:w-auto bg-pucho-dark text-white px-10 py-5 rounded-2xl text-xs font-bold shadow-glow hover:bg-pucho-purple transition-all transform active:scale-95 uppercase tracking-widest">Run Recovery Flow</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-left font-inter">
                         <thead class="bg-gray-50/50">
                             <tr>
@@ -1392,6 +1526,7 @@ const dashboard = {
                         <tbody id="feesTableBody"></tbody>
                     </table>
                 </div>
+            </div>
             </div>`;
         },
 
