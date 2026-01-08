@@ -31,6 +31,12 @@ const schoolDB = {
     admissions: [],
     notices: [],
     quizzes: [],
+    subjects: [
+        { id: 'SUB-101', name: 'Mathematics', class: '10th' },
+        { id: 'SUB-102', name: 'Science', class: '10th' },
+        { id: 'SUB-103', name: 'English', class: '10th' },
+        { id: 'SUB-104', name: 'Hindi', class: '10th' }
+    ],
     homework: [],
     leaveRequests: []
 };

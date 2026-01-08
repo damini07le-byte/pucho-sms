@@ -66,6 +66,9 @@ const dashboard = {
         if (admissions) schoolDB.admissions = admissions;
         if (notices) schoolDB.notices = notices;
         if (quizzes) schoolDB.quizzes = quizzes;
+        if (typeof schoolDB.subjects === 'undefined') schoolDB.subjects = [];
+        const subjects = await this.db('subjects');
+        if (subjects) schoolDB.subjects = subjects;
 
         if (this.isDbConnected) {
             showToast('✅ Cloud Sync Complete', 'success');
@@ -97,6 +100,10 @@ const dashboard = {
             ]
         };
         return stats[role.toLowerCase()] || stats.admin;
+    },
+
+    getSubjectsForClass: function (className) {
+        return (schoolDB.subjects || []).filter(s => s.class === className);
     },
 
     // Chart Initialization Engine
@@ -191,6 +198,7 @@ const dashboard = {
                 { id: 'students', name: 'Students', icon: '👨‍🎓' },
                 { id: 'staff', name: 'Staff Management', icon: '👩‍🏫' },
                 { id: 'fees', name: 'Fee Management', icon: '💰' },
+                { id: 'subjects', name: 'Subjects', icon: '📚' },
                 { id: 'exams', name: 'Exams & Results', icon: '📝' },
                 { id: 'attendance_all', name: 'Attendance', icon: '📅' },
                 { id: 'ai_insights', name: 'AI Insights', icon: '🧠' },
@@ -351,7 +359,8 @@ const dashboard = {
             parent_leave: { title: 'Leave Application', desc: 'Apply for absence or viewing leave history' },
             parent_notices: { title: 'School Notices', desc: 'Announcements and events for parents' },
             manage_profile: { title: 'My Profile', desc: 'Manage your personal account details' },
-            settings: { title: 'Settings', desc: 'Configure application preferences' }
+            settings: { title: 'Settings', desc: 'Configure application preferences' },
+            subjects: { title: 'Subject Master', desc: 'Define and manage subjects for each class' }
         };
 
         const meta = metadata[id] || { title: 'Module', desc: 'Section Details' };
@@ -725,11 +734,155 @@ const dashboard = {
         };
 
         const result = await this.db('notices', 'POST', newNotice);
-        if (result) {
-            schoolDB.notices.unshift(newNotice);
-            showToast('Notice Published!', 'success');
+        if (result || this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+            if (this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+                schoolDB.notices.unshift(newNotice);
+                showToast('Notice Published! (Local)', 'success');
+            } else {
+                schoolDB.notices.unshift(newNotice);
+                showToast('Notice Published!', 'success');
+            }
             document.getElementById('broadcastModal').classList.add('hidden');
             this.loadPage('communication');
+        }
+    },
+
+    showExamModal: function () {
+        const modal = document.getElementById('examModal');
+        const form = document.getElementById('examForm');
+        if (modal && form) {
+            form.reset();
+            const container = document.getElementById('subjectRowsContainer');
+            container.innerHTML = '';
+            this.addSubjectRow(); // Add first default row
+            modal.classList.remove('hidden');
+            document.getElementById('examStartDate').valueAsDate = new Date();
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            document.getElementById('examEndDate').valueAsDate = nextWeek;
+        }
+    },
+
+    addSubjectRow: function () {
+        const container = document.getElementById('subjectRowsContainer');
+        const examClass = document.getElementById('examClass').value;
+        const subjects = this.getSubjectsForClass(examClass);
+
+        const rowId = 'row_' + Date.now();
+        const rowHTML = `
+            <div id="${rowId}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end animate-fade-in bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group">
+                <div class="space-y-1">
+                    <label class="text-[9px] uppercase font-bold text-gray-400 ml-1">Date</label>
+                    <input type="date" class="row-date w-full px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-pucho-purple outline-none text-xs transition-all" required>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[9px] uppercase font-bold text-gray-400 ml-1">Time</label>
+                    <input type="time" class="row-time w-full px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-pucho-purple outline-none text-xs transition-all" required>
+                </div>
+                <div class="space-y-1 md:col-span-1">
+                    <label class="text-[9px] uppercase font-bold text-gray-400 ml-1">Subject</label>
+                    <select class="row-subject w-full px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-pucho-purple outline-none text-xs transition-all cursor-pointer appearance-none" required>
+                        <option value="">Select Subject</option>
+                        ${subjects.map(s => `<option value="${s.name}">${s.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="flex justify-end pb-1">
+                    <button type="button" onclick="this.closest('#${rowId}').remove()" 
+                        class="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-all opacity-0 group-hover:opacity-100">🗑️</button>
+                </div>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', rowHTML);
+    },
+
+    selectExamClass: function (val) {
+        document.getElementById('examClass').value = val;
+        document.getElementById('selectedClassText').innerText = val;
+        document.getElementById('classDropdownOptions').classList.add('hidden');
+
+        // Refresh all subject dropdowns in the modal
+        const subjects = this.getSubjectsForClass(val);
+        const dropdowns = document.querySelectorAll('#subjectRowsContainer .row-subject');
+        dropdowns.forEach(dd => {
+            const currentValue = dd.value;
+            dd.innerHTML = `<option value="">Select Subject</option>` +
+                subjects.map(s => `<option value="${s.name}" ${s.name === currentValue ? 'selected' : ''}>${s.name}</option>`).join('');
+        });
+    },
+
+    scheduleExam: async function () {
+        const examClass = document.getElementById('examClass').value;
+        const startDate = document.getElementById('examStartDate').value;
+        const endDate = document.getElementById('examEndDate').value;
+        const container = document.getElementById('subjectRowsContainer');
+        const rows = container.querySelectorAll('[id^="row_"]');
+
+        if (rows.length === 0) {
+            showToast("Add at least one subject", 'error');
+            return;
+        }
+
+        const examData = [];
+        rows.forEach(row => {
+            const date = row.querySelector('.row-date').value;
+            const time = row.querySelector('.row-time').value;
+            const subject = row.querySelector('.row-subject').value;
+
+            if (date && time && subject) {
+                examData.push({
+                    id: 'EXM-' + Math.floor(Math.random() * 10000),
+                    subject,
+                    class: examClass,
+                    date,
+                    time,
+                    venue: 'N/A', // Venue removed as per user request
+                    status: 'Scheduled',
+                    period_start: startDate,
+                    period_end: endDate
+                });
+            }
+        });
+
+        if (examData.length === 0) {
+            showToast("Fill all subject details", 'error');
+            return;
+        }
+
+        const submitBtn = document.querySelector('#examForm button[type="submit"]');
+        const originalText = submitBtn.innerText;
+        submitBtn.innerText = "Publishing Timetable...";
+        submitBtn.disabled = true;
+
+        showToast(`Publishing ${examData.length} exams...`, 'info');
+
+        // Post all exams
+        let successCount = 0;
+        for (const exam of examData) {
+            const result = await this.db('exams', 'POST', exam);
+            if (result || this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+                schoolDB.exams.unshift(exam);
+                successCount++;
+            }
+        }
+
+        if (successCount > 0) {
+            showToast(`Successfully published ${successCount} exams!`, 'success');
+            document.getElementById('examModal').classList.add('hidden');
+            this.loadPage('exams');
+        }
+
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
+    },
+
+    deleteExam: async function (id) {
+        if (!confirm('Are you sure you want to remove this exam schedule?')) return;
+
+        const result = await this.db('exams', 'DELETE', null, `?id=eq.${id}`);
+
+        if (result || this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+            schoolDB.exams = schoolDB.exams.filter(e => e.id !== id);
+            showToast('Exam schedule removed.', 'success');
+            this.loadPage('exams');
         }
     },
 
@@ -791,10 +944,21 @@ const dashboard = {
                 </tr>`;
             }
             if (type === 'exams') {
+                const isAdmin = auth.currentUser.role === 'admin';
                 return `<tr class="hover:bg-gray-50/50 transition-all animate-fade-in font-inter">
-                    <td class="p-6 border-b border-gray-50 font-bold text-pucho-dark">${d.subject}</td>
+                    <td class="p-6 border-b border-gray-50">
+                        <div class="font-bold text-pucho-dark">${d.subject}</div>
+                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">ID: ${d.id}</div>
+                    </td>
                     <td class="p-6 border-b border-gray-50 text-gray-500 text-sm font-medium">${d.class}</td>
-                    <td class="p-6 border-b border-gray-50 text-gray-400 text-sm font-bold uppercase tracking-tighter">${new Date(d.date || d.exam_date || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    <td class="p-6 border-b border-gray-50">
+                        <div class="text-sm font-bold text-pucho-purple">${new Date(d.date || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                        <div class="text-[10px] text-gray-400 font-medium">${d.time || 'TBA'}</div>
+                    </td>
+                    <td class="p-6 border-b border-gray-50 text-sm font-medium text-gray-500">${d.venue || 'TBA'}</td>
+                    <td class="p-6 border-b border-gray-50 text-right">
+                        ${isAdmin ? `<button onclick="dashboard.deleteExam('${d.id}')" class="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-all opacity-0 group-hover:opacity-100">🗑️</button>` : ''}
+                    </td>
                 </tr>`;
             }
             return '';
@@ -899,7 +1063,118 @@ const dashboard = {
         this.filterGeneric('fees');
     },
 
+    // Subject Management Functions
+    showAddSubjectModal: function () {
+        const modal = document.getElementById('subjectModal'); // Assuming a modal with this ID exists
+        const form = document.getElementById('subjectForm'); // Assuming a form with this ID exists
+        if (modal && form) {
+            form.reset();
+            modal.classList.remove('hidden');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const subjectName = document.getElementById('addSubjectName').value;
+                const subjectClass = document.getElementById('addSubjectClass').value;
+
+                if (!subjectName || !subjectClass) {
+                    showToast('Please fill all fields.', 'error');
+                    return;
+                }
+
+                const newSubject = {
+                    id: `SUB-${Date.now().toString().slice(-6)}`, // Simple ID generation
+                    name: subjectName,
+                    class: subjectClass
+                };
+
+                // Simulate API call
+                const result = await this.db('subjects', 'POST', newSubject);
+
+                if (result || this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+                    schoolDB.subjects.push(newSubject);
+                    showToast('Subject added successfully!', 'success');
+                    modal.classList.add('hidden');
+                    this.loadPage('subjects'); // Reload subjects page to show new entry
+                } else {
+                    showToast('Failed to add subject.', 'error');
+                }
+            };
+        }
+    },
+
+    deleteSubject: async function (id) {
+        if (!confirm('Are you sure you want to remove this subject?')) return;
+
+        const result = await this.db('subjects', 'DELETE', null, `?id=eq.${id}`);
+
+        if (result || this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+            schoolDB.subjects = schoolDB.subjects.filter(s => s.id !== id);
+            showToast('Subject removed.', 'success');
+            this.loadPage('subjects');
+        }
+    },
+
     templates: {
+        subjects: function () {
+            const classFilter = document.getElementById('filterClass_subjects')?.value || '';
+            let filtered = schoolDB.subjects;
+            if (classFilter) filtered = filtered.filter(s => s.class === classFilter);
+
+            const rows = filtered.map(s => `
+            <tr class="hover:bg-gray-50/50 transition-all font-inter">
+                <td class="p-6 font-bold text-pucho-dark border-b border-gray-50">${s.id}</td>
+                <td class="p-6 text-gray-700 font-medium border-b border-gray-50">${s.name}</td>
+                <td class="p-6 text-gray-500 text-sm border-b border-gray-50">${s.class}</td>
+                <td class="p-6 border-b border-gray-50 text-right">
+                    <button onclick="dashboard.deleteSubject('${s.id}')" class="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-all">🗑️</button>
+                </td>
+            </tr>
+        `).join('');
+
+            return `<div class="space-y-8 animate-fade-in">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-2xl text-pucho-dark">Subject Master</h3>
+                    <p class="text-gray-400">Manage subjects for academic scheduling</p>
+                </div>
+                <button onclick="dashboard.showAddSubjectModal()" class="bg-pucho-dark text-white px-8 py-3 rounded-2xl font-bold hover:shadow-glow hover:bg-pucho-purple transition-all">+ ADD SUBJECT</button>
+            </div>
+
+            <div class="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-subtle">
+                <div class="p-8 border-b border-gray-50 flex justify-end">
+                    <select id="filterClass_subjects" onchange="dashboard.loadPage('subjects')" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 outline-none">
+                        <option value="">All Classes</option>
+                        <option value="LKG" ${classFilter === 'LKG' ? 'selected' : ''}>LKG</option>
+                        <option value="UKG" ${classFilter === 'UKG' ? 'selected' : ''}>UKG</option>
+                        <option value="1st" ${classFilter === '1st' ? 'selected' : ''}>1st</option>
+                        <option value="2nd" ${classFilter === '2nd' ? 'selected' : ''}>2nd</option>
+                        <option value="3rd" ${classFilter === '3rd' ? 'selected' : ''}>3rd</option>
+                        <option value="4th" ${classFilter === '4th' ? 'selected' : ''}>4th</option>
+                        <option value="5th" ${classFilter === '5th' ? 'selected' : ''}>5th</option>
+                        <option value="6th" ${classFilter === '6th' ? 'selected' : ''}>6th</option>
+                        <option value="7th" ${classFilter === '7th' ? 'selected' : ''}>7th</option>
+                        <option value="8th" ${classFilter === '8th' ? 'selected' : ''}>8th</option>
+                        <option value="9th" ${classFilter === '9th' ? 'selected' : ''}>9th</option>
+                        <option value="10th" ${classFilter === '10th' ? 'selected' : ''}>10th</option>
+                        <option value="11th" ${classFilter === '11th' ? 'selected' : ''}>11th</option>
+                        <option value="12th" ${classFilter === '12th' ? 'selected' : ''}>12th</option>
+                    </select>
+                </div>
+                <table class="w-full text-left font-inter">
+                    <thead class="bg-gray-50/50">
+                        <tr>
+                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Subject ID</th>
+                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Subject Name</th>
+                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Class</th>
+                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows || '<tr><td colspan="4" class="p-10 text-center text-gray-400">No subjects defined for this class.</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+        },
         skeleton: function () {
             return `<div class="p-8 space-y-8 animate-pulse">
                 <div class="h-48 skeleton rounded-[40px] w-full"></div>
@@ -1532,27 +1807,26 @@ const dashboard = {
 
         exams: function () {
             setTimeout(() => dashboard.filterGeneric('exams'), 0);
+            const isAdmin = auth.currentUser.role === 'admin' || auth.currentUser.role === 'staff';
+
             return `<div class="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-subtle animate-fade-in">
                 <div class="p-8 border-b border-gray-50 flex justify-between items-center">
-                    <h3 class="font-bold text-2xl">Exam Schedule</h3>
+                    <div>
+                        <h3 class="font-bold text-2xl">Exam Schedule</h3>
+                        <p class="text-xs text-gray-400 font-medium mt-1">Upcoming academic assessments</p>
+                    </div>
                      <div class="flex gap-4">
                         <select id="filterClass_exams" onchange="dashboard.filterGeneric('exams')" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 outline-none">
                             <option value="">All Classes</option>
-                            <option value="LKG">LKG</option>
-                            <option value="UKG">UKG</option>
-                            <option value="1st">1st</option>
-                            <option value="2nd">2nd</option>
-                            <option value="3rd">3rd</option>
-                            <option value="4th">4th</option>
-                            <option value="5th">5th</option>
-                            <option value="6th">6th</option>
-                            <option value="7th">7th</option>
-                            <option value="8th">8th</option>
-                            <option value="9th">9th</option>
-                            <option value="10th">10th</option>
-                            <option value="11th">11th</option>
-                            <option value="12th">12th</option>
+                            <option value="LKG">LKG</option><option value="UKG">UKG</option>
+                            <option value="1st">1st</option><option value="2nd">2nd</option>
+                            <option value="3rd">3rd</option><option value="4th">4th</option>
+                            <option value="5th">5th</option><option value="6th">6th</option>
+                            <option value="7th">7th</option><option value="8th">8th</option>
+                            <option value="9th">9th</option><option value="10th">10th</option>
+                            <option value="11th">11th</option><option value="12th">12th</option>
                         </select>
+                        ${isAdmin ? `<button onclick="dashboard.showExamModal()" class="bg-pucho-dark text-white px-6 py-2 rounded-xl text-xs font-bold hover:bg-pucho-purple transition-all shadow-glow">+ SCHEDULE EXAM</button>` : ''}
                     </div>
                 </div>
                 <table class="w-full text-left font-inter">
@@ -1560,7 +1834,9 @@ const dashboard = {
                         <tr>
                             <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Subject</th>
                             <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Class</th>
-                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
+                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date & Time</th>
+                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Venue</th>
+                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="examsTableBody"></tbody>
