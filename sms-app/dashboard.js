@@ -2,7 +2,7 @@
 const dashboard = {
     // Supabase Config (Direct DB Access)
     supabaseUrl: 'https://zpkjmfaqwjnkoppvrsrl.supabase.co', // Aapka Project URL
-    supabaseKey: 'YOUR_SUPABASE_ANON_KEY', // Yahan apni Anon Key dalein
+    supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwa2ptZmFxd2pua29wcHZyc3JsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNDMzMzIsImV4cCI6MjA4MTYxOTMzMn0.LlYAFQfEDZ8ObeK_voI4KLb3OPzLg002Lx28DBNkN3w', // Yahan apni Anon Key dalein
 
     // Data State
     isDbConnected: false,
@@ -317,6 +317,7 @@ const dashboard = {
     },
 
     loadPage: function (id) {
+        console.log(`[Dashboard] Loading Page: ${id}`);
         // Update hash without triggering reload loop if handled
         if (window.location.hash.substring(1) !== id) {
             window.location.hash = id;
@@ -754,43 +755,44 @@ const dashboard = {
             form.reset();
             const container = document.getElementById('subjectRowsContainer');
             container.innerHTML = '';
-            this.addSubjectRow(); // Add first default row
+            // Trigger load for default class (10th)
+            this.selectExamClass('10th');
             modal.classList.remove('hidden');
-            document.getElementById('examStartDate').valueAsDate = new Date();
-            const nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + 7);
-            document.getElementById('examEndDate').valueAsDate = nextWeek;
         }
     },
 
-    addSubjectRow: function () {
+    addSubjectRow: function (preSelectedSubject = null) {
         const container = document.getElementById('subjectRowsContainer');
         const examClass = document.getElementById('examClass').value;
         const subjects = this.getSubjectsForClass(examClass);
 
-        const rowId = 'row_' + Date.now();
+        const rowId = 'row_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
         const rowHTML = `
-            <div id="${rowId}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end animate-fade-in bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group">
-                <div class="space-y-1">
-                    <label class="text-[9px] uppercase font-bold text-gray-400 ml-1">Date</label>
-                    <input type="date" class="row-date w-full px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-pucho-purple outline-none text-xs transition-all" required>
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[9px] uppercase font-bold text-gray-400 ml-1">Time</label>
-                    <input type="time" class="row-time w-full px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-pucho-purple outline-none text-xs transition-all" required>
-                </div>
-                <div class="space-y-1 md:col-span-1">
-                    <label class="text-[9px] uppercase font-bold text-gray-400 ml-1">Subject</label>
-                    <select class="row-subject w-full px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-pucho-purple outline-none text-xs transition-all cursor-pointer appearance-none" required>
-                        <option value="">Select Subject</option>
-                        ${subjects.map(s => `<option value="${s.name}">${s.name}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="flex justify-end pb-1">
-                    <button type="button" onclick="this.closest('#${rowId}').remove()" 
-                        class="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-all opacity-0 group-hover:opacity-100">🗑️</button>
-                </div>
-            </div>`;
+        <div id="${rowId}" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end animate-fade-in bg-white p-4 rounded-2xl border border-gray-100 shadow-sm group">
+            <div class="space-y-1">
+                <label class="text-[9px] uppercase font-bold text-gray-400 ml-1">Date</label>
+                <input type="date" class="row-date w-full px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-pucho-purple outline-none text-xs transition-all" required>
+            </div>
+            <div class="space-y-1">
+                <label class="text-[9px] uppercase font-bold text-gray-400 ml-1">Start Time</label>
+                <input type="time" class="row-start-time w-full px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-pucho-purple outline-none text-xs transition-all" required>
+            </div>
+            <div class="space-y-1">
+                <label class="text-[9px] uppercase font-bold text-gray-400 ml-1">End Time</label>
+                <input type="time" class="row-end-time w-full px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-pucho-purple outline-none text-xs transition-all" required>
+            </div>
+            <div class="space-y-1">
+                <label class="text-[9px] uppercase font-bold text-gray-400 ml-1">Subject</label>
+                <select class="row-subject w-full px-3 py-2 rounded-xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-pucho-purple outline-none text-xs transition-all cursor-pointer appearance-none" required>
+                    <option value="">Select Subject</option>
+                    ${subjects.map(s => `<option value="${s.name}" ${preSelectedSubject === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
+                </select>
+            </div>
+            <div class="flex justify-end pb-1">
+                <button type="button" onclick="this.closest('#${rowId}').remove()" 
+                    class="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-all opacity-0 group-hover:opacity-100">🗑️</button>
+            </div>
+        </div>`;
         container.insertAdjacentHTML('beforeend', rowHTML);
     },
 
@@ -799,20 +801,25 @@ const dashboard = {
         document.getElementById('selectedClassText').innerText = val;
         document.getElementById('classDropdownOptions').classList.add('hidden');
 
-        // Refresh all subject dropdowns in the modal
+        // Auto-populate rows for all subjects of this class
+        const container = document.getElementById('subjectRowsContainer');
+        container.innerHTML = ''; // Clear existing
+
         const subjects = this.getSubjectsForClass(val);
-        const dropdowns = document.querySelectorAll('#subjectRowsContainer .row-subject');
-        dropdowns.forEach(dd => {
-            const currentValue = dd.value;
-            dd.innerHTML = `<option value="">Select Subject</option>` +
-                subjects.map(s => `<option value="${s.name}" ${s.name === currentValue ? 'selected' : ''}>${s.name}</option>`).join('');
-        });
+
+        if (subjects.length > 0) {
+            subjects.forEach(s => {
+                this.addSubjectRow(s.name);
+            });
+            showToast(`Loaded ${subjects.length} subjects for Class ${val}`, 'info');
+        } else {
+            this.addSubjectRow(); // Add one empty row if no subjects found
+            showToast(`No subjects found for Class ${val}`, 'info');
+        }
     },
 
     scheduleExam: async function () {
         const examClass = document.getElementById('examClass').value;
-        const startDate = document.getElementById('examStartDate').value;
-        const endDate = document.getElementById('examEndDate').value;
         const container = document.getElementById('subjectRowsContainer');
         const rows = container.querySelectorAll('[id^="row_"]');
 
@@ -824,20 +831,23 @@ const dashboard = {
         const examData = [];
         rows.forEach(row => {
             const date = row.querySelector('.row-date').value;
-            const time = row.querySelector('.row-time').value;
+            const startTime = row.querySelector('.row-start-time').value;
+            const endTime = row.querySelector('.row-end-time').value;
             const subject = row.querySelector('.row-subject').value;
 
-            if (date && time && subject) {
+            if (date && startTime && endTime && subject) {
                 examData.push({
                     id: 'EXM-' + Math.floor(Math.random() * 10000),
                     subject,
                     class: examClass,
                     date,
-                    time,
-                    venue: 'N/A', // Venue removed as per user request
+                    time: `${startTime} - ${endTime}`,
+                    start_time: startTime, // Re-adding as required by DB schema
+                    end_time: endTime,     // Re-adding as required by DB schema
+                    venue: 'N/A',
                     status: 'Scheduled',
-                    period_start: startDate,
-                    period_end: endDate
+                    period_start: date,
+                    period_end: date
                 });
             }
         });
@@ -846,6 +856,43 @@ const dashboard = {
             showToast("Fill all subject details", 'error');
             return;
         }
+
+        // --- WEBHOOK INTEGRATION (Pucho Studio) ---
+        // 1. Fetch Students of this class
+        const students = schoolDB.students.filter(s => s.class === examClass);
+        const recipients = students.map(s => ({
+            student_name: s.name,
+            parent_name: s.guardian_name,
+            parent_email: s.email,
+            parent_phone: s.phone
+        }));
+
+        const webhookPayload = {
+            target_class: examClass,
+            exam_schedule: examData,
+            recipients: recipients,
+            timestamp: new Date().toISOString()
+        };
+
+        const webhookDetails = {
+            url: "https://studio.pucho.ai/api/v1/webhooks/qv2ZkTJtgNx8T3Z7HiMtb",
+            payload: webhookPayload
+        };
+
+        console.log("Triggering Webhook:", webhookDetails);
+
+        // Fire and forget webhook
+        fetch(webhookDetails.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(webhookDetails.payload)
+        })
+            .then(response => {
+                if (response.ok) showToast("Notifications sent via Pucho Studio", 'success');
+                else console.error("Webhook failed:", response.statusText);
+            })
+            .catch(err => console.error("Webhook Error:", err));
+        // ------------------------------------------
 
         const submitBtn = document.querySelector('#examForm button[type="submit"]');
         const originalText = submitBtn.innerText;
@@ -856,19 +903,46 @@ const dashboard = {
 
         // Post all exams
         let successCount = 0;
+        let failCount = 0;
+        let lastError = "";
+
         for (const exam of examData) {
-            const result = await this.db('exams', 'POST', exam);
-            if (result || this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
-                schoolDB.exams.unshift(exam);
+            // Mapping to Verified DB Schema: title, start_date, class_id
+            const { id, subject, date, time, ...rest } = exam;
+
+            const examPayload = {
+                title: `${subject} (${time})`, // Appending time to title as 'time' column is missing
+                start_date: date,
+                class_id: exam.class, // Assuming class_id maps to class
+                venue: exam.venue,
+                status: 'Scheduled'
+            };
+
+            const result = await this.db('exams', 'POST', examPayload);
+
+            if (result) {
+                schoolDB.exams.unshift(result[0] || exam); // Use DB result if available
                 successCount++;
+            } else {
+                failCount++;
+                lastError = "DB Insert Failed";
+                console.error("Failed to save exam:", examPayload);
             }
         }
 
         if (successCount > 0) {
             showToast(`Successfully published ${successCount} exams!`, 'success');
-            document.getElementById('examModal').classList.add('hidden');
-            this.loadPage('exams');
+            setTimeout(() => {
+                document.getElementById('examModal').classList.add('hidden');
+                this.loadPage('exams');
+            }, 1000);
+        } else {
+            showToast(`Failed to save exams. Error: ${lastError}`, 'error');
+            submitBtn.innerText = originalText; // Reset button
+            submitBtn.disabled = false;
         }
+
+
 
         submitBtn.innerText = originalText;
         submitBtn.disabled = false;
@@ -953,7 +1027,7 @@ const dashboard = {
                     <td class="p-6 border-b border-gray-50 text-gray-500 text-sm font-medium">${d.class}</td>
                     <td class="p-6 border-b border-gray-50">
                         <div class="text-sm font-bold text-pucho-purple">${new Date(d.date || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-                        <div class="text-[10px] text-gray-400 font-medium">${d.time || 'TBA'}</div>
+                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-tight">${d.time || (d.start_time ? `${d.start_time} - ${d.end_time}` : 'TBA')}</div>
                     </td>
                     <td class="p-6 border-b border-gray-50 text-sm font-medium text-gray-500">${d.venue || 'TBA'}</td>
                     <td class="p-6 border-b border-gray-50 text-right">
@@ -1063,42 +1137,227 @@ const dashboard = {
         this.filterGeneric('fees');
     },
 
+    // Subject Custom Dropdown Logic
+    toggleSubjectDropdown: function (event) {
+        event.stopPropagation();
+        const menu = document.getElementById('dropdownMenu_subject');
+        const arrow = document.getElementById('subjectDropdownArrow');
+        if (!menu) return;
+
+        const isHidden = menu.classList.contains('hidden');
+
+        if (isHidden) {
+            menu.classList.remove('hidden');
+            if (arrow) arrow.style.transform = 'rotate(180deg)';
+        } else {
+            menu.classList.add('hidden');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+        }
+
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target) && !e.target.closest('#dropdownToggle_subject')) {
+                menu.classList.add('hidden');
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+                window.removeEventListener('click', closeMenu);
+            }
+        };
+        window.addEventListener('click', closeMenu);
+    },
+
+    selectSubjectOption: function (val) {
+        const input = document.getElementById('addSubjectClass');
+        const textSpan = document.getElementById('subjectSelectedText');
+        const menu = document.getElementById('dropdownMenu_subject');
+        const arrow = document.getElementById('subjectDropdownArrow');
+
+        if (input) input.value = val;
+        if (textSpan) {
+            textSpan.innerText = val;
+            textSpan.className = "font-bold text-pucho-dark";
+        }
+
+        if (menu) menu.classList.add('hidden');
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+
+        // Load existing subjects for this class
+        this.renderExistingSubjects(val);
+    },
+
     // Subject Management Functions
+    renderExistingSubjects: function (className) {
+        const container = document.getElementById('existingSubjectsContainer');
+        if (!container) return;
+
+        const subjects = schoolDB.subjects.filter(s => s.class === className);
+
+        if (subjects.length === 0) {
+            container.innerHTML = `
+                <div class="p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-center text-gray-400 text-xs font-medium">
+                    No subjects defined for ${className} yet.
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="flex flex-wrap gap-2">
+                ${subjects.map(s => `
+                    <div class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold border border-blue-100 flex items-center gap-2">
+                        ${s.name}
+                        <button type="button" onclick="dashboard.deleteSubject('${s.id}')" class="hover:text-red-500">✕</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    addSubjectInputRow: function () {
+        const container = document.getElementById('subjectRowsContainer');
+        const rowId = 'sub_row_' + Date.now();
+        const div = document.createElement('div');
+        div.id = rowId;
+        div.className = "flex gap-2 mb-2 animate-fade-in";
+        div.innerHTML = `
+            <input type="text" placeholder="Subject Name (e.g. Physics)" class="row-subject-name w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 focus:border-pucho-purple outline-none" required>
+            <button type="button" onclick="document.getElementById('${rowId}').remove()" class="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-all">✕</button>
+        `;
+        container.appendChild(div);
+    },
+
     showAddSubjectModal: function () {
-        const modal = document.getElementById('subjectModal'); // Assuming a modal with this ID exists
-        const form = document.getElementById('subjectForm'); // Assuming a form with this ID exists
+        const modal = document.getElementById('subjectModal');
+        const form = document.getElementById('subjectForm');
+
         if (modal && form) {
             form.reset();
+            document.getElementById('subjectRowsContainer').innerHTML = '';
+            const existingContainer = document.getElementById('existingSubjectsContainer');
+            if (existingContainer) existingContainer.innerHTML = ''; // Clear previous existing subjects
+            this.addSubjectInputRow(); // Add first row by default
+
+            // Reset custom dropdown
+            const textSpan = document.getElementById('subjectSelectedText');
+            if (textSpan) {
+                textSpan.innerText = "Select Class";
+                textSpan.className = "font-bold text-gray-400 opacity-70";
+            }
+            document.getElementById('addSubjectClass').value = "";
+
+            // Auto-select class if filter is active
+            const currentFilter = document.getElementById('filterClass_subjects')?.value;
+            if (currentFilter) {
+                this.selectSubjectOption(currentFilter);
+            }
+
             modal.classList.remove('hidden');
+
+            // Set Onsubmit
             form.onsubmit = async (e) => {
                 e.preventDefault();
-                const subjectName = document.getElementById('addSubjectName').value;
-                const subjectClass = document.getElementById('addSubjectClass').value;
-
-                if (!subjectName || !subjectClass) {
-                    showToast('Please fill all fields.', 'error');
-                    return;
-                }
-
-                const newSubject = {
-                    id: `SUB-${Date.now().toString().slice(-6)}`, // Simple ID generation
-                    name: subjectName,
-                    class: subjectClass
-                };
-
-                // Simulate API call
-                const result = await this.db('subjects', 'POST', newSubject);
-
-                if (result || this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
-                    schoolDB.subjects.push(newSubject);
-                    showToast('Subject added successfully!', 'success');
-                    modal.classList.add('hidden');
-                    this.loadPage('subjects'); // Reload subjects page to show new entry
-                } else {
-                    showToast('Failed to add subject.', 'error');
-                }
+                await this.saveSubjects();
             };
         }
+    },
+
+    saveSubjects: async function () {
+        const targetClass = document.getElementById('addSubjectClass').value;
+        const rows = document.querySelectorAll('.row-subject-name');
+
+        if (!targetClass) {
+            showToast('Please select a target class.', 'error');
+            return;
+        }
+
+        const subjectsToAdd = [];
+        rows.forEach(row => {
+            if (row.value.trim()) {
+                subjectsToAdd.push({
+                    id: crypto.randomUUID(),
+                    name: row.value.trim(),
+                    class: targetClass
+                });
+            }
+        });
+
+        if (subjectsToAdd.length === 0) {
+            showToast('Please add at least one subject.', 'error');
+            return;
+        }
+
+        const submitBtn = document.querySelector('#subjectForm button[type="submit"]');
+        submitBtn.innerText = "Saving...";
+        submitBtn.disabled = true;
+
+        // Process sequentially or batch if API supports
+        let successCount = 0;
+        for (const sub of subjectsToAdd) {
+            const result = await this.db('subjects', 'POST', sub);
+            if (result || this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+                schoolDB.subjects.push(sub);
+                successCount++;
+            }
+        }
+
+        if (successCount > 0) {
+            showToast(`Successfully added ${successCount} subjects to ${targetClass}!`, 'success');
+            document.getElementById('subjectModal').classList.add('hidden');
+            this.loadPage('subjects');
+        } else {
+            showToast('Failed to save subjects.', 'error');
+        }
+
+        submitBtn.innerText = "Save Subjects";
+        submitBtn.disabled = false;
+    },
+
+    renderSubjectModal: function () {
+        const classes = ['LKG', 'UKG', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'];
+
+        return `<div id="subjectModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-pucho-dark/40 backdrop-blur-sm hidden animate-fade-in">
+            <div class="bg-white p-8 w-full max-w-xl rounded-[32px] border border-white/30 shadow-2xl relative animate-slide-up max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <button onclick="document.getElementById('subjectModal').classList.add('hidden')" class="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full">✕</button>
+                <div class="mb-6 border-b border-gray-50 pb-4">
+                    <div class="w-12 h-12 bg-pucho-purple/10 rounded-xl flex items-center justify-center text-2xl mb-4">📚</div>
+                    <h1 class="text-3xl font-bold text-pucho-dark mb-1">Add New Subject</h1>
+                    <p class="text-gray-500 font-inter">Define subjects to be used in exam scheduling.</p>
+                </div>
+                <form id="subjectForm" class="space-y-6 font-inter">
+                    <div>
+                         <label class="text-[10px] font-bold text-pucho-purple uppercase tracking-widest mb-2 block">Target Class</label>
+                         <div class="relative w-full">
+                            <div onclick="dashboard.toggleSubjectDropdown(event)" id="dropdownToggle_subject" class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 flex justify-between items-center cursor-pointer hover:border-blue-500 transition-all group">
+                                <span id="subjectSelectedText" class="font-bold text-gray-400 opacity-70">Select Class</span>
+                                <svg id="subjectDropdownArrow" class="w-5 h-5 text-blue-600 transition-transform group-hover:text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                            <input type="hidden" id="addSubjectClass" required>
+                            
+                            <div id="dropdownMenu_subject" class="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 hidden z-50 max-h-48 overflow-y-auto custom-scrollbar p-2 animate-fade-in">
+                                ${classes.map(c => `<div class="p-3 hover:bg-blue-50 rounded-xl cursor-pointer font-bold text-gray-600 hover:text-blue-600 transition-colors" onclick="dashboard.selectSubjectOption('${c}')">${c}</div>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Existing Subjects</label>
+                    <div id="existingSubjectsContainer" class="mb-4">
+                        <!-- Existing subjects loaded dynamically -->
+                    </div>
+
+                    <div class="flex justify-between items-center mb-2">
+                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Add New Subjects</label>
+                         <button type="button" onclick="dashboard.addSubjectInputRow()" class="text-xs font-bold text-pucho-purple hover:underline">+ Add Row</button>
+                    </div>
+                        <div id="subjectRowsContainer" class="max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                             <!-- Rows injected here -->
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-50">
+                        <button type="submit" class="w-full bg-pucho-dark text-white px-8 py-4 rounded-2xl font-bold hover:shadow-glow hover:bg-pucho-purple transition-all transform active:scale-[0.98]">SAVE SUBJECTS</button>
+                    </div>
+                </form>
+            </div>
+        </div>`;
     },
 
     deleteSubject: async function (id) {
@@ -1125,7 +1384,7 @@ const dashboard = {
                 <td class="p-6 text-gray-700 font-medium border-b border-gray-50">${s.name}</td>
                 <td class="p-6 text-gray-500 text-sm border-b border-gray-50">${s.class}</td>
                 <td class="p-6 border-b border-gray-50 text-right">
-                    <button onclick="dashboard.deleteSubject('${s.id}')" class="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-all">🗑️</button>
+                    <button onclick="dashboard.deleteSubject('${s.id}')" class="w-10 h-10 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center ml-auto">🗑️</button>
                 </td>
             </tr>
         `).join('');
@@ -1139,9 +1398,10 @@ const dashboard = {
                 <button onclick="dashboard.showAddSubjectModal()" class="bg-pucho-dark text-white px-8 py-3 rounded-2xl font-bold hover:shadow-glow hover:bg-pucho-purple transition-all">+ ADD SUBJECT</button>
             </div>
 
-            <div class="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-subtle">
-                <div class="p-8 border-b border-gray-50 flex justify-end">
-                    <select id="filterClass_subjects" onchange="dashboard.loadPage('subjects')" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 outline-none">
+            <div class="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-subtle min-h-[400px]">
+                <div class="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h4 class="font-bold text-lg">Defined Subjects</h4>
+                    <select id="filterClass_subjects" onchange="dashboard.loadPage('subjects')" class="px-6 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-600 outline-none hover:border-pucho-purple transition-colors bg-gray-50">
                         <option value="">All Classes</option>
                         <option value="LKG" ${classFilter === 'LKG' ? 'selected' : ''}>LKG</option>
                         <option value="UKG" ${classFilter === 'UKG' ? 'selected' : ''}>UKG</option>
@@ -1162,16 +1422,17 @@ const dashboard = {
                 <table class="w-full text-left font-inter">
                     <thead class="bg-gray-50/50">
                         <tr>
-                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Subject ID</th>
-                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Subject Name</th>
-                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Class</th>
-                            <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
+                            <th class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">ID</th>
+                            <th class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Name</th>
+                            <th class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Class</th>
+                            <th class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${rows || '<tr><td colspan="4" class="p-10 text-center text-gray-400">No subjects defined for this class.</td></tr>'}
+                    <tbody class="divide-y divide-gray-50">
+                        ${rows || '<tr><td colspan="4" class="p-12 text-center text-gray-400 font-bold opacity-60">No subjects found. Add new subjects to get started.</td></tr>'}
                     </tbody>
                 </table>
+                ${dashboard.renderSubjectModal()}
             </div>
         </div>`;
         },
@@ -2704,6 +2965,116 @@ const dashboard = {
                      <button class="px-8 py-3 bg-pucho-dark text-white rounded-2xl font-bold hover:bg-pucho-purple transition-all shadow-glow uppercase text-xs tracking-widest">Download Full PDF</button>
                 </div>
             </div>`;
+        },
+
+        // --- EXAM MODAL ---
+        showExamModal: function () {
+            const modal = document.getElementById('examModal');
+            if (!modal) {
+                // If modal doesn't exist in DOM, render it
+                const modalHtml = this.renderExamModal();
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+            }
+            // Re-select fresh reference
+            document.getElementById('examModal').classList.remove('hidden');
+        },
+
+        renderExamModal: function () {
+            // Get Subjects from DB for Dropdown
+            const subjects = this.isDbConnected ? schoolDB.subjects : [];
+            // Group by class if needed, or just list all unique names for now
+            // Better: Filter subjects based on selected class in the form? 
+            // For MVP: Show generic dropdown or depend on class selection
+
+            const uniqueSubjects = [...new Set(subjects.map(s => s.name))];
+
+            return `<div id="examModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-pucho-dark/40 backdrop-blur-sm animate-fade-in">
+                <div class="bg-white p-8 w-full max-w-lg rounded-[32px] border border-white/30 shadow-2xl relative animate-slide-up">
+                    <button onclick="document.getElementById('examModal').classList.add('hidden')" class="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full">✕</button>
+                    
+                    <div class="mb-6 border-b border-gray-50 pb-4">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-2xl mb-4">📝</div>
+                        <h2 class="text-2xl font-bold text-pucho-dark">Schedule New Exam</h2>
+                        <p class="text-gray-400 text-sm">Create an assessment event</p>
+                    </div>
+
+                    <form onsubmit="dashboard.saveExam(event)" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="label-sm">Class</label>
+                                <select id="examClass" class="input-field" required>
+                                    <option value="">Select</option>
+                                    ${['LKG', 'UKG', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'].map(c => `<option value="${c}">${c}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label-sm">Division</label>
+                                <select id="examDiv" class="input-field">
+                                    <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="label-sm">Subject</label>
+                            <div class="relative">
+                                <select id="examSubject" class="input-field appearance-none" required>
+                                    <option value="">Select Subject</option>
+                                    ${uniqueSubjects.map(s => `<option value="${s}">${s}</option>`).join('')}
+                                </select>
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-1 ml-1">Subjects are loaded from Subject Master</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="label-sm">Date</label>
+                                <input type="date" id="examDate" class="input-field" required>
+                            </div>
+                            <div>
+                                <label class="label-sm">Time</label>
+                                <input type="time" id="examTime" class="input-field" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="label-sm">Venue / Room</label>
+                            <input type="text" id="examVenue" class="input-field" placeholder="e.g. Hall 1" required>
+                        </div>
+
+                        <div class="pt-4 flex justify-end gap-3">
+                            <button type="button" onclick="document.getElementById('examModal').classList.add('hidden')" class="px-6 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
+                            <button type="submit" class="bg-pucho-dark text-white px-8 py-3 rounded-2xl font-bold hover:shadow-glow hover:bg-pucho-purple transition-all">Schedule</button>
+                        </div>
+                    </form>
+                </div>
+            </div>`;
+        },
+
+        saveExam: async function (e) {
+            e.preventDefault();
+            const newExam = {
+                id: crypto.randomUUID(),
+                class: document.getElementById('examClass').value,
+                division: document.getElementById('examDiv').value,
+                subject: document.getElementById('examSubject').value,
+                date: document.getElementById('examDate').value,
+                time: document.getElementById('examTime').value,
+                venue: document.getElementById('examVenue').value,
+                created_at: new Date().toISOString()
+            };
+
+            // Optimistic UI
+            schoolDB.exams.unshift(newExam);
+            this.loadPage('exams');
+            document.getElementById('examModal').classList.add('hidden');
+            showToast('Exam Scheduled Successfully!', 'success');
+
+            // DB Sync
+            if (this.isDbConnected) {
+                await this.db('exams', 'POST', newExam);
+            }
         },
 
         parent_notices: function () {
