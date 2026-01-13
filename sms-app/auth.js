@@ -13,17 +13,19 @@ const auth = {
     login: async function (email, password, role) {
         // 1. Check Static Credentials FIRST
         // This allows admin/123 to work regardless of Supabase configuration
-        let user = this.credentials[email];
-        // Also check if email matches a role-based account (e.g. email "staff" for role "staff")
+        let user = this.credentials[email.toLowerCase().trim()];
+
+        // If not found by email, try to find by username/email matching in values
         if (!user) {
             user = Object.values(this.credentials).find(u => u.email === email && u.role === role);
         }
-        // Fallback: check if the input "email" is actually just the role name (e.g. user typed "admin")
-        if (!user && this.credentials[email] && this.credentials[email].role === role) {
-            user = this.credentials[email];
-        }
 
+        // Validate user exists and password matches AND role matches selected role
         if (user && user.password === String(password)) {
+            if (user.role !== role) {
+                console.warn(`Role mismatch: expected ${role}, user has ${user.role}`);
+                return false;
+            }
             console.log("Static Login Success:", user);
             this.currentUser = user;
             localStorage.setItem('sms_user', JSON.stringify(user));
@@ -61,22 +63,41 @@ const auth = {
         window.location.reload();
     },
 
+    showDashboard: function () {
+        if (!this.currentUser) return;
+
+        console.log("[Auth] Transitioning to Dashboard for:", this.currentUser.role);
+
+        // Hide Landing & Modal
+        if (document.getElementById('landingSection')) document.getElementById('landingSection').classList.add('hidden');
+        if (document.getElementById('loginModal')) {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('loginModal').classList.remove('flex');
+        }
+
+        // Show App Shell
+        const appShell = document.getElementById('appShell');
+        if (appShell) appShell.classList.remove('hidden');
+
+        document.body.classList.remove('overflow-hidden');
+
+        // Populate and Init
+        populateUserInfo(this.currentUser);
+        dashboard.init();
+
+        // Ensure hash is set if we are on root or home
+        if (!window.location.hash || window.location.hash === '#home' || window.location.hash === '#') {
+            window.location.hash = '#overview';
+        }
+    },
+
     checkSession: function () {
         if (this.currentUser) {
-            // Smart Routing: Only redirect if hash indicates a dashboard page
             const hash = window.location.hash;
             const isDashboardRoute = hash && hash !== '#home' && hash !== '#' && hash.length > 2;
 
             if (isDashboardRoute) {
-                // Show Dashboard
-                if (document.getElementById('landingSection')) document.getElementById('landingSection').classList.add('hidden');
-                if (document.getElementById('loginModal')) document.getElementById('loginModal').classList.add('hidden');
-                document.getElementById('appShell').classList.remove('hidden');
-                document.body.classList.remove('overflow-hidden');
-                populateUserInfo(this.currentUser);
-                dashboard.init();
-            } else {
-                // Stay on Landing Page - Logic to modify buttons REMOVED per user request
+                this.showDashboard();
             }
         }
     },
@@ -163,8 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (await auth.login(email, pass, role)) {
                 errorDiv.classList.add('hidden');
-                window.location.hash = '#overview'; // Force redirect to Dashboard
-                auth.checkSession();
+                auth.showDashboard();
             } else {
                 errorDiv.classList.remove('hidden');
                 loginForm.classList.add('animate-pulse');

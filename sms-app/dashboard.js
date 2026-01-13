@@ -3148,6 +3148,39 @@ const dashboard = {
             showToast('Leave Request Submitted!', 'success');
             this.loadPage('parent_leave');
         }
+    },
+
+    submitLeaveRequest: async function () {
+        const fromDate = document.getElementById('leaveFrom').value;
+        const toDate = document.getElementById('leaveTo').value;
+        const reason = document.getElementById('leaveReason').value;
+
+        if (!fromDate || !toDate || !reason) {
+            showToast('Please fill all fields', 'error');
+            return;
+        }
+
+        const request = {
+            id: 'LV-' + Math.floor(Math.random() * 10000),
+            student_id: auth.currentUser.id,
+            student_name: auth.currentUser.name,
+            from_date: fromDate,
+            to_date: toDate,
+            reason: reason,
+            status: 'Pending',
+            applied_at: new Date().toISOString()
+        };
+
+        showToast('Submitting request...', 'info');
+
+        const result = await this.db('leave_requests', 'POST', request);
+
+        if (!schoolDB.leaveRequests) schoolDB.leaveRequests = [];
+        schoolDB.leaveRequests.unshift(request);
+
+        showToast('Leave Request Submitted Successfully!', 'success');
+        document.getElementById('leaveForm').classList.add('hidden');
+        this.loadPage('parent_leave');
     }
 };
 
