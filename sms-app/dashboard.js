@@ -166,7 +166,12 @@ const dashboard = {
     // Initial Load Logic
     init: async function () {
         this.renderSidebar();
-        await this.syncDB();
+        // Optimistic UI: Don't await sync. Load local data immediately.
+        showToast('🚀 Dashboard Loaded! Syncing data...', 'info');
+        this.syncDB().then(() => {
+            // Optional: Refresh page or specific sections if needed after sync
+            console.log("Background Sync Complete");
+        });
 
         // Hash Routing Logic
         const hash = window.location.hash.substring(1); // Remove '#'
