@@ -2185,6 +2185,46 @@ const dashboard = {
             </div>`;
         },
 
+        staff_notices: function () {
+            const notices = (schoolDB.notices || []).filter(n => n.target === 'Staff' || n.target === 'Global');
+            return this.renderNoticeList(notices, 'Staff Announcements');
+        },
+
+        parent_notices: function () {
+            const notices = (schoolDB.notices || []).filter(n => n.target === 'Parents' || n.target === 'Global');
+            return this.renderNoticeList(notices, 'School Announcements');
+        },
+
+        renderNoticeList: function (notices, title) {
+            const cards = notices.map(n => `
+                <div class="bg-white p-6 rounded-[32px] border border-gray-100 shadow-subtle flex flex-col gap-4 animate-fade-in hover:shadow-glow transition-all group">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-[10px] font-bold uppercase tracking-widest">${n.target}</span>
+                            <h4 class="text-xl font-bold text-pucho-dark mt-2 group-hover:text-pucho-purple transition-colors">${n.title}</h4>
+                            <p class="text-gray-400 text-xs font-bold mt-1">${n.date}</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm leading-relaxed">${n.content}</p>
+                    <div class="pt-4 border-t border-gray-50 flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-400">By Admin</span>
+                    </div>
+                </div>
+            `).join('');
+
+            return `<div class="space-y-8 animate-fade-in">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-2xl text-pucho-dark">${title}</h3>
+                        <p class="text-gray-400">Important notices for you</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    ${cards || '<p class="text-gray-400 font-bold col-span-2 text-center py-10 italic">No announcements found.</p>'}
+                </div>
+            </div>`;
+        },
+
         reports: function () {
             // Calculate Analytics
             const totalFees = schoolDB.fees.reduce((acc, curr) => acc + curr.amount, 0);
