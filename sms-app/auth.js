@@ -151,44 +151,53 @@ function populateUserInfo(user) {
 
 // Initial session check
 document.addEventListener('DOMContentLoaded', () => {
-    auth.checkSession();
+    try {
+        auth.checkSession();
+    } catch (err) {
+        console.error("Session Check Failed:", err);
+    }
 
     // Login Form Listener
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const isSignup = !document.getElementById('signupFields').classList.contains('hidden');
-            const errorDiv = document.getElementById('loginError');
+            try {
+                const isSignup = !document.getElementById('signupFields').classList.contains('hidden');
+                const errorDiv = document.getElementById('loginError');
 
-            const emailInput = document.getElementById('username');
-            const passInput = document.getElementById('password');
-            const email = emailInput.value.trim();
-            const pass = passInput.value.trim();
+                const emailInput = document.getElementById('username');
+                const passInput = document.getElementById('password');
+                const email = emailInput.value.trim();
+                const pass = passInput.value.trim();
 
-            const roleSelect = document.getElementById('loginRole');
-            const role = roleSelect ? roleSelect.value.toLowerCase().trim() : 'parent';
+                const roleSelect = document.getElementById('loginRole');
+                const role = roleSelect ? roleSelect.value.toLowerCase().trim() : 'parent';
 
-            if (isSignup) {
-                const name = document.getElementById('regName').value.trim();
-                if (!name || !email || !pass) {
-                    showToast("Please fill all fields.", 'error');
+                if (isSignup) {
+                    const name = document.getElementById('regName').value.trim();
+                    if (!name || !email || !pass) {
+                        showToast("Please fill all fields.", 'error');
+                        return;
+                    }
+                    auth.credentials[email] = { email: email, password: pass, role: 'parent', name: name };
+                    showToast(`Account Created!\nWelcome, ${name}.\nPlease login with your new credentials.`, 'success');
+                    router.showLogin();
+                    emailInput.value = email;
                     return;
                 }
-                auth.credentials[email] = { email: email, password: pass, role: 'parent', name: name };
-                showToast(`Account Created!\nWelcome, ${name}.\nPlease login with your new credentials.`, 'success');
-                router.showLogin();
-                emailInput.value = email;
-                return;
-            }
 
-            if (await auth.login(email, pass, role)) {
-                errorDiv.classList.add('hidden');
-                auth.showDashboard();
-            } else {
-                errorDiv.classList.remove('hidden');
-                loginForm.classList.add('animate-pulse');
-                setTimeout(() => loginForm.classList.remove('animate-pulse'), 500);
+                if (await auth.login(email, pass, role)) {
+                    errorDiv.classList.add('hidden');
+                    auth.showDashboard();
+                } else {
+                    errorDiv.classList.remove('hidden');
+                    loginForm.classList.add('animate-pulse');
+                    setTimeout(() => loginForm.classList.remove('animate-pulse'), 500);
+                }
+            } catch (err) {
+                console.error("Login Error:", err);
+                alert("Login Error: " + err.message); // Visible feedback for user/debug
             }
         });
     }
