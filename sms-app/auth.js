@@ -11,39 +11,47 @@ const auth = {
     },
 
     login: async function (email, password, role) {
-        // Fallback to static credentials if Supabase not ready
-        if (dashboard.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
-            let user = this.credentials[email] || Object.values(this.credentials).find(u => u.email === email && u.role === role);
-            if (!user && this.credentials[role] && this.credentials[role].email === email) user = this.credentials[role];
-
-            if (user && user.password === String(password)) {
-                this.currentUser = user;
-                localStorage.setItem('sms_user', JSON.stringify(user));
-                return true;
-            }
-            return false;
+        // 1. Check Static Credentials FIRST
+        // This allows admin/123 to work regardless of Supabase configuration
+        let user = this.credentials[email];
+        // Also check if email matches a role-based account (e.g. email "staff" for role "staff")
+        if (!user) {
+            user = Object.values(this.credentials).find(u => u.email === email && u.role === role);
+        }
+        // Fallback: check if the input "email" is actually just the role name (e.g. user typed "admin")
+        if (!user && this.credentials[email] && this.credentials[email].role === role) {
+            user = this.credentials[email];
         }
 
-        // --- SUPABASE AUTH LOGIC ---
-        try {
-            const table = (role === 'admin' || role === 'staff') ? 'staff' : 'students';
-            const query = `?email=eq.${email}&password=eq.${password}`;
-            const users = await dashboard.db(table, 'GET', null, query);
-
-            if (users && users.length > 0) {
-                const user = users[0];
-                // Map DB keys to expected UI keys if needed
-                this.currentUser = {
-                    ...user,
-                    role: user.role || role,
-                    name: user.name || user.student_name || 'User'
-                };
-                localStorage.setItem('sms_user', JSON.stringify(this.currentUser));
-                return true;
-            }
-        } catch (err) {
-            console.error("Auth Fail:", err);
+        if (user && user.password === String(password)) {
+            console.log("Static Login Success:", user);
+            this.currentUser = user;
+            localStorage.setItem('sms_user', JSON.stringify(user));
+            return true;
         }
+
+        // 2. Supabase Auth Logic (Only if static login failed)
+        if (dashboard.supabaseKey !== 'YOUR_SUPABASE_ANON_KEY') {
+            try {
+                const table = (role === 'admin' || role === 'staff') ? 'staff' : 'students';
+                const query = `?email=eq.${email}&password=eq.${password}`;
+                const users = await dashboard.db(table, 'GET', null, query);
+
+                if (users && users.length > 0) {
+                    const user = users[0];
+                    this.currentUser = {
+                        ...user,
+                        role: user.role || role,
+                        name: user.name || user.student_name || 'User'
+                    };
+                    localStorage.setItem('sms_user', JSON.stringify(this.currentUser));
+                    return true;
+                }
+            } catch (err) {
+                console.error("Supabase Auth Fail:", err);
+            }
+        }
+
         return false;
     },
 
