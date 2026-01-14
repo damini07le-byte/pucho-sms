@@ -93,12 +93,8 @@ const auth = {
 
     checkSession: function () {
         if (this.currentUser) {
-            const hash = window.location.hash;
-            const isDashboardRoute = hash && hash !== '#home' && hash !== '#' && hash.length > 2;
-
-            if (isDashboardRoute) {
-                this.showDashboard();
-            }
+            // Always transition to dashboard if user is logged in
+            this.showDashboard();
         }
     },
 
