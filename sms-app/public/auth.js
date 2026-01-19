@@ -66,8 +66,6 @@ const auth = {
     showDashboard: function () {
         if (!this.currentUser) return;
 
-        console.log("[Auth] Transitioning to Dashboard for:", this.currentUser.role);
-
         // Hide Landing & Modal
         if (document.getElementById('landingSection')) document.getElementById('landingSection').classList.add('hidden');
         if (document.getElementById('loginModal')) {
