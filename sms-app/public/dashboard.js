@@ -43,32 +43,87 @@ const dashboard = {
     syncDB: async function (silent = false) {
         const content = document.getElementById('mainContent');
         if (content && !silent) content.innerHTML = this.templates.skeleton();
-        // showToast('Syncing with Cloud Database...', 'info');
 
-        // Fetch All Tables (Parallel)
-        const [students, staff, fees, attendance, exams, results, admissions, notices, quizzes] = await Promise.all([
-            this.db('students'),
-            this.db('staff'),
+        // Fetch Data with Relational Joins
+        const [studentsRaw, staffRaw, fees, attendance, examsRaw, resultsRaw, admissions, notices, quizzes, subjects] = await Promise.all([
+            this.db('students', 'GET', null, '?select=*,profiles:id(full_name,phone,avatar_url),sections:section_id(name,classes(name))'),
+            this.db('staff', 'GET', null, '?select=*,profiles:employee_id(full_name,phone,avatar_url)'),
             this.db('fees_payments'),
             this.db('attendance'),
-            this.db('exams'),
-            this.db('results'),
+            this.db('exams', 'GET', null, '?select=*,classes:class_id(name)'),
+            this.db('results', 'GET', null, '?select=*,students:student_id(profiles:id(full_name)),subjects:subject_id(name)'),
             this.db('admissions'),
             this.db('notices'),
-            this.db('quizzes')
+            this.db('quizzes'),
+            this.db('subjects')
         ]);
 
-        if (students) schoolDB.students = students;
-        if (staff) schoolDB.staff = staff;
+        // --- NORMALIZATION LAYER ---
+
+        // Map Students
+        if (studentsRaw) {
+            schoolDB.students = studentsRaw.map(s => ({
+                id: s.admission_no || s.id,
+                db_id: s.id,
+                name: (s.profiles && s.profiles.full_name) || 'Student',
+                class: (s.sections && s.sections.classes && s.sections.classes.name) || 'N/A',
+                division: (s.sections && s.sections.name) || 'N/A',
+                roll_no: s.roll_no || 0,
+                phone: (s.profiles && s.profiles.phone) || '',
+                email: s.id + '@school.com',
+                status: s.status || 'Active',
+                parent_id: s.parent_id
+            }));
+        }
+
+        // Map Staff
+        if (staffRaw) {
+            schoolDB.staff = staffRaw.map(s => ({
+                id: s.employee_id || s.id,
+                db_id: s.id,
+                name: (s.profiles && s.profiles.full_name) || s.name || 'Staff Member',
+                role: s.role || 'Teacher',
+                subject: s.subject || 'All',
+                phone: (s.profiles && s.profiles.phone) || s.mobile || '',
+                status: 'Active'
+            }));
+        }
+
+        // Map Exams
+        if (examsRaw) {
+            schoolDB.exams = examsRaw.map(e => ({
+                id: e.id,
+                title: e.title,
+                class: (e.classes && e.classes.name) || e.class || 'All',
+                date: e.start_date,
+                subject: e.subject || 'General'
+            }));
+        }
+
+        // Map Results
+        if (resultsRaw) {
+            schoolDB.results = resultsRaw.map(r => ({
+                id: r.id,
+                student_id: r.student_id,
+                student_name: (r.students && r.students.profiles && r.students.profiles.full_name) || 'Student',
+                subject: (r.subjects && r.subjects.name) || 'Subject',
+                marks: r.marks_obtained,
+                total: r.total_marks,
+                exam: 'Term Exam'
+            }));
+        }
+
         if (fees) schoolDB.fees = fees;
         if (attendance) schoolDB.attendance = attendance;
-        if (exams) schoolDB.exams = exams;
-        if (results) schoolDB.results = results;
         if (admissions) schoolDB.admissions = admissions;
-        if (notices) schoolDB.notices = notices;
+        if (notices) {
+            schoolDB.notices = notices.map(n => ({
+                ...n,
+                target: n.target_role || n.target || 'All',
+                date: n.created_at ? new Date(n.created_at).toLocaleDateString() : (n.date || 'Today')
+            }));
+        }
         if (quizzes) schoolDB.quizzes = quizzes;
-        if (typeof schoolDB.subjects === 'undefined') schoolDB.subjects = [];
-        const subjects = await this.db('subjects');
         if (subjects) schoolDB.subjects = subjects;
 
         if (this.isDbConnected && !silent) {
@@ -377,9 +432,21 @@ const dashboard = {
         desc.innerText = meta.desc;
 
         if (this.templates[id]) {
-            content.innerHTML = this.templates[id](role);
-            if (id === 'overview') {
-                setTimeout(() => this.initCharts(), 100);
+            try {
+                content.innerHTML = this.templates[id](role);
+                if (id === 'overview') {
+                    setTimeout(() => this.initCharts(), 100);
+                }
+            } catch (err) {
+                console.error(`Error rendering template ${id}:`, err);
+                content.innerHTML = `
+                    <div class="p-20 text-center animate-fade-in">
+                        <div class="text-6xl mb-6">⚠️</div>
+                        <h2 class="text-2xl font-bold text-pucho-dark mb-4">Content Load Error</h2>
+                        <p class="text-gray-400 mb-8 max-w-md mx-auto">We encountered a problem while displaying this section. Please try refreshing or contact support.</p>
+                        <button onclick="window.location.reload()" class="bg-pucho-dark text-white px-8 py-3 rounded-2xl font-bold shadow-glow">Reload App</button>
+                    </div>
+                `;
             }
         } else {
             content.innerHTML = `
@@ -436,105 +503,7 @@ const dashboard = {
     // which would then be accessed via `this.templates.homework` if `this.templates`
     // was a reference to `this` or an object containing these methods.
 
-    // I will add it as a new method to the `dashboard` object, which is the most common pattern.
-    // If `this.templates` is a separate object, then the instruction is incomplete.
-    // Assuming `dashboard` is the object, and `templates` is a property of `dashboard`.
-    // The instruction is asking to add `homework` to `templates`.
 
-    // Let's assume `this.templates` is an object property of the current object (dashboard).
-    // The instruction is asking to add a new function to this `templates` object.
-    // The provided snippet is a bit confusing in its placement.
-    // I will add a new `templates` object if it doesn't exist, and add `homework` to it.
-    // Or, if `this.templates` is meant to be `this` itself, then `homework` is a new method.
-
-    // Given the context `this.templates[id]`, it implies `templates` is an object.
-    // The instruction shows `homework: function() { ... }` after the `if` block,
-    // and then a closing `},` which suggests it's part of an object definition.
-    // I will assume `this.templates` is an object that needs to be defined or extended.
-    // Since it's not defined, I will define it as a property of the `dashboard` object.
-
-    templates: { // Assuming this is where templates are defined
-        homework: function () {
-            const classes = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'];
-            const subjects = (schoolDB.subjects || []).map(s => s.name);
-
-            return `
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-                <!-- Upload Section -->
-                <div class="lg:col-span-1">
-                    <div class="bg-white rounded-[40px] p-8 border border-gray-100 shadow-subtle sticky top-8">
-                        <h3 class="font-bold text-xl mb-6 flex items-center gap-2">
-                            <span class="text-2xl">📤</span> Upload Material
-                        </h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">Subject</label>
-                                <select id="hwSubject" class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 font-bold text-sm outline-none focus:border-pucho-purple">
-                                    <option value="">Select Subject</option>
-                                    ${subjects.map(s => `<option value="${s}">${s}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">Class / Grade</label>
-                                <select id="hwClass" class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 font-bold text-sm outline-none focus:border-pucho-purple">
-                                    <option value="">Select Class</option>
-                                    ${classes.map(c => `<option value="${c}">${c}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">Title</label>
-                                <input type="text" id="hwTitle" placeholder="e.g. Chapter 1 Worksheet" class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 font-bold text-sm outline-none focus:border-pucho-purple">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">Attachment</label>
-                                <div class="relative">
-                                    <input type="file" id="hwFile" class="hidden" onchange="document.getElementById('fileName').innerText = this.files[0] ? this.files[0].name : 'No file chosen'">
-                                    <label for="hwFile" class="flex flex-col items-center justify-center w-full h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all">
-                                        <span class="text-2xl mb-2">📎</span>
-                                        <span id="fileName" class="text-xs font-bold text-gray-400">Click to choose file</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <button onclick="dashboard.uploadHomework()" class="w-full bg-pucho-dark text-white py-4 rounded-2xl font-bold hover:bg-pucho-purple hover:shadow-glow transition-all mt-4">PUBLISH MATERIAL</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- List Section -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white rounded-[40px] p-8 border border-gray-100 shadow-subtle min-h-[600px]">
-                        <div class="flex justify-between items-center mb-8">
-                            <h3 class="font-bold text-xl">Recent Uploads</h3>
-                            <div class="text-xs font-bold text-gray-400 bg-gray-50 px-4 py-2 rounded-full">${(schoolDB.homework || []).length} Items</div>
-                        </div>
-
-                        <div id="homeworkList" class="space-y-4">
-                            ${(schoolDB.homework || []).length > 0 ? schoolDB.homework.map(hw => `
-                                <div class="flex items-center justify-between p-4 bg-gray-50/50 border border-gray-100 rounded-3xl hover:border-pucho-purple/30 transition-all group">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-xl">📄</div>
-                                        <div>
-                                            <h4 class="font-bold text-pucho-dark">${hw.title}</h4>
-                                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">${hw.subject} • ${hw.class_grade}</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <button class="w-10 h-10 bg-white rounded-xl border border-gray-100 flex items-center justify-center text-sm shadow-sm hover:text-pucho-purple transition-colors">👁️</button>
-                                        <button class="w-10 h-10 bg-white rounded-xl border border-gray-100 flex items-center justify-center text-sm shadow-sm hover:text-red-500 transition-colors">🗑️</button>
-                                    </div>
-                                </div>
-                            `).reverse().join('') : `
-                                <div class="flex flex-col items-center justify-center py-20 text-gray-300">
-                                    <div class="text-6xl mb-4 opacity-20">📚</div>
-                                    <p class="font-bold italic">No materials uploaded yet</p>
-                                </div>
-                            `}
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-        },
-    },
 
     showAddStaffModal: function () {
         const modal = document.getElementById('staffModal');
@@ -556,17 +525,21 @@ const dashboard = {
         }
     },
 
-    loadAttendanceStudents: function () {
+    loadAttendanceStudents: async function () {
         const cls = document.getElementById('attClass').value;
         const div = document.getElementById('attDiv').value;
         const list = document.getElementById('attendanceList');
 
         if (!cls || !div) return;
 
-        // Filter students
-        const students = schoolDB.students.filter(s => (s.class === cls || s.grade === cls) && s.division === div);
+        list.innerHTML = this.templates.skeleton();
 
-        if (students.length === 0) {
+        // 1. Fetch Students from DB with Relational Data (Profiles for names, Sections for filtering)
+        // We use a query that filters by class name and section name
+        const query = `?select=*,profiles:id(full_name),sections:section_id!inner(name,classes!inner(name))&sections.classes.name=eq.${cls}&sections.name=eq.${div}`;
+        const studentsRaw = await this.db('students', 'GET', null, query);
+
+        if (!studentsRaw || studentsRaw.length === 0) {
             list.innerHTML = `<div class="flex flex-col items-center justify-center p-12 bg-gray-50 rounded-3xl text-center animate-fade-in">
                 <div class="text-4xl mb-4">📭</div>
                 <h4 class="font-bold text-gray-600">No Students Found</h4>
@@ -575,11 +548,19 @@ const dashboard = {
             return;
         }
 
+        // 2. Map Raw Data to UI Format
+        const students = studentsRaw.map(s => ({
+            id: s.id,
+            name: s.profiles ? s.profiles.full_name : 'Unknown Student',
+            roll_no: s.roll_no || 'N/A',
+            section: s.sections ? s.sections.name : 'N/A'
+        }));
+
         list.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in" id="studentAttendanceItems">
             ${students.map((s, i) => `
                 <div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:shadow-subtle transition-all group" data-student-id="${s.id}">
                      <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center font-bold text-xs text-blue-500 border border-blue-100">${s.roll_no || s.roll || i + 1}</div>
+                        <div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center font-bold text-xs text-blue-500 border border-blue-100">${s.roll_no}</div>
                         <div>
                             <p class="font-bold text-sm text-pucho-dark">${s.name}</p>
                             <p class="text-[10px] font-bold text-gray-400">ID: ${s.id}</p>
@@ -627,6 +608,38 @@ const dashboard = {
             // Mock persistence
             schoolDB.attendance = [...schoolDB.attendance, ...attendanceData];
             showToast('Attendance saved locally (Offline)', 'success');
+        }
+
+        // TRIGGER AUTOMATION FLOW (Pucho Studio) - Specifically for Staff/Teacher side
+        if (auth.currentUser.role === 'staff' || auth.currentUser.role === 'admin') {
+            try {
+                const enrichedRecords = attendanceData.map(d => {
+                    const student = schoolDB.students.find(s => s.id === d.student_id);
+                    return {
+                        student_name: student ? student.name : 'Unknown',
+                        status: d.status,
+                        parent_name: student ? student.guardian_name : 'Parent',
+                        parent_contact: student ? student.phone : 'N/A',
+                        parent_email: student ? student.email : 'N/A'
+                    };
+                });
+
+                const webhookUrl = 'https://studio.pucho.ai/api/v1/webhooks/b39kJ8gSFz4dFzXYdWc3C';
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'STAFF_ATTENDANCE_AUTOMATION',
+                        class: `${cls} - ${div}`,
+                        date: date,
+                        teacher: auth.currentUser.name,
+                        records: enrichedRecords
+                    })
+                });
+                showToast('🚀 Staff automation flow triggered!', 'success');
+            } catch (e) {
+                console.error('Automation Flow Error:', e);
+            }
         }
     },
 
@@ -1990,45 +2003,7 @@ const dashboard = {
             </div>`;
         },
 
-        communication: function () {
-            let notices = schoolDB.notices.map(n => `
-                <div class="bg-white p-6 rounded-[32px] border border-gray-100 shadow-subtle flex flex-col gap-4 animate-fade-in">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-[10px] font-bold uppercase tracking-widest">${n.target}</span>
-                            <h4 class="text-xl font-bold text-pucho-dark mt-2">${n.title}</h4>
-                            <p class="text-gray-400 text-xs font-bold mt-1">${n.date}</p>
-                        </div>
-                        <button class="p-2 hover:bg-gray-100 rounded-full"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                    </div>
-                    <p class="text-gray-600 text-sm leading-relaxed">${n.content}</p>
-                    <div class="pt-4 border-t border-gray-50 flex justify-between items-center">
-                        <span class="text-xs font-bold text-gray-400">By Admin</span>
-                        <button class="text-pucho-purple text-xs font-bold hover:underline">Read More</button>
-                    </div>
-                </div>
-            `).join('');
 
-            return `<div class="space-y-8 animate-fade-in">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h3 class="font-bold text-2xl text-pucho-dark">Broadcast Room</h3>
-                        <p class="text-gray-400">Send circulars and notifications</p>
-                    </div>
-                    <button onclick="dashboard.showBroadcastModal()" class="bg-pucho-dark text-white px-8 py-3 rounded-2xl font-bold hover:shadow-glow hover:bg-pucho-purple transition-all">+ NEW POST</button>
-                </div>
-                
-                <div class="bg-white p-2 rounded-[24px] inline-flex mb-4">
-                     <button class="px-6 py-2 bg-pucho-purple/10 text-pucho-purple rounded-[18px] text-xs font-bold uppercase tracking-widest">All</button>
-                     <button class="px-6 py-2 text-gray-400 hover:text-pucho-dark rounded-[18px] text-xs font-bold uppercase tracking-widest">Parents</button>
-                     <button class="px-6 py-2 text-gray-400 hover:text-pucho-dark rounded-[18px] text-xs font-bold uppercase tracking-widest">Staff</button>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    ${notices}
-                </div>
-            </div>`;
-        },
         card: function (title, value, sub, icon, color = 'pucho-purple') {
             return `<div class="p-8 bg-white border border-gray-100 rounded-[32px] shadow-subtle hover:shadow-glow transition-all">
                 <div class="flex justify-between items-start mb-6">
@@ -2695,8 +2670,14 @@ const dashboard = {
             </div>`;
         },
 
-        communication: function () {
-            let notices = schoolDB.notices.map(n => `
+        communication: function (role) {
+            const notices = (schoolDB.notices || []).filter(n =>
+                role === 'admin' ||
+                role === 'staff' ||
+                (role === 'parent' && (n.target === 'Parents' || n.target === 'Parent' || n.target === 'Global' || n.target === 'All' || n.target === 'Student' || n.target === 'Students' || n.target === 'student' || n.target === 'parent'))
+            );
+
+            let noticeRows = notices.map(n => `
                 <div class="bg-white p-6 rounded-[32px] border border-gray-100 shadow-subtle flex flex-col gap-4 animate-fade-in hover:shadow-glow transition-all group">
                     <div class="flex justify-between items-start">
                         <div>
@@ -2704,7 +2685,6 @@ const dashboard = {
                             <h4 class="text-xl font-bold text-pucho-dark mt-2 group-hover:text-pucho-purple transition-colors">${n.title}</h4>
                             <p class="text-gray-400 text-xs font-bold mt-1">${n.date}</p>
                         </div>
-                        <button class="p-2 hover:bg-gray-100 rounded-full"><svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                     </div>
                     <p class="text-gray-600 text-sm leading-relaxed">${n.content}</p>
                     <div class="pt-4 border-t border-gray-50 flex justify-between items-center">
@@ -2718,19 +2698,13 @@ const dashboard = {
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="font-bold text-2xl text-pucho-dark">Broadcast Room</h3>
-                        <p class="text-gray-400">Send circulars and notifications</p>
+                        <p class="text-gray-400 text-sm">Send circulars and notifications</p>
                     </div>
-                    <button onclick="dashboard.showBroadcastModal()" class="bg-pucho-dark text-white px-8 py-3 rounded-2xl font-bold hover:shadow-glow hover:bg-pucho-purple transition-all">+ NEW POST</button>
+                    ${role === 'admin' ? '<button onclick="dashboard.showBroadcastModal()" class="bg-pucho-dark text-white px-8 py-3 rounded-2xl font-bold hover:shadow-glow hover:bg-pucho-purple transition-all">+ NEW POST</button>' : ''}
                 </div>
                 
-                <div class="bg-white p-2 rounded-[24px] inline-flex mb-4 border border-gray-100">
-                     <button class="px-6 py-2 bg-pucho-purple text-white rounded-[18px] text-xs font-bold uppercase tracking-widest shadow-lg shadow-pucho-purple/20">All</button>
-                     <button class="px-6 py-2 text-gray-400 hover:text-pucho-dark rounded-[18px] text-xs font-bold uppercase tracking-widest">Parents</button>
-                     <button class="px-6 py-2 text-gray-400 hover:text-pucho-dark rounded-[18px] text-xs font-bold uppercase tracking-widest">Staff</button>
-                </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    ${notices}
+                    ${notices.length > 0 ? noticeRows : '<div class="col-span-2 py-20 text-center text-gray-400 font-bold italic animate-pulse">No circulars or notices available at the moment.</div>'}
                 </div>
             </div>`;
         },
@@ -2851,49 +2825,7 @@ const dashboard = {
         },
 
 
-        // --- STUDENT DASHBOARD TEMPLATES ---
-        student_profile: function () { return this.student_overview(); }, // Alias for My Child (Parent) / Student Profile
 
-        student_overview: function () {
-            return `<div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-2 animate-fade-in">
-                <!-- Profile Card -->
-                <div class="bg-white rounded-[40px] p-8 border border-gray-100 shadow-subtle text-center">
-                    <div class="w-32 h-32 bg-pucho-purple/10 rounded-full mx-auto flex items-center justify-center text-4xl mb-4">👨‍🎓</div>
-                    <h2 class="text-2xl font-bold text-pucho-dark">Arjun Das</h2>
-                    <p class="text-gray-500 font-medium mb-6">Class 10th-A | Roll No: 24</p>
-                    <div class="flex justify-center gap-4 text-sm font-bold">
-                        <div class="bg-green-50 text-green-700 px-4 py-2 rounded-xl">Attendance: 92%</div>
-                        <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-xl">GPA: 8.8</div>
-                    </div>
-                </div>
-
-                <!-- Notices -->
-                <div class="md:col-span-2 bg-pucho-dark text-white rounded-[40px] p-8 shadow-glow relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-pucho-purple rounded-full blur-[80px] opacity-20"></div>
-                    <h3 class="text-xl font-bold mb-6 opacity-90">📢 Latest Notices</h3>
-                    <div class="space-y-4 relative z-10">
-                        <div class="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/10">
-                            <h4 class="font-bold text-sm">Science Fair Registration</h4>
-                            <p class="text-xs opacity-70 mt-1">School closed from 25th Dec to 2nd Jan.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Stats -->
-                <div class="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                        <p class="text-xs font-bold text-gray-400 uppercase">Next Exam</p>
-                        <p class="text-lg font-bold text-pucho-dark mt-1">Mathematics</p>
-                        <p class="text-xs text-red-500 font-bold">In 3 Days</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                        <p class="text-xs font-bold text-gray-400 uppercase">Fees Due</p>
-                        <p class="text-lg font-bold text-pucho-dark mt-1">₹0</p>
-                        <p class="text-xs text-green-500 font-bold">Paid</p>
-                    </div>
-                </div>
-            </div>`;
-        },
 
         settings: function () {
             const role = auth.currentUser.role;
@@ -3089,7 +3021,9 @@ const dashboard = {
 
         student_profile: function () {
             // Get student data linked to parent
-            const student = schoolDB.students.find(s => s.guardian_name === auth.currentUser.name) || schoolDB.students[0];
+            const students = schoolDB.students || [];
+            const student = students.find(s => s.parent_id === auth.currentUser.id) || students[0];
+            if (!student) return '<div class="p-20 text-center text-gray-400 italic">No student record associated with your account.</div>';
 
             // Re-use Graph Helper (Define locally as simple string builder for this scope or duplication for simplicity in single-file)
             const createBarGraph = (title, labels, values, color = 'bg-pucho-purple') => {
@@ -3179,20 +3113,39 @@ const dashboard = {
         parent_attendance: function () { return this.my_attendance(); }, // Alias for Parent
         my_attendance: function () {
             const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            const currentMonthIndex = new Date().getMonth();
+            const years = [2024, 2025, 2026];
+            const now = new Date();
+            const currentMonthIndex = now.getMonth();
+            const currentYear = now.getFullYear();
 
             // Generate Grid Logic
-            const generateGrid = (monthIndex) => {
-                const daysInMonth = new Date(2025, monthIndex + 1, 0).getDate();
-                const student = schoolDB.students.find(s => s.guardian_name === auth.currentUser.name) || schoolDB.students[0];
-                const realAttendance = schoolDB.attendance.filter(a => a.student_id === student.id);
+            const generateGrid = (monthIndex, year) => {
+                const firstDay = new Date(year, monthIndex, 1).getDay(); // 0 is Sunday
+                const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+                const students = schoolDB.students || [];
+                const student = students.find(s => s.parent_id === auth.currentUser.id) || students[0];
+
+                if (!student) return { html: '<div class="col-span-7 py-10 text-center text-gray-400">No student record found.</div>', p: 0, a: 0 };
+
+                const realAttendance = (schoolDB.attendance || []).filter(a => a.student_id === student.id);
 
                 let gridHtml = '';
+                // Weekday Headers
+                const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                weekdays.forEach(wd => {
+                    gridHtml += `<div class="text-[10px] font-black text-gray-400 uppercase text-center mb-2">${wd}</div>`;
+                });
+
+                // Empty slots before first day
+                for (let i = 0; i < firstDay; i++) {
+                    gridHtml += `<div class="aspect-square"></div>`;
+                }
+
                 let present = 0;
                 let absent = 0;
 
                 for (let i = 1; i <= daysInMonth; i++) {
-                    const dateStr = `2025-${String(monthIndex + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                     const record = realAttendance.find(a => a.date === dateStr);
 
                     let statusClass = 'bg-gray-50 text-gray-300'; // No record
@@ -3205,62 +3158,65 @@ const dashboard = {
                             absent++;
                         }
                     } else {
-                        // For mock/demo: assume present if weekdays and past date
-                        const d = new Date(2025, monthIndex, i);
+                        // For mock/demo consistency
+                        const d = new Date(year, monthIndex, i);
                         const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                         const isFuture = d > new Date();
                         if (!isFuture && !isWeekend) {
-                            statusClass = 'bg-green-50/50 text-green-400'; // Historic assumed present
+                            statusClass = 'bg-green-50/50 text-green-400';
                         }
                     }
 
-                    gridHtml += `<div class="${statusClass} aspect-square rounded-xl flex items-center justify-center font-bold text-sm animate-fade-in" style="animation-delay: ${i * 10}ms">${i}</div>`;
+                    gridHtml += `<div class="${statusClass} aspect-square rounded-xl flex items-center justify-center font-bold text-xs animate-fade-in" style="animation-delay: ${i * 5}ms">${i}</div>`;
                 }
                 return { html: gridHtml, p: present, a: absent };
             };
 
-            const initialData = generateGrid(currentMonthIndex);
+            const initialData = generateGrid(currentMonthIndex, currentYear);
 
             setTimeout(() => {
-                dashboard.updateAttendance = function (select) {
-                    const monthIdx = parseInt(select.value);
-                    const data = generateGrid(monthIdx);
+                dashboard.updateAttendance = function () {
+                    const monthIdx = parseInt(document.getElementById('attMonth').value);
+                    const year = parseInt(document.getElementById('attYear').value);
+                    const data = generateGrid(monthIdx, year);
                     document.getElementById('attGrid').innerHTML = data.html;
                     document.getElementById('attStats').innerHTML = `
-                    <span class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-green-500"></span> Marked Present (${data.p})</span>
-                    <span class="flex items-center gap-2 bg-red-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-red-500"></span> Marked Absent (${data.a})</span>
-                `;
+                        <span class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-green-500"></span> Present (${data.p})</span>
+                        <span class="flex items-center gap-2 bg-red-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-red-500"></span> Absent (${data.a})</span>
+                    `;
                 }
             }, 100);
 
-            return `<div class="bg-white rounded-[40px] p-8 border border-gray-100 shadow-subtle animate-fade-in text-center font-inter">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            return `<div class="bg-white rounded-[40px] p-8 border border-gray-100 shadow-subtle animate-fade-in font-inter">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 text-center md:text-left">
                 <div>
                     <h3 class="font-bold text-2xl text-pucho-dark">Attendance Record</h3>
-                    <p class="text-gray-400 text-sm">Track daily presence</p>
+                    <p class="text-gray-400 text-sm">Track daily presence history</p>
                 </div>
-                <div class="relative">
-                     <select onchange="dashboard.updateAttendance(this)" class="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-6 py-2 font-bold text-sm outline-none text-pucho-dark pr-10 hover:border-pucho-purple transition-colors cursor-pointer min-w-[150px]">
-                        ${months.map((m, i) => `<option value="${i}" ${i === currentMonthIndex ? 'selected' : ''}>${m} 2024</option>`).join('')}
+                <div class="flex gap-3">
+                     <select id="attMonth" onchange="dashboard.updateAttendance()" class="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 font-bold text-xs outline-none text-pucho-dark hover:border-pucho-purple transition-colors cursor-pointer">
+                        ${months.map((m, i) => `<option value="${i}" ${i === currentMonthIndex ? 'selected' : ''}>${m}</option>`).join('')}
                     </select>
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+                     <select id="attYear" onchange="dashboard.updateAttendance()" class="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 font-bold text-xs outline-none text-pucho-dark hover:border-pucho-purple transition-colors cursor-pointer">
+                        ${years.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('')}
+                    </select>
                 </div>
             </div>
 
-            <div id="attGrid" class="grid grid-cols-7 gap-3 max-w-md mx-auto mb-8">
+            <div id="attGrid" class="grid grid-cols-7 gap-2 md:gap-3 max-w-sm mx-auto mb-8">
                  ${initialData.html}
             </div>
             
-            <div id="attStats" class="flex justify-center gap-6 text-sm font-bold text-gray-500">
-                <span class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-green-500"></span> Present (${initialData.p})</span>
-                <span class="flex items-center gap-2 bg-red-50 px-3 py-1 rounded-lg"><span class="w-2 h-2 rounded-full bg-red-500"></span> Absent (${initialData.a})</span>
+            <div id="attStats" class="flex justify-center gap-6 text-xs font-bold text-gray-500">
+                <span class="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-xl"><span class="w-2 h-2 rounded-full bg-green-500"></span> Present (${initialData.p})</span>
+                <span class="flex items-center gap-2 bg-red-50 px-4 py-2 rounded-xl"><span class="w-2 h-2 rounded-full bg-red-500"></span> Absent (${initialData.a})</span>
             </div>
         </div>`;
         },
 
         parent_fees: function () { return this.my_fees(); },
         my_fees: function () {
-            const student = schoolDB.students.find(s => s.guardian_name === auth.currentUser.name) || schoolDB.students[0];
+            const student = schoolDB.students.find(s => s.parent_id === auth.currentUser.id) || schoolDB.students[0];
             const childId = student.id;
             const history = schoolDB.fees.filter(f => f.student_id === childId);
             const pendingFee = history.find(f => f.status === 'Pending');
@@ -3307,19 +3263,25 @@ const dashboard = {
                 <button class="bg-pucho-dark text-white px-6 py-3 rounded-xl font-bold hover:bg-pucho-purple transition-colors shadow-lg" onclick="document.getElementById('leaveForm').classList.toggle('hidden')">+ New Request</button>
             </div>
 
-            <div id="leaveForm" class="hidden bg-gray-50 p-6 rounded-3xl mb-8 border border-gray-100 animate-slide-up">
-                <h4 class="font-bold text-lg mb-4 text-pucho-dark">Compose Application</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div><label class="label-sm">From Date</label><input type="date" id="leaveFrom" class="input-field"></div>
-                    <div><label class="label-sm">To Date</label><input type="date" id="leaveTo" class="input-field"></div>
+            <div id="leaveForm" class="hidden bg-gray-50 p-8 rounded-[32px] mb-8 border border-gray-100 animate-slide-up">
+                <h4 class="font-bold text-lg mb-6 text-pucho-dark">Compose Application</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-1.5">
+                        <label class="label-sm">From Date</label>
+                        <input type="date" id="leaveFrom" class="input-field">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="label-sm">To Date</label>
+                        <input type="date" id="leaveTo" class="input-field">
+                    </div>
                 </div>
-                <div class="mb-4">
-                     <label class="label-sm">Reason</label>
-                     <textarea id="leaveReason" class="input-field" rows="3" placeholder="e.g. Family Function, Medical..."></textarea>
+                <div class="mb-6 space-y-1.5">
+                     <label class="label-sm">Reason for Absence</label>
+                     <textarea id="leaveReason" class="input-field min-h-[120px]" rows="4" placeholder="e.g. Family Function, Medical Emergency..."></textarea>
                 </div>
-                <div class="flex justify-end gap-2">
-                    <button class="px-4 py-2 text-gray-500 font-bold hover:bg-gray-200 rounded-lg" onclick="document.getElementById('leaveForm').classList.add('hidden')">Cancel</button>
-                    <button class="px-6 py-2 bg-pucho-purple text-white font-bold rounded-xl hover:shadow-lg" onclick="dashboard.submitLeaveRequest()">Submit</button>
+                <div class="flex justify-end items-center gap-4">
+                    <button class="text-sm font-bold text-gray-500 hover:text-pucho-dark transition-colors px-4 py-2" onclick="document.getElementById('leaveForm').classList.add('hidden')">Cancel</button>
+                    <button class="px-8 py-3 bg-pucho-purple text-white font-bold rounded-xl hover:shadow-lg transition-all hover:scale-105" onclick="dashboard.submitLeaveRequest()">Submit Request</button>
                 </div>
             </div>
 
@@ -3343,7 +3305,8 @@ const dashboard = {
         },
 
         parent_homework: function () {
-            const student = schoolDB.students.find(s => s.guardian_name === auth.currentUser.name) || schoolDB.students[0];
+            const student = (schoolDB.students || []).find(s => s.parent_id === auth.currentUser.id) || (schoolDB.students ? schoolDB.students[0] : null);
+            if (!student) return '<div class="p-20 text-center text-gray-400 italic">No student record associated with your account.</div>';
             const homeworks = (schoolDB.homework || []).filter(h => h.class_grade === student.class || h.class_grade === student.grade);
 
             return `<div class="bg-white rounded-[40px] p-8 border border-gray-100 shadow-subtle animate-fade-in font-inter">
@@ -3529,7 +3492,7 @@ const dashboard = {
                     </div>
                     <input type="text" id="quizTitle" placeholder="Enter Quiz / Exam Title (e.g. Chapter 1 - Algebra)" class="w-full px-4 py-3 rounded-2xl border border-gray-200 mb-4 focus:border-pucho-purple outline-none">
                     <div class="flex justify-end">
-                        <button onclick="dashboard.publishQuiz()" class="bg-pucho-purple text-white px-8 py-3 rounded-xl font-bold hover:shadow-glow transition-all">PUBLISH TO STUDENTS</button>
+                        <button onclick="dashboard.publishQuiz()" class="bg-pucho-purple text-white px-8 py-3 rounded-xl font-bold hover:shadow-glow transition-all">PUBLISH TO CLASS</button>
                     </div>
                 </div>
 
@@ -3641,7 +3604,8 @@ const dashboard = {
         // Note: student_profile, parent_attendance, parent_fees are aliased above.
 
         parent_results: function () {
-            const student = schoolDB.students.find(s => s.guardian_name === auth.currentUser.name) || schoolDB.students[0];
+            const student = (schoolDB.students || []).find(s => s.parent_id === auth.currentUser.id) || (schoolDB.students ? schoolDB.students[0] : null);
+            if (!student) return '<div class="p-20 text-center text-gray-400 italic">No student record associated with your account.</div>';
             const childId = student.id;
             const results = schoolDB.results.filter(r => r.student_id === childId);
 
@@ -3847,10 +3811,16 @@ const dashboard = {
             return;
         }
 
+        const student = (schoolDB.students || []).find(s => s.parent_id === auth.currentUser.id) || (schoolDB.students ? schoolDB.students[0] : null);
+        if (!student) {
+            showToast('No student associated with your account', 'error');
+            return;
+        }
+
         const request = {
             id: 'LV-' + Math.floor(Math.random() * 10000),
-            student_id: auth.currentUser.id,
-            student_name: auth.currentUser.name,
+            student_id: student.db_id || student.id,
+            student_name: student.name,
             from_date: fromDate,
             to_date: toDate,
             reason: reason,

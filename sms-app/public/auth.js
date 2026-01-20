@@ -6,7 +6,8 @@ const auth = {
     credentials: {
         admin: { email: "admin", password: "123", role: "admin", name: "Supreme Admin" },
         staff: { email: "staff", password: "123", role: "staff", name: "Teacher Rahul" },
-        student: { email: "student", password: "123", role: "student", name: "Arjun Das" },
+        admin: { email: "admin", password: "123", role: "admin", name: "Supreme Admin" },
+        staff: { email: "staff", password: "123", role: "staff", name: "Teacher Rahul" },
         parent: { email: "parent", password: "123", role: "parent", name: "Vikram Das" }
     },
 
@@ -35,7 +36,7 @@ const auth = {
         // 2. Supabase Auth Logic (Only if static login failed)
         if (dashboard.supabaseKey !== 'YOUR_SUPABASE_ANON_KEY') {
             try {
-                const table = (role === 'admin' || role === 'staff') ? 'staff' : 'students';
+                const table = (role === 'admin' || role === 'staff') ? 'staff' : 'parents';
                 const query = `?email=eq.${email}&password=eq.${password}`;
                 const users = await dashboard.db(table, 'GET', null, query);
 
