@@ -1,8 +1,8 @@
 // MASTER DASHBOARD ENGINE
 const dashboard = {
     // Supabase Config (Direct DB Access)
-    supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-    supabaseKey: import.meta.env.VITE_SUPABASE_KEY,
+    supabaseUrl: (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env.VITE_SUPABASE_URL : '',
+    supabaseKey: (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env.VITE_SUPABASE_KEY : '',
 
     // Data State
     isDbConnected: false,
