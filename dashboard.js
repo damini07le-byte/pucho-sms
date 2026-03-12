@@ -105,7 +105,7 @@ const dashboard = {
         const [studentsRaw, staffRaw, fees, attendance, examsRaw, resultsRaw, admissions, notices, quizzes, subjects, classesRaw, staffProfiles, leaves, homeworkRaw, sectionsRaw] = await Promise.all([
             this.db('students', 'GET', null, '?select=*,profiles:profiles!students_id_fkey(full_name,phone,avatar_url),sections:section_id(name,classes(name))'),
             this.db('staff'), // Fetch raw staff, manual join
-            this.db('fees_payments'),
+            this.db('fees_payments', 'GET', null, '?select=*,profiles(full_name)'),
             this.db('attendance'),
             this.db('exams'),  // Manual join for classes
             this.db('results', 'GET', null, '?select=*,students:student_id(profiles:profiles!students_id_fkey(full_name)),subjects:subject_id(name)'),
@@ -175,14 +175,17 @@ const dashboard = {
                     divisionName = parts[1].trim();
                 }
                 
+                // Robust profile extraction (handles PostgREST object or array)
+                const profileObj = Array.isArray(s.profiles) ? s.profiles[0] : s.profiles;
+                
                 return {
                     id: s.admission_no || s.id,
                     db_id: s.id,
-                    name: (s.profiles && s.profiles.full_name) || 'Student',
+                    name: profileObj?.full_name || 'Student',
                     class: className,
                     division: divisionName,
                     roll_no: s.roll_no || 0,
-                    phone: (s.profiles && s.profiles.phone) || '',
+                    phone: profileObj?.phone || '',
                     email: s.id + '@school.com',
                     status: s.status || 'Active',
                     gender: s.gender,
@@ -207,13 +210,14 @@ const dashboard = {
 
             window.schoolDB.staff = staffRaw.map(s => {
                 const profile = profileMap[s.id] || profileMap[s.employee_id] || {};
+                const profileObj = Array.isArray(profile) ? profile[0] : profile;
                 return {
                     id: s.employee_id || s.id,
                     db_id: s.id,
-                    name: profile.full_name || s.name || 'Staff Member',
+                    name: profileObj?.full_name || s.name || 'Staff Member',
                     role: s.role || 'Teacher',
                     subject: s.subject || 'All',
-                    phone: profile.phone || s.mobile || '',
+                    phone: profileObj?.phone || s.mobile || '',
                     status: 'Active'
                 };
             });
@@ -237,21 +241,46 @@ const dashboard = {
 
         // Map Results
         if (resultsRaw) {
-            window.schoolDB.results = resultsRaw.map(r => ({
-                id: r.id,
-                student_id: r.student_id,
-                student_name: (r.students && r.students.profiles && r.students.profiles.full_name) || 'Student',
-                subject: (r.subjects && r.subjects.name) || 'Subject',
-                marks: r.marks_obtained,
-                total: r.total_marks,
-                exam: 'Term Exam'
-            }));
+            window.schoolDB.results = resultsRaw.map(r => {
+                const profileObj = Array.isArray(r.students?.profiles) ? r.students.profiles[0] : r.students?.profiles;
+                const subjectName = Array.isArray(r.subjects) ? r.subjects[0]?.name : r.subjects?.name;
+                return {
+                    id: r.id,
+                    student_id: r.student_id,
+                    student_name: profileObj?.full_name || 'Student',
+                    subject: subjectName || 'Subject',
+                    marks: r.marks_obtained,
+                    total: r.total_marks,
+                    exam: 'Term Exam'
+                };
+            });
         }
 
         // Final Fees Integration
         if (fees && fees.length > 0) {
-            window.schoolDB.fees = fees;
-        } else {
+            window.schoolDB.fees = fees.map(f => {
+                // Handle different PostgREST return formats (object vs array)
+                const profileObj = Array.isArray(f.profiles) ? f.profiles[0] : f.profiles;
+                
+                // For student name, first check the profiles join, 
+                // then fallback to finding student in schoolDB.students
+                let studentName = profileObj?.full_name;
+                if (!studentName) {
+                    const student = window.schoolDB.students.find(s => s.db_id === f.student_id || s.id === f.student_id);
+                    studentName = student?.name;
+                }
+
+                return {
+                    ...f,
+                    amount: f.amount_paid || f.amount || 0,
+                    student_name: studentName || 'Student',
+                    class: student?.class || 'N/A',
+                    student_class: student?.class || 'N/A',
+                    type: f.type || 'Tuition Fee'
+                };
+            });
+        }
+ else {
             console.log("DB fees empty, generating 5 Paid / 5 Pending per class fallback...");
             window.schoolDB.fees = this._generateMockFees();
         }
@@ -455,7 +484,7 @@ const dashboard = {
         this.syncDB(true).then(() => {
             const currentHash = window.location.hash.substring(1) || 'overview';
             // Force reload for pages that might show stale mock data
-            const dataPages = ['homework', 'students', 'staff', 'exams', 'attendance_all', 'subjects', 'manage_quizzes', 'parent_homework'];
+            const dataPages = ['homework', 'students', 'staff', 'exams', 'attendance_all', 'subjects', 'manage_quizzes', 'parent_homework', 'fees', 'admissions', 'quizzes', 'leaves', 'notices'];
             if (dataPages.includes(currentHash)) {
                 console.log(`[Sync] Data update complete. Refreshing ${currentHash} view.`);
                 this.loadPage(currentHash);
@@ -493,6 +522,7 @@ const dashboard = {
         const menus = {
             admin: [
                 { id: 'admissions', name: 'Admissions', icon: '🏫' },
+                { id: 'classes', name: 'Classes Management', icon: '🏫' },
                 { id: 'students', name: 'Students', icon: '👨‍🎓' },
                 { id: 'staff', name: 'Staff Management', icon: '👩‍🏫' },
                 { id: 'fees', name: 'Fee Management', icon: '💰' },
@@ -780,6 +810,7 @@ const dashboard = {
         const metadata = {
             overview: { title: 'Dashboard Overview', desc: 'Quick summary of school activity' },
             admissions: { title: 'Admissions Hall', desc: 'Track and process new student applications' },
+            classes: { title: 'Class Center', desc: 'Class-wise student and finance monitoring' },
             students: { title: 'Student Database', desc: 'Manage profiles, classes, and sections' },
             staff: { title: 'Staff Directory', desc: 'Manage teachers, clerks, and accountants' },
             fees: { title: 'Finance Center', desc: 'Fee structures, billing, and collection' },
@@ -926,7 +957,7 @@ const dashboard = {
 
         list.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in" id="studentAttendanceItems">
             ${students.map((s, i) => `
-                <div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:shadow-subtle transition-all group" data-student-id="${s.id}">
+                <div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:shadow-subtle transition-all group" data-student-id="${s.id}" data-db-id="${s.db_id}">
                      <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center font-bold text-xs text-blue-500 border border-blue-100">${s.roll_no}</div>
                         <div>
@@ -954,7 +985,7 @@ const dashboard = {
         const date = new Date().toISOString().split('T')[0];
 
         items.forEach(item => {
-            const studentId = item.dataset.studentId;
+            const studentId = item.dataset.dbId || item.dataset.studentId;
             const status = item.querySelector('.attendance-btn').innerText === 'P' ? 'Present' : 'Absent';
             attendanceData.push({
                 student_id: studentId,
@@ -1060,7 +1091,7 @@ const dashboard = {
         }
 
         body.innerHTML = students.map(s => `
-            <tr class="border-b border-gray-50 animate-fade-in" data-student-id="${s.id}">
+            <tr class="border-b border-gray-50 animate-fade-in" data-student-id="${s.id}" data-db-id="${s.db_id}">
                 <td class="px-6 py-4 font-bold text-gray-500">${s.roll || s.roll_no || 'N/A'}</td>
                 <td class="px-6 py-4 font-bold text-pucho-dark">${s.name}</td>
                 <td class="px-6 py-4">
@@ -1111,7 +1142,7 @@ const dashboard = {
         const date = new Date().toISOString().split('T')[0];
 
         rows.forEach(row => {
-            const studentId = row.dataset.studentId;
+            const studentId = row.dataset.dbId || row.dataset.studentId;
             const marks = row.querySelector('.mark-input').value;
             const grade = row.querySelector('.grade-badge').innerText;
 
@@ -2383,11 +2414,14 @@ const dashboard = {
             if (type === 'fees') {
                 return `<tr class="hover:bg-gray-50/50 transition-all animate-fade-in shadow-sm">
                     <td class="p-6 border-b border-gray-50">
-                        <div class="font-bold text-pucho-dark">${d.student_name || 'Student'}</div>
+                        <div class="font-bold text-pucho-dark">${d.student_name}</div>
                         <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">${d.student_id}</div>
                     </td>
-                    <td class="p-6 border-b border-gray-50 text-gray-500 font-medium">${d.type}</td>
-                    <td class="p-6 border-b border-gray-50 font-bold text-pucho-dark">₹${d.amount?.toLocaleString() || '0'}</td>
+                    <td class="p-6 border-b border-gray-50">
+                        <div class="text-sm font-bold text-gray-600">${d.class || 'N/A'}</div>
+                    </td>
+                    <td class="p-6 border-b border-gray-50 text-gray-500 font-medium">${d.type || 'Tuition Fee'}</td>
+                    <td class="p-6 border-b border-gray-50 font-bold text-pucho-dark">₹${(d.amount || 0).toLocaleString()}</td>
                     <td class="p-6 border-b border-gray-50"><span class="px-3 py-1 ${d.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} rounded-full text-[10px] font-bold uppercase tracking-widest">${d.status}</span></td>
                 </tr>`;
             }
@@ -2425,14 +2459,21 @@ const dashboard = {
         const classFilter = document.getElementById('filterClass_fees')?.value;
         const pendingFees = schoolDB.fees.filter(f => f.status === 'Pending');
 
-        // Enrich data with student/parent info for the Automation Loop
+        // Confirm before running a large flow
+        if (pendingFees.length > 50) {
+            if (!confirm(`Warning: You are about to initiate recovery for ${pendingFees.length} students. This may take some time. Continue?`)) {
+                return;
+            }
+        }
+
+        // Enrich data with FULL student and payment info for the Automation Loop
         const enrichedFees = pendingFees.map(f => {
-            const student = schoolDB.students.find(s => s.id === f.student_id);
+            // Link using database UUID (db_id for student, student_id for fee)
+            const student = schoolDB.students.find(s => s.db_id === f.student_id);
             return {
-                ...f,
-                student_name: student ? student.name : 'Unknown',
-                parent_name: student ? (student.guardian_name || student.parent_name) : 'Unknown',
-                parent_email: student ? student.email : (student ? student.parent_email : 'Unknown'),
+                payment_details: { ...f },
+                student_details: student ? { ...student } : { id: f.student_id, name: 'Unknown Student' },
+                // Maintain top-level fields for backward compatibility or direct filter mapping
                 student_class: student ? student.class : 'N/A'
             };
         });
@@ -2459,7 +2500,7 @@ const dashboard = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'FEE_RECOVERY_AUTOMATION_LOOP',
-                    total_amount: finalFees.reduce((sum, f) => sum + (f.amount || 0), 0),
+                    total_amount: finalFees.reduce((sum, f) => sum + (f.payment_details.amount || 0), 0),
                     count: finalFees.length,
                     grade_filter: classFilter || 'All Grades',
                     data: finalFees // This list contains emails and amounts for Studio to loop
@@ -2497,13 +2538,17 @@ const dashboard = {
         window.addEventListener('click', closeMenu);
     },
 
-    selectDropdownOption: function (val, text) {
-        const input = document.getElementById('filterClass_fees');
-        const toggleText = document.getElementById('selectedClassText');
-        const menu = document.getElementById('dropdownMenu_fees');
-        const arrow = document.getElementById('dropdownArrow');
+    selectDropdownOption: function (val, text, type = 'fees') {
+        const input = document.getElementById('filterClass_' + type);
+        const toggleText = document.getElementById('selectedClassText_' + type) || document.getElementById('selectedClassText');
+        const menu = document.getElementById('dropdownMenu_' + type);
+        const arrow = document.getElementById('dropdownArrow_' + type) || document.getElementById('dropdownArrow');
 
-        if (input) input.value = val;
+        if (input) {
+            input.value = val;
+            // Dispatch change event manually since setting .value doesn't trigger it
+            input.dispatchEvent(new Event('change'));
+        }
         if (toggleText) toggleText.innerText = text;
 
         if (menu) {
@@ -2512,11 +2557,11 @@ const dashboard = {
                 if (item.innerText === text) item.classList.add('selected');
                 else item.classList.remove('selected');
             });
-            menu.classList.remove('show');
+            menu.classList.add('hidden');
         }
         if (arrow) arrow.style.transform = 'rotate(0deg)';
 
-        this.filterGeneric('fees');
+        this.filterGeneric(type);
     },
 
     // Subject Custom Dropdown Logic
@@ -3085,6 +3130,109 @@ const dashboard = {
             </div>`;
     },
 
+    classes: function () {
+        const classes = ['Nursery', 'LKG', 'UKG', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
+        
+        return `<div class="animate-fade-in space-y-8 font-inter">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-black text-pucho-dark tracking-tight">Class Management</h2>
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Management of segments and student distribution</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                ${classes.map(cls => {
+                    const count = (schoolDB.students || []).filter(s => s.class === cls).length;
+                    return `
+                    <div onclick="dashboard.showClassDetail('${cls}')" class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-subtle hover:shadow-glow hover:border-pucho-purple/20 transition-all cursor-pointer group">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-pucho-purple/10 transition-colors">🏫</div>
+                            <span class="px-3 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase tracking-widest">Active</span>
+                        </div>
+                        <h3 class="text-2xl font-black text-pucho-dark mb-1">${cls}</h3>
+                        <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">${count} Students Enrolled</p>
+                        
+                        <div class="mt-8 pt-6 border-t border-gray-50 flex items-center justify-between">
+                            <span class="text-[10px] font-black text-pucho-purple uppercase tracking-widest">View Details →</span>
+                            <div class="flex -space-x-2">
+                                <div class="w-6 h-6 rounded-full border-2 border-white bg-gray-200"></div>
+                                <div class="w-6 h-6 rounded-full border-2 border-white bg-gray-300"></div>
+                                <div class="w-6 h-6 rounded-full border-2 border-white bg-gray-400 text-[8px] flex items-center justify-center font-bold text-white">+${Math.max(0, count-2)}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>`;
+    },
+
+    showClassDetail: function (className) {
+        const students = (schoolDB.students || []).filter(s => s.class === className);
+        const fees = (schoolDB.fees || []).filter(f => f.class === className);
+        const paidCount = fees.filter(f => f.status === 'Paid').length;
+        const pendingCount = fees.filter(f => f.status === 'Pending').length;
+
+        const content = document.getElementById('mainContent');
+        if (!content) return;
+
+        content.innerHTML = `
+            <div class="animate-fade-in space-y-8 font-inter mb-20">
+                <div class="flex items-center gap-4 mb-8">
+                    <button onclick="dashboard.navigate('classes')" class="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-pucho-dark transition-all">←</button>
+                    <div>
+                        <h2 class="text-3xl font-black text-pucho-dark tracking-tight">Class: ${className}</h2>
+                        <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Detailed academic and financial report</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-8 bg-white border border-gray-100 rounded-[40px] shadow-subtle">
+                        <h4 class="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Total Students</h4>
+                        <p class="text-3xl font-black text-pucho-dark">${students.length}</p>
+                    </div>
+                    <div class="p-8 bg-green-50 border border-green-100 rounded-[40px] shadow-subtle">
+                        <h4 class="text-green-600 text-[10px] font-black uppercase tracking-widest mb-1">Fees Paid</h4>
+                        <p class="text-3xl font-black text-green-700">${paidCount}</p>
+                    </div>
+                    <div class="p-8 bg-red-50 border border-red-100 rounded-[40px] shadow-subtle">
+                        <h4 class="text-red-600 text-[10px] font-black uppercase tracking-widest mb-1">Fees Pending</h4>
+                        <p class="text-3xl font-black text-red-700">${pendingCount}</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-subtle">
+                    <div class="p-8 border-b border-gray-50 flex justify-between items-center">
+                        <h3 class="font-bold text-xl">Student List</h3>
+                        <button onclick="dashboard.navigate('students')" class="text-xs font-bold text-pucho-purple hover:underline">MANAGE ALL STUDENTS</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50/50">
+                                <tr>
+                                    <th class="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Name</th>
+                                    <th class="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Roll No</th>
+                                    <th class="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${students.length > 0 ? students.map(s => `
+                                    <tr class="hover:bg-gray-50/50 transition-all border-b border-gray-50 last:border-0 cursor-pointer" onclick="dashboard.editStudent('${s.id}')">
+                                        <td class="px-6 py-5">
+                                            <div class="font-bold text-pucho-dark">${s.name}</div>
+                                            <div class="text-[10px] text-gray-400 font-bold uppercase">ID: ${s.id}</div>
+                                        </td>
+                                        <td class="px-6 py-5 text-sm font-bold text-gray-600">${s.roll_no || '-'}</td>
+                                        <td class="px-6 py-5"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-[8px] font-black uppercase tracking-widest">Active</span></td>
+                                    </tr>
+                                `).join('') : `<tr><td colspan="3" class="p-12 text-center text-gray-400 font-bold uppercase tracking-widest">No students found for this class</td></tr>`}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
+    },
+
     students: function () {
         // Empty State
         if (schoolDB.students.length === 0) {
@@ -3420,7 +3568,7 @@ const dashboard = {
         const totalPaid = schoolDB.fees.filter(f => f.status === 'Paid').reduce((sum, f) => sum + f.amount, 0);
         const totalPending = schoolDB.fees.filter(f => f.status === 'Pending').reduce((sum, f) => sum + f.amount, 0);
         const pendingCount = schoolDB.fees.filter(f => f.status === 'Pending').length;
-        const classes = ['LKG', 'UKG', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
+        const classes = ['Nursery', 'LKG', 'UKG', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
 
         return `<div class="space-y-8 animate-fade-in">
                 <!-- Finance Stats -->
@@ -3449,15 +3597,15 @@ const dashboard = {
                         <!-- Custom Scrollable Dropdown -->
                         <div class="dropdown-container w-full md:w-64">
                             <div onclick="dashboard.toggleCustomDropdown(event)" id="dropdownToggle_fees" class="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50 text-sm font-bold text-gray-600 outline-none flex justify-between items-center cursor-pointer hover:bg-white transition-all shadow-sm">
-                                <span id="selectedClassText">All Classes</span>
+                                <span id="selectedClassText_fees">All Classes</span>
                                 <svg class="w-4 h-4 transition-transform" id="dropdownArrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                             <!-- Hidden input for filterGeneric compatibility -->
                             <input type="hidden" id="filterClass_fees" value="">
                             
                             <div id="dropdownMenu_fees" class="dropdown-menu custom-scrollbar">
-                                <div class="dropdown-item selected" onclick="dashboard.selectDropdownOption('', 'All Classes')">All Classes</div>
-                                ${classes.map(c => `<div class="dropdown-item" onclick="dashboard.selectDropdownOption('${c}', '${c}')">${c}</div>`).join('')}
+                                <div class="dropdown-item selected" onclick="dashboard.selectDropdownOption('', 'All Classes', 'fees')">All Classes</div>
+                                ${classes.map(c => `<div class="dropdown-item" onclick="dashboard.selectDropdownOption('${c}', '${c}', 'fees')">${c}</div>`).join('')}
                             </div>
                         </div>
                         
@@ -3469,6 +3617,7 @@ const dashboard = {
                         <thead class="bg-gray-50/50">
                             <tr>
                                 <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student Details</th>
+                                <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Class</th>
                                 <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category</th>
                                 <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Amount</th>
                                 <th class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
@@ -5600,7 +5749,14 @@ const dashboard = {
         // Save to database
         if (this.isDbConnected) {
             for (const mark of marksData) {
-                await this.db('results', 'POST', mark);
+                await this.db('results', 'POST', {
+                    ...mark,
+                    subject_id: mark.subject_id, 
+                    student_id: mark.student_id,
+                    marks_obtained: mark.marks,
+                    total_marks: 100,
+                    exam_type: mark.exam_name || 'Term Exam'
+                });
             }
         }
 
@@ -6059,12 +6215,12 @@ const dashboard = {
             id: hwId,
             title,
             subject,
-            class: cls,
+            class_grade: cls,
             division: div,
             assigned_by: currentUserName,
             description: desc,
             due_date: dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            pdf_link: existingHw ? (existingHw.pdf_link || existingHw.file || null) : null // Preserve existing link if present
+            file_url: existingHw ? (existingHw.pdf_link || existingHw.file || null) : null // Preserve existing link if present
         };
 
         // 0. Handle File Upload if exists
@@ -6556,9 +6712,8 @@ const dashboard = {
         const newExam = {
             id: crypto.randomUUID(),
             class: document.getElementById('examClass').value,
-            division: document.getElementById('examDiv').value,
             subject: document.getElementById('examSubject').value,
-            date: document.getElementById('examDate').value,
+            start_date: document.getElementById('examDate').value,
             time: document.getElementById('examTime').value,
             venue: document.getElementById('examVenue').value,
             created_at: new Date().toISOString()
@@ -6669,12 +6824,10 @@ const dashboard = {
                 amount: 5000,
                 due_date: '2024-12-31',
                 status: status,
+                type: 'Tuition Fee',
                 month: 'December 2024'
             });
         });
-
-        // Trigger Webhook for Fee Recovery Analysis (Pucho Studio)
-        this.triggerFeeRecoveryFlow(fees.filter(f => f.status === 'Pending'));
 
         return fees;
     },
