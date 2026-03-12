@@ -244,7 +244,7 @@ const dashboard = {
         if (quizzes) {
             window.schoolDB.quizzes = quizzes.map(q => ({
                 ...q,
-                class: q.class || '1st', // Fallback or map from DB field
+                class: this.normalizeClassName(q.class || '1st'), // Normalize
                 division: q.division || 'All',
                 type: q.type || 'Quiz',
                 date: q.date ? new Date(q.date).toLocaleDateString() : (q.created_at ? new Date(q.created_at).toLocaleDateString() : 'Today')
@@ -254,7 +254,7 @@ const dashboard = {
             window.schoolDB.subjects = subjects.map(s => ({
                 id: s.id,
                 name: s.name,
-                class: s.class || '1st',
+                class: this.normalizeClassName(s.class || '1st'), // Normalize
                 code: s.code || s.name.substring(0, 3).toUpperCase()
             }));
         }
@@ -265,7 +265,7 @@ const dashboard = {
                 title: h.title,
                 description: h.description,
                 subject: h.subject,
-                class: h.class || 'N/A',
+                class: this.normalizeClassName(h.class || 'N/A'), // Normalize
                 division: h.division || 'All',
                 assignedBy: h.assigned_by || 'Teacher',
                 dueDate: h.due_date ? new Date(h.due_date).toLocaleDateString() : 'N/A',
@@ -332,16 +332,11 @@ const dashboard = {
         return stats[role.toLowerCase()] || stats.admin;
     },
 
-    // Normalize class name: '8th' -> 'Grade 8', '1st' -> 'Grade 1', 'LKG' -> 'LKG', etc.
+    // Normalize class name: '8th' -> '8th', 'Grade 8' -> '8th'
     normalizeClassName: function (className) {
-        if (!className) return className;
-        const revMap = {
-            'Grade 1': '1st', 'Grade 2': '2nd', 'Grade 3': '3rd',
-            'Grade 4': '4th', 'Grade 5': '5th', 'Grade 6': '6th',
-            'Grade 7': '7th', 'Grade 8': '8th', 'Grade 9': '9th',
-            'Grade 10': '10th', 'Grade 11': '11th', 'Grade 12': '12th'
-        };
-        return revMap[className] || className;
+        if (!className) return '';
+        // Strip "Grade " prefix and trim
+        return className.toString().replace(/^Grade\s+/i, '').trim();
     },
 
     getSubjectsForClass: function (className) {
