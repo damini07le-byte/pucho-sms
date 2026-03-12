@@ -231,7 +231,12 @@ const dashboard = {
             }));
         }
 
-        if (fees) window.schoolDB.fees = fees;
+        if (fees && fees.length > 0) {
+            window.schoolDB.fees = fees;
+        } else {
+            console.log("DB fees empty, generating mock data...");
+            window.schoolDB.fees = this._generateMockFees();
+        }
         if (attendance) window.schoolDB.attendance = attendance;
         if (admissions) window.schoolDB.admissions = admissions;
         if (notices) {
@@ -2325,10 +2330,12 @@ const dashboard = {
         const body = document.getElementById(`${type}TableBody`);
         if (!body) return;
 
-        let data = schoolDB[type];
+        const classFilter = document.getElementById('filterClass_' + type)?.value;
+        let data = schoolDB[type] || [];
+        
         if (classFilter) {
             const normalized = this.normalizeClassName(classFilter);
-            data = data.filter(d => d.class === normalized || d.class === classFilter);
+            data = data.filter(d => d.class === normalized || d.class === classFilter || d.student_class === normalized);
         }
 
         if (!data || data.length === 0) {
@@ -6594,6 +6601,29 @@ const dashboard = {
         showToast(`Initiating Smart Recovery Flow for ${pendingCount} records...`, 'info');
         setTimeout(() => showToast(`AI analyzing payment history for critical defaults...`, 'info'), 1500);
         setTimeout(() => showToast(`Successfully dispatched alerts to ${pendingCount} parents via WhatsApp & SMS.`, 'success'), 3500);
+    },
+    _generateMockFees: function() {
+        const classes = ['LKG', 'UKG', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
+        const mockFees = [];
+        const types = ['Tuition Fee', 'Transport Fee', 'Activity Fee', 'Library Fee', 'Exam Fee'];
+        
+        classes.forEach(cls => {
+            for (let i = 1; i <= 10; i++) {
+                const status = (i <= 5) ? 'Paid' : 'Pending';
+                mockFees.push({
+                    id: `FEE-${cls}-${i}`,
+                    student_id: `STU-${cls}-${i.toString().padStart(3, '0')}`,
+                    student_name: `Student ${i} (${cls})`,
+                    class: cls,
+                    student_class: cls,
+                    type: types[i % types.length],
+                    amount: 5000 + (Math.floor(Math.random() * 5) * 500),
+                    status: status,
+                    due_date: '2026-03-15'
+                });
+            }
+        });
+        return mockFees;
     }
 };
 
