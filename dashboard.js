@@ -153,23 +153,30 @@ const dashboard = {
 
         // Map Students
         if (studentsRaw) {
-            window.schoolDB.students = studentsRaw.map(s => ({
-                id: s.admission_no || s.id,
-                db_id: s.id,
-                name: (s.profiles && s.profiles.full_name) || 'Student',
-                class: (s.sections && s.sections.classes && s.sections.classes.name) || 'N/A',
-                division: (s.sections && s.sections.name) || 'N/A',
-                roll_no: s.roll_no || 0,
-                phone: (s.profiles && s.profiles.phone) || '',
-                email: s.id + '@school.com',
-                status: s.status || 'Active',
-                gender: s.gender,
-                dob: s.dob,
-                parent_id: s.parent_id,
-                guardian_name: s.guardian_name || 'N/A',
-                parent_email: s.parent_email || '',
-                parent_phone: s.parent_phone || ''
-            }));
+            window.schoolDB.students = studentsRaw.map(s => {
+                // Determine class and division
+                // Prioritize sections.classes.name, fallback to s.class or 'N/A'
+                let className = (s.sections && s.sections.classes && s.sections.classes.name) || s.class || 'N/A';
+                let divisionName = (s.sections && s.sections.name) || s.division || 'N/A';
+                
+                return {
+                    id: s.admission_no || s.id,
+                    db_id: s.id,
+                    name: (s.profiles && s.profiles.full_name) || 'Student',
+                    class: className,
+                    division: divisionName,
+                    roll_no: s.roll_no || 0,
+                    phone: (s.profiles && s.profiles.phone) || '',
+                    email: s.id + '@school.com',
+                    status: s.status || 'Active',
+                    gender: s.gender,
+                    dob: s.dob,
+                    parent_id: s.parent_id,
+                    guardian_name: s.guardian_name || 'N/A',
+                    parent_email: s.parent_email || '',
+                    parent_phone: s.parent_phone || ''
+                };
+            });
         }
 
         // Map Staff
@@ -874,7 +881,11 @@ const dashboard = {
         list.innerHTML = this.skeleton();
 
         // Use local schoolDB which is already synced and enriched
-        const students = schoolDB.students.filter(s => (s.class === cls || s.class === rawClass) && s.division === div);
+        const students = schoolDB.students.filter(s => {
+            const studentClassNorm = this.normalizeClassName(s.class);
+            const targetClassNorm = this.normalizeClassName(rawClass);
+            return studentClassNorm === targetClassNorm && s.division === div;
+        });
 
         if (students.length === 0) {
             list.innerHTML = `<div class="flex flex-col items-center justify-center p-12 bg-gray-50 rounded-3xl text-center animate-fade-in">
@@ -5401,9 +5412,11 @@ const dashboard = {
 
         // Get subjects for THIS specific class only
         const studentClass = this.normalizeClassName(student.class);
-        const rawSubjects = (schoolDB.subjects || []).filter(sub => {
+        const rawSubjects = (window.schoolDB.subjects || []).filter(sub => {
             if (!sub.class) return false;
-            return this.normalizeClassName(sub.class) === studentClass;
+            // Normalize both for maximum compatibility
+            const subClass = this.normalizeClassName(sub.class);
+            return subClass === studentClass;
         });
 
         // Unique filter by name to prevent "English" repeating multiple times
