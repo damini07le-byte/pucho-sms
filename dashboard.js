@@ -5136,7 +5136,7 @@ const dashboard = {
                     <div class="header">
                         <div class="logo-section">
                             <div class="logo">
-                                <img src="${window.location.origin}/assets/pucho_logo_sidebar_v2.png" alt="Pucho.ai Logo">
+                                <img src="${window.location.origin}/images/pucho_logo_login.png" alt="Pucho.ai Logo">
                             </div>
                             <div class="school-info">
                                 <h1>Pucho.ai School</h1>
@@ -5185,7 +5185,7 @@ const dashboard = {
                         </div>
                         <div class="footer-brand">
                             <div class="footer-logo">
-                                <img src="${window.location.origin}/assets/pucho_logo_sidebar_v2.png" alt="Pucho.ai">
+                                <img src="${window.location.origin}/images/pucho_logo_login.png" alt="Pucho.ai">
                             </div>
                             <div class="footer-text">Powered by Pucho.ai SMS</div>
                         </div>
