@@ -1173,7 +1173,7 @@ const dashboard = {
 
                 // --- WEBHOOK INTEGRATION (Pucho Studio - Report Card Automation) ---
                 try {
-                    const webhookUrl = 'https://studio.pucho.ai/api/v1/webhooks/lAFPplKxovNfqPFSBaCxE'; // Reusing or waiting for specific URL? User gave one URL, might be for all or just homework.
+                    const webhookUrl = 'https://studio.pucho.ai/api/v1/webhooks/k2Ie3tSBQVFI34KDVrqcP'; // Results/Marks Flow
                     // The user said "hey 3 ke flow de ek ek karke", I will use the same base logic but I need to know if they want the SAME webhook URL or a different one.
                     // For now, I'll implement the logic so it's ready.
 
@@ -1361,7 +1361,7 @@ const dashboard = {
 
                 // --- WEBHOOK INTEGRATION (Pucho Studio - Report Card Automation) ---
                 try {
-                    const webhookUrl = 'https://studio.pucho.ai/api/v1/webhooks/lAFPplKxovNfqPFSBaCxE'; // Reusing or waiting for specific URL? User gave one URL, might be for all or just homework.
+                    const webhookUrl = 'https://studio.pucho.ai/api/v1/webhooks/k2Ie3tSBQVFI34KDVrqcP'; // Results/Marks Flow
                     // The user said "hey 3 ke flow de ek ek karke", I will use the same base logic but I need to know if they want the SAME webhook URL or a different one.
                     // For now, I'll implement the logic so it's ready.
 
