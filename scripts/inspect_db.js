@@ -11,31 +11,37 @@ const { chromium } = require('@playwright/test');
             const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwa2ptZmFxd2pua29wcHZyc3JsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjA0MzMzMiwiZXhwIjoyMDgxNjE5MzMyfQ.o7hfaphdAeuNR-cXvSZ_XQVk1jV8hSBOxSMEb7Gds9s';
             
             async function getCount(table) {
-                const res = await fetch(`${supabaseUrl}/rest/v1/${table}?select=count`, {
-                    headers: { 'apikey': supabaseKey, 'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'count=exact' }
-                });
-                return res.headers.get('content-range');
+                try {
+                    const res = await fetch(`${supabaseUrl}/rest/v1/${table}?select=count`, {
+                        headers: { 'apikey': supabaseKey, 'Authorization': 'Bearer ' + supabaseKey, 'Prefer': 'count=exact' }
+                    });
+                    if (!res.ok) return "ERROR: " + await res.text();
+                    return res.headers.get('content-range');
+                } catch (e) { return "FETCH_ERROR: " + e.message; }
             }
 
             async function getOne(table) {
-                const res = await fetch(`${supabaseUrl}/rest/v1/${table}?select=*&limit=1`, {
-                    headers: { 'apikey': supabaseKey, 'Authorization': 'Bearer ' + supabaseKey }
-                });
-                return await res.json();
+                try {
+                    const res = await fetch(`${supabaseUrl}/rest/v1/${table}?select=*&limit=1`, {
+                        headers: { 'apikey': supabaseKey, 'Authorization': 'Bearer ' + supabaseKey }
+                    });
+                    if (!res.ok) return { error: await res.text() };
+                    return await res.json();
+                } catch (e) { return { error: e.message }; }
             }
 
             return {
-                studentsCount: await getCount('students'),
-                feesCount: await getCount('fees_payments'),
-                studentSample: await getOne('students'),
-                feeSample: await getOne('fees_payments')
+                profiles: {
+                    count: await getCount('profiles'),
+                    sample: await getOne('profiles')
+                }
             };
         });
         
-        console.log("Database Status Snapshot:");
+        console.log("Profiles Table Status:");
         console.log(JSON.stringify(info, null, 2));
     } catch (err) {
-        console.error("Error inspecting database:", err);
+        console.error("Critical Error:", err);
     } finally {
         if (browser) await browser.close();
     }

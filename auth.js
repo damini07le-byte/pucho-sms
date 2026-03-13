@@ -90,10 +90,8 @@ const auth = {
         populateUserInfo(this.currentUser);
         window.dashboard.init();
 
-        // Ensure hash is set if we are on root or home
-        if (!window.location.hash || window.location.hash === '#home' || window.location.hash === '#') {
-            window.location.hash = '#overview';
-        }
+        // ALWAYS force overview on fresh login to ensure consistent start
+        window.location.hash = '#overview';
     },
 
     checkSession: function () {
@@ -152,33 +150,58 @@ const auth = {
 
     signUp: async function (name, email, password, role = 'parent') {
         try {
-            const supabase = window.dashboard.supabase;
-            if (!supabase) window.dashboard.initSupabase();
+            if (!window.dashboard.supabase) window.dashboard.initSupabase();
+            const client = window.dashboard.supabase;
 
-            if (window.dashboard.supabase) {
-                const { data, error } = await window.dashboard.supabase.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: {
-                            full_name: name,
-                            role: role
-                        }
+            if (!client) {
+                showToast("Connection to server failed. Please try again.", 'error');
+                return false;
+            }
+
+            const { data, error } = await client.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        full_name: name,
+                        role: role
                     }
-                });
+                }
+            });
 
-                if (error) throw error;
+            if (error) {
+                console.error("Supabase Auth Error:", error);
+                throw error;
+            }
 
-                if (data?.user?.identities?.length === 0) {
+            if (data?.user) {
+                // 2. Create Profile Record
+                const { error: profileError } = await client
+                    .from('profiles')
+                    .insert([
+                        {
+                            id: data.user.id,
+                            full_name: name,
+                            role: role,
+                            phone: ''
+                        }
+                    ]);
+
+                if (profileError) {
+                    console.error("Profile Creation Failed:", profileError);
+                }
+
+                if (data.identities?.length === 0) {
                     showToast("User already exists. Please login.", 'warning');
                 } else {
                     showToast(`Success! Verification email sent to: ${email}`, 'success');
                 }
                 return true;
             }
+            return false;
         } catch (err) {
-            console.error("SignUp Error:", err);
-            showToast(err.message, 'error');
+            console.error("SignUp Execution Error:", err);
+            showToast(err.message || "Registration failed", 'error');
             return false;
         }
     }
@@ -226,9 +249,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     const success = await auth.signUp(name, email, pass, role);
                     if (success) {
-                        document.getElementById('signupFields').classList.add('hidden');
-                        document.querySelector('#loginForm button[type="submit"]').innerText = "Sign In";
-                        document.getElementById('toggleSignup').innerText = "Create New Account";
+                        // Switch back to login view after successful signup
+                        router.showLogin();
+                        showToast(`Registration successful! Please sign in.`, 'success');
                     }
                     return;
                 }
