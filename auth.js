@@ -6,8 +6,6 @@ const auth = {
     credentials: {
         admin: { email: "admin", password: "123", role: "admin", name: "Supreme Admin" },
         staff: { email: "staff", password: "123", role: "staff", name: "Teacher Rahul" },
-        admin: { email: "admin", password: "123", role: "admin", name: "Supreme Admin" },
-        staff: { email: "staff", password: "123", role: "staff", name: "Teacher Rahul" },
         parent: { email: "parent", password: "123", role: "parent", name: "Vikram Das" }
     },
 
@@ -28,33 +26,31 @@ const auth = {
         }
 
         // 2. REAL Supabase Auth Logic
-        const supabase = window.dashboard.supabase;
-        if (!supabase) {
-            window.dashboard.initSupabase();
-        }
+        if (window.dashboard && window.dashboard.initSupabase) {
+            if (!window.dashboard.supabase) await window.dashboard.initSupabase();
+            
+            if (window.dashboard.supabase) {
+                const { data, error } = await window.dashboard.supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
 
-        if (window.dashboard.supabase) {
-            const { data, error } = await window.dashboard.supabase.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
-
-            if (data?.user) {
-                console.log("Supabase Auth Success:", data.user);
-                // Extract metadata (role, name) from user_metadata
-                const metadata = data.user.user_metadata || {};
-                this.currentUser = {
-                    id: data.user.id,
-                    email: data.user.email,
-                    role: metadata.role || role,
-                    name: metadata.full_name || metadata.name || data.user.email.split('@')[0]
-                };
-                localStorage.setItem('sms_user', JSON.stringify(this.currentUser));
-                return true;
-            }
-            if (error) {
-                console.error("Supabase Auth Error:", error.message);
-                throw error;
+                if (data?.user) {
+                    console.log("Supabase Auth Success:", data.user);
+                    const metadata = data.user.user_metadata || {};
+                    this.currentUser = {
+                        id: data.user.id,
+                        email: data.user.email,
+                        role: metadata.role || role,
+                        name: metadata.full_name || metadata.name || data.user.email.split('@')[0]
+                    };
+                    localStorage.setItem('sms_user', JSON.stringify(this.currentUser));
+                    return true;
+                }
+                if (error) {
+                    console.error("Supabase Auth Error:", error.message);
+                    throw error;
+                }
             }
         }
 
@@ -62,7 +58,7 @@ const auth = {
     },
 
     logout: async function () {
-        if (window.dashboard.supabase) {
+        if (window.dashboard && window.dashboard.supabase) {
             await window.dashboard.supabase.auth.signOut();
         }
         this.currentUser = null;
@@ -74,32 +70,52 @@ const auth = {
         if (!this.currentUser) return;
 
         // Hide Landing & Modal
-        if (document.getElementById('landingSection')) document.getElementById('landingSection').classList.add('hidden');
-        if (document.getElementById('loginModal')) {
-            document.getElementById('loginModal').classList.add('hidden');
-            document.getElementById('loginModal').classList.remove('flex');
+        const landing = document.getElementById('landingSection');
+        const loginModal = document.getElementById('loginModal');
+        const appShell = document.getElementById('appShell');
+
+        if (landing) landing.classList.add('hidden');
+        if (loginModal) {
+            loginModal.classList.add('hidden');
+            loginModal.classList.remove('flex');
         }
 
         // Show App Shell
-        const appShell = document.getElementById('appShell');
         if (appShell) appShell.classList.remove('hidden');
-
         document.body.classList.remove('overflow-hidden');
 
-        // Populate and Init
+        // Populate User Info
         populateUserInfo(this.currentUser);
-        window.dashboard.init();
 
-        // ALWAYS force overview on fresh login to ensure consistent start
-        window.location.hash = '#overview';
+        // Robust Initialization: Wait for dashboard object (Standard script sync issue)
+        let retryCount = 0;
+        const maxRetries = 50; // 5 seconds total
+        const initChecker = setInterval(() => {
+            if (window.dashboard && typeof window.dashboard.init === 'function') {
+                clearInterval(initChecker);
+                window.dashboard.init();
+                // If no specific hash, go to overview
+                if (!window.location.hash || window.location.hash === '#') {
+                    window.location.hash = '#overview';
+                }
+                console.log("[Auth] Dashboard init successful.");
+            } else {
+                retryCount++;
+                if (retryCount % 10 === 0) console.log(`[Auth] Still waiting for dashboard... (${retryCount}/${maxRetries})`);
+                if (retryCount >= maxRetries) {
+                    clearInterval(initChecker);
+                    console.error("[Auth] Dashboard failed to load.");
+                    if (typeof showToast === 'function') showToast("Dashboard failed to initialize.", "error");
+                }
+            }
+        }, 100);
     },
 
     checkSession: function () {
-        // We ALWAYS show the landing page first as per user request
+        // We ALWAYS show the landing page first
         if (document.getElementById('landingSection')) document.getElementById('landingSection').classList.remove('hidden');
         if (document.getElementById('appShell')) document.getElementById('appShell').classList.add('hidden');
         
-        // ONLY show dashboard if there is a specific dashboard hash (e.g. from a deep link/refresh)
         const hash = window.location.hash.substring(1);
         const dashboardPages = ['overview', 'students', 'staff', 'fees', 'exams', 'attendance_all', 'ai_insights', 'communication', 'reports', 'settings', 'my_classes', 'mark_attendance', 'exam_marks', 'manage_quizzes', 'homework', 'staff_notices', 'parent_attendance', 'parent_homework', 'parent_fees', 'parent_results', 'parent_leave', 'parent_notices', 'subjects', 'leave_approvals'];
         
@@ -123,10 +139,9 @@ const auth = {
         submitBtn.innerText = "Sending Link...";
 
         try {
-            const supabase = window.dashboard.supabase;
-            if (!supabase) window.dashboard.initSupabase();
+            if (window.dashboard && !window.dashboard.supabase) await window.dashboard.initSupabase();
 
-            if (window.dashboard.supabase) {
+            if (window.dashboard && window.dashboard.supabase) {
                 const { error } = await window.dashboard.supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: window.location.origin + '/#settings',
                 });
@@ -150,8 +165,8 @@ const auth = {
 
     signUp: async function (name, email, password, role = 'parent') {
         try {
-            if (!window.dashboard.supabase) window.dashboard.initSupabase();
-            const client = window.dashboard.supabase;
+            if (window.dashboard && !window.dashboard.supabase) await window.dashboard.initSupabase();
+            const client = window.dashboard ? window.dashboard.supabase : null;
 
             if (!client) {
                 showToast("Connection to server failed. Please try again.", 'error');
@@ -175,7 +190,6 @@ const auth = {
             }
 
             if (data?.user) {
-                // 2. Create Profile Record
                 const { error: profileError } = await client
                     .from('profiles')
                     .insert([
@@ -212,7 +226,7 @@ function populateUserInfo(user) {
     if (document.getElementById('userName')) document.getElementById('userName').innerText = user.name;
     if (document.getElementById('userRole')) document.getElementById('userRole').innerText = user.role;
     const avatar = document.getElementById('userAvatar');
-    if (avatar) avatar.innerText = user.name.charAt(0);
+    if (avatar) avatar.innerText = (user.name || "U").charAt(0);
 }
 
 // Initial session check
@@ -223,7 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Session Check Failed:", err);
     }
 
-    // Login Form Listener
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -249,7 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     const success = await auth.signUp(name, email, pass, role);
                     if (success) {
-                        // Switch back to login view after successful signup
                         router.showLogin();
                         showToast(`Registration successful! Please sign in.`, 'success');
                     }
@@ -259,10 +271,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const success = await auth.login(email, pass, role);
                     if (success) {
-                        errorDiv.classList.add('hidden');
+                        if (errorDiv) errorDiv.classList.add('hidden');
                         auth.showDashboard();
                     } else {
-                        errorDiv.classList.remove('hidden');
+                        if (errorDiv) errorDiv.classList.remove('hidden');
                         loginForm.classList.add('animate-shake');
                         setTimeout(() => loginForm.classList.remove('animate-shake'), 500);
                     }
@@ -271,12 +283,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (err) {
                 console.error("Login Error:", err);
-                alert("Login Error: " + err.message); // Visible feedback for user/debug
             }
         });
     }
 
-    // Toggle Sidebar for mobile
     const menuToggle = document.getElementById('menuToggle');
     if (menuToggle) {
         menuToggle.addEventListener('click', () => {
@@ -286,5 +296,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Export
 window.auth = auth;
